@@ -1,0 +1,40 @@
+name: Feature Request
+description: Suggest a new capability or improvement for Polingo
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before** requesting a feature, review the documentation and search existing issues or discussions to avoid duplicates.
+  - type: checkboxes
+    attributes:
+      label: Did you check docs and existing issues?
+      description: Make sure you checked all of the below before submitting a feature request.
+      options:
+        - label: I have confirmed this feature does not already exist in Polingo
+          required: true
+        - label: I have searched existing issues and discussions for similar requests
+          required: true
+  - type: textarea
+    attributes:
+      label: Problem statement
+      description: Describe the problem you are trying to solve or the pain point you are experiencing.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed solution
+      description: Describe your ideal solution. Include API ideas, configuration options, or examples.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Alternatives considered
+      description: List other approaches you have tried or considered and why they are insufficient.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Share mockups, code snippets, or references that help explain the request.

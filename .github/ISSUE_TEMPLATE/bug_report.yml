@@ -1,0 +1,64 @@
+name: Bug Report
+description: Report a reproducible issue with Polingo packages or tooling
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before** reporting an issue, read the documentation, check the [README](../README.md), and search existing issues or discussions. Usage questions such as ***"How do I...?"*** belong in Discussions and will be closed.
+  - type: checkboxes
+    attributes:
+      label: Did you check docs and existing issues?
+      description: Make sure you checked all of the below before submitting an issue.
+      options:
+        - label: I have read the Polingo documentation and package READMEs
+          required: true
+        - label: I have searched existing issues in this repository
+          required: true
+        - label: I have searched issues in related projects (e.g. integrations or loaders)
+          required: true
+  - type: input
+    attributes:
+      label: Polingo package version(s)
+      placeholder: "@polingo/core 0.2.0, @polingo/node 0.2.0"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Node.js version (`node -v`)
+      placeholder: "v20.15.0"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Operating system/version
+      placeholder: "macOS 15.1, Ubuntu 22.04, Windows 11"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: Explain what went wrong. Include stack traces or logs when possible.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps To Reproduce
+      description: Step-by-step instructions to reproduce the behavior.
+      placeholder: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Include configuration snippets, relevant `.po`/`.mo` examples, or links to minimal reproductions if available.

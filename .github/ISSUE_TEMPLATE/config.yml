@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/ragnarok22/polingo/discussions/new?category=q-a
+    about: Usage questions or advice requests belong in Discussions.
+  - name: Security issues
+    url: https://github.com/ragnarok22/polingo/security/policy
+    about: Please review the security policy for instructions on reporting vulnerabilities privately.
