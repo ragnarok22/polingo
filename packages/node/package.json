@@ -26,14 +26,14 @@
   },
   "dependencies": {
     "@polingo/core": "workspace:*",
-    "chokidar": "^3.5.3",
-    "gettext-parser": "^7.0.1"
+    "chokidar": "^4.0.3",
+    "gettext-parser": "^8.0.0"
   },
   "devDependencies": {
     "@types/gettext-parser": "^8.0.0",
-    "@types/node": "^20.0.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.3.0",
+    "@types/node": "^24.7.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
   "keywords": [
@@ -44,6 +44,6 @@
     "translation",
     "nodejs"
   ],
-  "author": "",
+  "author": "Reinier Hernández Avila",
   "license": "MIT"
 }
