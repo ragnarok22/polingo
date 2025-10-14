@@ -56,6 +56,7 @@ const catalog = await loader.load('en', 'messages');
 Express/Fastify-compatible middleware that attaches a translator to every incoming request.
 
 ```ts
+// Inside your Express or Fastify app setup
 app.use(
   polingoMiddleware({
     directory: './locales',
