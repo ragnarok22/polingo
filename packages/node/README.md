@@ -210,8 +210,8 @@ async function getPolingo() {
 
 - [`@polingo/core`](../core) – translation runtime (`Translator`, caches, helpers).
 - [`@polingo/web`](../web) – fetch-based loader with localStorage cache for browsers.
-- [`@polingo/react`](../react) – React bindings (coming soon).
-- [`@polingo/cli`](../cli) – command line tooling (coming soon).
+- [`@polingo/react`](../react) – React hooks, context provider, and Trans component.
+- [`@polingo/cli`](../cli) – command line tooling for extraction, compilation, and validation.
 
 ## License
 

@@ -48,10 +48,10 @@ Thanks for taking the time to contribute! We want Polingo to be a friendly and p
 - Once approved, a maintainer will handle the merge. Contributors should not self-merge unless explicitly invited.
 
 ### Security & Responsible Disclosure
-Please do **not** open public issues for security concerns. Email details to **security@polingo.dev** and allow maintainers time to investigate before disclosure.
+Please do **not** open public issues for security concerns. Follow the [security policy](.github/SECURITY.md) for responsible disclosure guidelines and allow maintainers time to investigate before public disclosure.
 
 ### Need Help?
-If you have questions about contributing, open a discussion or reach out to the maintainers through the contact info in `README.md`. For conduct-related matters, email **conduct@polingo.dev**.
+If you have questions about contributing, open a discussion or reach out to the maintainers through GitHub issues. For conduct-related matters, please open an issue or contact the repository maintainers directly through GitHub.
 
 We appreciate your contributions—thank you for helping make Polingo better!
 

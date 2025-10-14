@@ -30,9 +30,14 @@ Polingo is organized as a monorepo with the following packages:
 - **[@polingo/core](./packages/core)**: Environment-agnostic translation engine
 - **[@polingo/node](./packages/node)**: Node.js loader with filesystem support and middleware
 - **[@polingo/web](./packages/web)**: Browser adapter using fetch + localStorage caching
+- **[@polingo/react](./packages/react)**: React bindings with hooks, context provider, and Trans component
+- **[@polingo/cli](./packages/cli)**: Command-line tools for extraction, compilation, and validation
 
 ## Installation
 
+Choose the package that fits your environment:
+
+**For Node.js applications:**
 ```bash
 npm install @polingo/node
 # or
@@ -41,8 +46,21 @@ pnpm add @polingo/node
 yarn add @polingo/node
 ```
 
-For environment-agnostic usage (browser, edge, etc.), install only the core:
+**For browser/React applications:**
+```bash
+npm install @polingo/core @polingo/web @polingo/react
+# or
+pnpm add @polingo/core @polingo/web @polingo/react
+```
 
+**For CLI tooling (development dependency):**
+```bash
+npm install -D @polingo/cli
+# or
+pnpm add -D @polingo/cli
+```
+
+**For environment-agnostic usage:**
 ```bash
 npm install @polingo/core
 ```
@@ -130,6 +148,67 @@ app.get('/', async (request, reply) => {
 
 app.listen({ port: 3000 });
 ```
+
+### React Integration
+
+```typescript
+import { PolingoProvider, useTranslation, Trans } from '@polingo/react';
+import { createPolingo } from '@polingo/web';
+
+function App() {
+  return (
+    <PolingoProvider
+      create={() =>
+        createPolingo({
+          locale: 'en',
+          locales: ['en', 'es', 'fr'],
+          loader: { baseUrl: '/i18n' },
+        })
+      }
+    >
+      <MyComponent />
+    </PolingoProvider>
+  );
+}
+
+function MyComponent() {
+  const { t, tn, setLocale } = useTranslation();
+
+  return (
+    <div>
+      <h1>{t('Welcome to Polingo!')}</h1>
+      <p>{tn('You have {n} message', 'You have {n} messages', 3, { n: 3 })}</p>
+      <Trans
+        message="Read the <0>documentation</0> to learn more"
+        components={[<a href="/docs" />]}
+      />
+      <button onClick={() => setLocale('es')}>Español</button>
+    </div>
+  );
+}
+```
+
+For a complete React example, see the [React + Vite example](./examples/react-vite).
+
+### CLI Workflow
+
+Use the CLI to extract, compile, and validate translations:
+
+```bash
+# Install CLI tools
+pnpm add -D @polingo/cli
+
+# Extract translatable strings from source code
+pnpm polingo extract src -o locales/messages.pot
+
+# After translating .po files, compile to runtime format
+pnpm polingo compile locales -o public/i18n --format json
+
+# Validate translations before deployment
+pnpm polingo validate locales --strict
+```
+
+See the [@polingo/cli documentation](./packages/cli) for detailed command reference.
 
 ### Hot Reload During Development
 
@@ -239,6 +318,12 @@ make clean
 - Node.js >= 18.0.0
 - pnpm >= 8.0.0 (developed with pnpm 10.x)
 
+## Examples
+
+Check out our working examples to see Polingo in action:
+
+- **[React + Vite Example](./examples/react-vite)**: Full-featured React app demonstrating hooks, Trans component, locale switching, and complete translation workflow
+
 ## Documentation
 
 For detailed documentation, see the individual package READMEs:
@@ -246,6 +331,8 @@ For detailed documentation, see the individual package READMEs:
 - [@polingo/core documentation](./packages/core)
 - [@polingo/node documentation](./packages/node)
 - [@polingo/web documentation](./packages/web)
+- [@polingo/react documentation](./packages/react)
+- [@polingo/cli documentation](./packages/cli)
 
 ## Contributing
 

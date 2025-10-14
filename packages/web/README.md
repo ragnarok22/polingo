@@ -152,8 +152,8 @@ If your backend returns a different shape, use `transformResponse` to convert it
 
 - [`@polingo/core`](../core) – translation runtime (`Translator`, caches, helpers).
 - [`@polingo/node`](../node) – filesystem loader, middleware, and watcher for Node.js.
-- [`@polingo/react`](../react) – bindings for React applications (coming soon).
-- [`@polingo/cli`](../cli) – extraction and compilation tooling (coming soon).
+- [`@polingo/react`](../react) – React hooks, context provider, and Trans component.
+- [`@polingo/cli`](../cli) – command line tooling for extraction, compilation, and validation.
 
 ## License
 
