@@ -229,6 +229,29 @@ describe('Translator', () => {
   });
 
   describe('cache integration', () => {
+    it('should reuse cached catalogs without invoking the loader', async () => {
+      const cache = new MemoryCache();
+      const loadMock = vi.fn<[string, string], Promise<TranslationCatalog>>(() => {
+        throw new Error('Loader should not be called when catalog is cached');
+      });
+      const loaderMock: TranslationLoader = {
+        load: loadMock,
+      };
+
+      cache.set('es:messages', esFixture as TranslationCatalog);
+
+      const cachedTranslator = new Translator(loaderMock, cache, {
+        locale: 'es',
+        fallback: 'en',
+        domain: 'messages',
+      });
+
+      await cachedTranslator.load('es');
+
+      expect(loadMock).not.toHaveBeenCalled();
+      expect(cachedTranslator.hasLocale('es')).toBe(true);
+    });
+
     it('should use cache when available', async () => {
       const cache = new MemoryCache();
       const cachedTranslator = new Translator(loader, cache, {
