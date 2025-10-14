@@ -140,16 +140,20 @@ export class LocalStorageCache implements TranslationCache {
   }
 }
 
+type LocalStorageGlobal = typeof globalThis & { localStorage?: Storage | null };
+
 function detectLocalStorage(): Storage | null {
   try {
-    if (typeof window === 'undefined' || !window.localStorage) {
+    const globalScope = globalThis as LocalStorageGlobal;
+    const storage = globalScope.localStorage;
+    if (!storage) {
       return null;
     }
 
     const testKey = '__polingo_ls_test__';
-    window.localStorage.setItem(testKey, '1');
-    window.localStorage.removeItem(testKey);
-    return window.localStorage;
+    storage.setItem(testKey, '1');
+    storage.removeItem(testKey);
+    return storage;
   } catch {
     return null;
   }

@@ -30,14 +30,14 @@ afterEach(() => {
 
 describe('WebLoader', () => {
   it('fetches catalogs using the provided baseUrl', async () => {
-    const fetchMock = vi.fn(async (url: RequestInfo) => {
+    const fetchMock = vi.fn((url: RequestInfo) => {
       expect(url).toBe('https://cdn.example.com/es/messages.json');
-      return {
+      return Promise.resolve({
         ok: true,
         status: 200,
         statusText: 'OK',
-        json: async () => sampleCatalog,
-      } as Response;
+        json: () => Promise.resolve(sampleCatalog),
+      } as Response);
     });
 
     const loader = new WebLoader({
@@ -52,14 +52,14 @@ describe('WebLoader', () => {
   });
 
   it('uses custom URL builder when provided', async () => {
-    const fetchMock = vi.fn(async (url: RequestInfo) => {
+    const fetchMock = vi.fn((url: RequestInfo) => {
       expect(url).toBe('https://cdn.example.com/i18n/messages_es.json');
-      return {
+      return Promise.resolve({
         ok: true,
         status: 200,
         statusText: 'OK',
-        json: async () => sampleCatalog,
-      } as Response;
+        json: () => Promise.resolve(sampleCatalog),
+      } as Response);
     });
 
     const loader = new WebLoader({
@@ -102,13 +102,13 @@ describe('LocalStorageCache', () => {
 describe('createPolingo', () => {
   it('creates a translator and caches catalogs in localStorage', async () => {
     const storage = new MemoryStorage();
-    const fetchMock = vi.fn(async () => {
-      return {
+    const fetchMock = vi.fn(() => {
+      return Promise.resolve({
         ok: true,
         status: 200,
         statusText: 'OK',
-        json: async () => sampleCatalog,
-      } as Response;
+        json: () => Promise.resolve(sampleCatalog),
+      } as Response);
     });
 
     const translator = await createPolingo({
