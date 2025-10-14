@@ -1,0 +1,12 @@
+{
+  "charset": "utf-8",
+  "translations": {
+    "": {
+      "Hello": { "msgid": "Hello", "msgstr": "Hola" },
+      "Welcome, {name}!": {
+        "msgid": "Welcome, {name}!",
+        "msgstr": "¡Bienvenido, {name}!"
+      }
+    }
+  }
+}
