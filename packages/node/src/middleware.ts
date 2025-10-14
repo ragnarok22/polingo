@@ -101,21 +101,21 @@ export function polingoMiddleware(options: MiddlewareOptions) {
     await initPromise;
 
     // Extract locale from request
-    const locale = localeExtractor(req);
+    const requestedLocale = localeExtractor(req);
+    const isSupportedLocale =
+      typeof requestedLocale === 'string' && locales.includes(requestedLocale);
+    const effectiveLocale = isSupportedLocale ? requestedLocale : fallback;
 
-    // Validate locale
-    if (!locales.includes(locale)) {
-      if (debug) {
-        console.warn(`[Polingo] Invalid locale "${locale}", using fallback "${fallback}"`);
-      }
+    if (!isSupportedLocale && debug && requestedLocale) {
+      console.warn(`[Polingo] Invalid locale "${requestedLocale}", using fallback "${fallback}"`);
     }
 
     if (perLocale) {
       // Get or create translator for this locale
-      let translator = translators.get(locale);
+      let translator = translators.get(effectiveLocale);
       if (!translator) {
         translator = await createPolingo({
-          locale,
+          locale: effectiveLocale,
           locales,
           directory,
           fallback,
@@ -124,13 +124,13 @@ export function polingoMiddleware(options: MiddlewareOptions) {
           watch,
           debug,
         });
-        translators.set(locale, translator);
+        translators.set(effectiveLocale, translator);
       }
       req.polingo = translator;
     } else {
       // Use shared translator and change locale
       if (sharedTranslator) {
-        await sharedTranslator.setLocale(locale);
+        await sharedTranslator.setLocale(effectiveLocale);
         req.polingo = sharedTranslator;
       }
     }
