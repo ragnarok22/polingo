@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDirs": ["./src", "../core/src", "../web/src"],
     "jsx": "react-jsx",
     "lib": ["ES2020", "DOM"]
   },
