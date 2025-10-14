@@ -3,6 +3,7 @@ import type {
   TranslationCache,
   TranslationCatalog,
   TranslationLoader,
+  TranslationLookupResult,
 } from './types';
 import { interpolate } from './interpolator';
 import { getPluralIndex } from './plurals';
@@ -221,9 +222,9 @@ export class Translator {
     context: string,
     vars?: Record<string, string | number>
   ): string {
-    const translation = this.findTranslation(msgid, context);
+    const result = this.findTranslation(msgid, context);
 
-    if (!translation) {
+    if (!result) {
       if (this.debug) {
         console.warn(
           `[Polingo] Translation not found: "${msgid}" (context: "${context}", locale: "${this.locale}")`
@@ -233,6 +234,7 @@ export class Translator {
     }
 
     // Get translated string
+    const { translation } = result;
     const msgstr = Array.isArray(translation.msgstr) ? translation.msgstr[0] : translation.msgstr;
 
     // If empty translation, return original
@@ -253,9 +255,9 @@ export class Translator {
     context: string,
     vars?: Record<string, string | number>
   ): string {
-    const translation = this.findTranslation(msgid, context);
+    const result = this.findTranslation(msgid, context);
 
-    if (!translation || !Array.isArray(translation.msgstr)) {
+    if (!result || !Array.isArray(result.translation.msgstr)) {
       if (this.debug) {
         console.warn(
           `[Polingo] Plural translation not found: "${msgid}" (context: "${context}", locale: "${this.locale}")`
@@ -268,7 +270,8 @@ export class Translator {
     }
 
     // Get plural index based on locale
-    const pluralIndex = getPluralIndex(count, this.locale);
+    const { translation, locale } = result;
+    const pluralIndex = getPluralIndex(count, locale);
     const msgstr = translation.msgstr[pluralIndex] ?? translation.msgstr[0];
 
     // If empty translation, return original
@@ -286,7 +289,7 @@ export class Translator {
    *
    * Searches in current locale first, then falls back to fallback locale
    */
-  private findTranslation(msgid: string, context: string): { msgstr: string | string[] } | null {
+  private findTranslation(msgid: string, context: string): TranslationLookupResult | null {
     // Try current locale
     const currentKey = `${this.locale}:${this.domain}`;
     const currentCatalog = this.catalogs.get(currentKey);
@@ -295,7 +298,7 @@ export class Translator {
       const contextTranslations = currentCatalog.translations[context] ?? {};
       const translation = contextTranslations[msgid];
       if (translation) {
-        return translation;
+        return { translation, locale: this.locale };
       }
     }
 
@@ -308,7 +311,7 @@ export class Translator {
         const contextTranslations = fallbackCatalog.translations[context] ?? {};
         const translation = contextTranslations[msgid];
         if (translation) {
-          return translation;
+          return { translation, locale: this.fallback };
         }
       }
     }

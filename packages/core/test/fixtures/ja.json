@@ -1,0 +1,23 @@
+{
+  "charset": "utf-8",
+  "headers": {
+    "language": "ja",
+    "plural-forms": "nplurals=1; plural=0;"
+  },
+  "translations": {
+    "": {
+      "Hello": {
+        "msgid": "Hello",
+        "msgstr": "こんにちは"
+      },
+      "Welcome, {name}!": {
+        "msgid": "Welcome, {name}!",
+        "msgstr": "{name}さん、ようこそ！"
+      },
+      "You have {count} messages": {
+        "msgid": "You have {count} messages",
+        "msgstr": "{count}件のメッセージがあります"
+      }
+    }
+  }
+}

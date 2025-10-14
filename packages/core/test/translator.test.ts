@@ -4,6 +4,7 @@ import { NoCache, MemoryCache } from '../src/cache';
 import type { TranslationLoader, TranslationCatalog } from '../src/types';
 import esFixture from './fixtures/es.json';
 import enFixture from './fixtures/en.json';
+import jaFixture from './fixtures/ja.json';
 
 // Mock loader that uses our fixtures
 class MockLoader implements TranslationLoader {
@@ -13,6 +14,7 @@ class MockLoader implements TranslationLoader {
     this.catalogs = new Map([
       ['es:messages', esFixture as TranslationCatalog],
       ['en:messages', enFixture as TranslationCatalog],
+      ['ja:messages', jaFixture as TranslationCatalog],
     ]);
   }
 
@@ -183,6 +185,20 @@ describe('Translator', () => {
     it('should fallback when plural not found', () => {
       const result = translator.tn('{n} unknown', '{n} unknowns', 5);
       expect(result).toBe('5 unknowns');
+    });
+
+    it('should use fallback plural rules when active locale lacks plurals', async () => {
+      const japaneseTranslator = new Translator(loader, new NoCache(), {
+        locale: 'ja',
+        fallback: 'en',
+        domain: 'messages',
+      });
+
+      await japaneseTranslator.load(['ja', 'en']);
+
+      expect(japaneseTranslator.tn('{n} item', '{n} items', 1)).toBe('1 item');
+      expect(japaneseTranslator.tn('{n} item', '{n} items', 2)).toBe('2 items');
+      expect(japaneseTranslator.tn('{n} item', '{n} items', 0)).toBe('0 items');
     });
   });
 
