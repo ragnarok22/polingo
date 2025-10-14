@@ -57,7 +57,7 @@ export function useTranslation(): UseTranslationResult {
 export function useLocale(): {
   locale: string;
   loading: boolean;
-  setLocale(locale: string): Promise<void>;
+  setLocale: (locale: string) => Promise<void>;
 } {
   const { locale, loading, setLocale } = usePolingo();
   return { locale, loading, setLocale };
