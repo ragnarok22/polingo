@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@polingo/core": ["packages/core/src/index.ts"],
+      "@polingo/core/*": ["packages/core/src/*"],
+      "@polingo/node": ["packages/node/src/index.ts"],
+      "@polingo/node/*": ["packages/node/src/*"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/test/**/*.ts"
+  ]
+}
