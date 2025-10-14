@@ -1,31 +1,38 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Monorepo managed by `pnpm` workspaces. Primary packages live under `packages/`.
-- `packages/core` contains the framework-agnostic translation engine; its public surface is exported from `src/index.ts`.
-- `packages/node` provides the Node.js loader, middleware, and filesystem watcher. Shared utilities and adapters reside in `src/`.
-- Tests live beside each package in `packages/*/test`. Generated build output is written to `packages/*/dist` and should never be committed.
-- Configuration files (`tsconfig.*.json`, `eslint.config.js`, `vitest.config.ts`) sit at the repo root and apply across packages.
+- Monorepo managed by `pnpm` workspaces; main packages live under `packages/`.
+- `packages/core/src` exposes the framework-agnostic translation engine via `src/index.ts`.
+- `packages/node/src` hosts the Node.js loader, middleware, and shared adapters; reuse utilities rather than duplicating logic.
+- Co-locate tests under `packages/*/test`, and keep generated `dist/` artifacts out of version control.
+- Shared configuration (`tsconfig.*.json`, `eslint.config.js`, `vitest.config.ts`) sits at the repo root; update these sparingly and document changes.
 
 ## Build, Test, and Development Commands
-- `pnpm install --frozen-lockfile` synchronizes dependencies without mutating `pnpm-lock.yaml`.
-- `pnpm lint` runs ESLint with type-aware rules across `packages/*/{src,test}`.
-- `pnpm format:check` verifies Prettier formatting for `*.ts`, `*.json`, and `*.md`.
-- `pnpm typecheck` executes TypeScript in project references for all packages.
-- `pnpm build` or `make build` compiles every package via `tsup`.
-- `make test` runs Vitest; `make coverage` collects coverage and uploads to Codecov in CI.
+- `pnpm install --frozen-lockfile` syncs dependencies without mutating `pnpm-lock.yaml`.
+- `pnpm build` (or `make build`) compiles all packages through `tsup`.
+- `pnpm lint` runs ESLint with project references; use `pnpm lint:fix` before large refactors.
+- `pnpm format:check` enforces Prettier; run `pnpm format` to apply fixes.
+- `pnpm typecheck` executes strict TypeScript checks; keep it green before merging.
+- `make test` runs Vitest suites; `make coverage` collects coverage for CI parity.
 
 ## Coding Style & Naming Conventions
-- Source code is TypeScript with strict compiler options. Use two-space indentation, explicit return types when clarity requires, and avoid `any`.
-- Follow idiomatic naming: PascalCase for classes (`TranslationWatcher`), camelCase for functions and variables (`createPolingo`), kebab-case for files when appropriate (`middleware.ts`).
-- Always run `pnpm lint` and `pnpm format:check` before submitting changes; auto-fixes are available via `pnpm lint:fix` and `pnpm format`.
+- Language is TypeScript with strict options; prefer explicit return types when not obvious.
+- Indent with two spaces, avoid `any`, and keep imports ordered logically (external, internal, relative).
+- Name files in kebab-case (`translation-watcher.ts`), classes in PascalCase, and functions/variables in camelCase.
+- Limit inline comments; add brief context ahead of complex logic instead.
 
 ## Testing Guidelines
-- Testing is handled by Vitest. Place specs under `packages/<pkg>/test` with filenames ending in `.test.ts`.
-- Prefer descriptive test names mirroring user-facing behaviors. Leverage Vitest snapshots only when asserting translation catalogs.
-- Aim to keep coverage green; CI enforces a coverage upload step, so run `make coverage` locally before large merges.
+- Use Vitest with specs placed beside sources (`packages/<pkg>/test/*.test.ts`).
+- Favor behavior-driven test names (`it("loads catalog diff")`); rely on snapshots only for translation catalogs.
+- Aim to run `make coverage` locally before PRs; investigate regressions immediately.
 
 ## Commit & Pull Request Guidelines
-- Use Conventional Commits (e.g., `feat(core): add pluralization helpers`, `docs(readme): explain setup`), matching the existing history.
-- Each PR should describe the change, reference related issues, and note validation steps (`pnpm lint`, `pnpm build`, tests).
-- Attach screenshots or logs when modifying developer experience or CI workflows. Ensure workflows pass before requesting review.
+- Follow Conventional Commits (`feat(core): add pluralization`); scope to package or area.
+- PRs should include a concise summary, linked issues, and validation notes (e.g., `pnpm lint`, `make test`).
+- Attach logs or screenshots when altering developer experience or CI behavior.
+- Ensure CI pipelines pass and respond promptly to review feedback.
+
+## Environment & Security Notes
+- Avoid committing secrets; prefer `.env` files listed in `.gitignore`.
+- Respect `workspace-write` expectations: edit within workspace paths and document any deviations.
+- When adding dependencies, justify necessity in the PR and run `pnpm audit` if risk is suspected.
