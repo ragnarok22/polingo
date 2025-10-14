@@ -23,7 +23,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint src --ext .ts,.tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
   },
   "keywords": [
     "polingo",
@@ -35,6 +36,15 @@
   ],
   "author": "Reinier Hernández Avila",
   "license": "MIT",
+  "homepage": "https://github.com/ragnarok22/polingo#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ragnarok22/polingo.git",
+    "directory": "packages/react"
+  },
+  "bugs": {
+    "url": "https://github.com/ragnarok22/polingo/issues"
+  },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
   },

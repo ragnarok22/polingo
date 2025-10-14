@@ -2,27 +2,29 @@
   "name": "@polingo/node",
   "version": "0.0.1",
   "description": "Node.js loader for Polingo translation system",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint src --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@polingo/core": "workspace:*",
@@ -45,5 +47,14 @@
     "nodejs"
   ],
   "author": "Reinier Hernández Avila",
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://github.com/ragnarok22/polingo#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ragnarok22/polingo.git",
+    "directory": "packages/node"
+  },
+  "bugs": {
+    "url": "https://github.com/ragnarok22/polingo/issues"
+  }
 }

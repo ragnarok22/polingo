@@ -2,7 +2,7 @@ import { readdir, readFile, stat, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { po, mo } from 'gettext-parser';
-import packageJson from '../package.json' assert { type: 'json' };
+import packageJson from '../package.json' with { type: 'json' };
 
 const DEFAULT_EXTRACT_EXTENSIONS = [
   '.ts',

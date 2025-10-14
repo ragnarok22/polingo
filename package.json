@@ -3,6 +3,14 @@
   "version": "0.0.1",
   "type": "module",
   "description": "Modern i18n library using .po/.mo files",
+  "homepage": "https://github.com/ragnarok22/polingo#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ragnarok22/polingo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ragnarok22/polingo/issues"
+  },
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r dev",

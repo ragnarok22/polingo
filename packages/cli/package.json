@@ -25,7 +25,29 @@
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "polingo",
+    "i18n",
+    "internationalization",
+    "gettext",
+    "translation",
+    "cli",
+    "po",
+    "mo"
+  ],
+  "author": "Reinier Hernández Avila",
+  "license": "MIT",
+  "homepage": "https://github.com/ragnarok22/polingo#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ragnarok22/polingo.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/ragnarok22/polingo/issues"
   },
   "dependencies": {
     "gettext-parser": "^8.0.0"
