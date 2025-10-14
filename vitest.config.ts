@@ -20,6 +20,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@polingo/core': resolve(__dirname, './packages/core/src'),
+      '@polingo/web': resolve(__dirname, './packages/web/src'),
     },
   },
 });

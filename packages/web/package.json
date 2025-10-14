@@ -1,0 +1,46 @@
+{
+  "name": "@polingo/web",
+  "version": "0.1.0",
+  "description": "Browser adapter for Polingo with fetch loader and localStorage caching",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "polingo",
+    "i18n",
+    "internationalization",
+    "gettext",
+    "translation",
+    "browser"
+  ],
+  "author": "Reinier Hernández Avila",
+  "license": "MIT",
+  "dependencies": {
+    "@polingo/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

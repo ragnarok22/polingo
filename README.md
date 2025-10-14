@@ -12,6 +12,7 @@ Modern internationalization (i18n) library using industry-standard `.po` and `.m
 - **Automatic Catalog Detection**: Seamlessly load either `.po` or `.mo` catalogs from disk
 - **Environment-Agnostic Core**: Universal translation engine that works anywhere
 - **Node.js Integration**: Filesystem loader with optional hot-reload via chokidar
+- **Browser Ready**: Fetch loader backed by localStorage caching
 - **Pluralization**: Full support for plural forms across different languages
 - **Context Support**: Disambiguate identical strings with different meanings
 - **Variable Interpolation**: Dynamic content with placeholder replacement
@@ -25,6 +26,7 @@ Polingo is organized as a monorepo with the following packages:
 
 - **[@polingo/core](./packages/core)**: Environment-agnostic translation engine
 - **[@polingo/node](./packages/node)**: Node.js loader with filesystem support and middleware
+- **[@polingo/web](./packages/web)**: Browser adapter using fetch + localStorage caching
 
 ## Installation
 
@@ -62,6 +64,20 @@ console.log(polingo.t('Hello, {name}!', { name: 'Juan' })); // "¡Hola, Juan!"
 // Pluralization
 console.log(polingo.tn('{n} item', '{n} items', 1, { n: 1 })); // "1 artículo"
 console.log(polingo.tn('{n} item', '{n} items', 5, { n: 5 })); // "5 artículos"
+```
+
+### Basic Usage (Browser)
+
+```typescript
+import { createPolingo } from '@polingo/web';
+
+const polingo = await createPolingo({
+  locale: 'es',
+  locales: ['es', 'en'],
+  loader: { baseUrl: '/locales' },
+});
+
+document.querySelector('#greeting')!.textContent = polingo.t('Hello');
 ```
 
 ### Express Integration
@@ -226,6 +242,7 @@ For detailed documentation, see the individual package READMEs:
 
 - [@polingo/core documentation](./packages/core)
 - [@polingo/node documentation](./packages/node)
+- [@polingo/web documentation](./packages/web)
 
 ## Contributing
 
