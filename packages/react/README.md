@@ -34,4 +34,4 @@ We welcome early feedback on API shape and ecosystem integration. Please open an
 
 ## License
 
-MIT © Reinier Hernández
+MIT © Reinier Hernández Avila

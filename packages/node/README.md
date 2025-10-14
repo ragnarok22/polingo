@@ -215,4 +215,4 @@ async function getPolingo() {
 
 ## License
 
-MIT © Reinier Hernández
+MIT © Reinier Hernández Avila

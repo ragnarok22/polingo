@@ -257,4 +257,4 @@ If you discover a security vulnerability, please follow our [security policy](.g
 
 ## License
 
-MIT © [Reinier Hernández](LICENSE)
+MIT © [Reinier Hernández Avila](LICENSE)

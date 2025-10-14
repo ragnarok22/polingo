@@ -34,4 +34,4 @@ Interested in helping design or implement the CLI? Please open an issue in the m
 
 ## License
 
-MIT © Reinier Hernández
+MIT © Reinier Hernández Avila

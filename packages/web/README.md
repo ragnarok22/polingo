@@ -157,4 +157,4 @@ If your backend returns a different shape, use `transformResponse` to convert it
 
 ## License
 
-MIT © Reinier Hernández
+MIT © Reinier Hernández Avila

@@ -219,4 +219,4 @@ import { interpolate, getPluralIndex } from '@polingo/core';
 
 ## License
 
-MIT © Reinier Hernández
+MIT © Reinier Hernández Avila
