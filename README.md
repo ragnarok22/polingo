@@ -6,6 +6,9 @@
 
 Modern internationalization (i18n) library using industry-standard `.po` and `.mo` files for JavaScript/TypeScript projects.
 
+> [!CAUTION]
+> **Alpha Notice:** Polingo is currently in an alpha state. Breaking changes are becoming less common, but anything and everything may still change.
+
 ## Features
 
 - **Standard Gettext Support**: Use `.po` and `.mo` files, the industry standard for translations
