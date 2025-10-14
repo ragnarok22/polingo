@@ -9,15 +9,15 @@ Modern internationalization (i18n) library using industry-standard `.po` and `.m
 ## Features
 
 - **Standard Gettext Support**: Use `.po` and `.mo` files, the industry standard for translations
+- **Automatic Catalog Detection**: Seamlessly load either `.po` or `.mo` catalogs from disk
 - **Environment-Agnostic Core**: Universal translation engine that works anywhere
-- **Node.js Integration**: Filesystem-based translation loading with hot-reload support
+- **Node.js Integration**: Filesystem loader with optional hot-reload via chokidar
 - **Pluralization**: Full support for plural forms across different languages
 - **Context Support**: Disambiguate identical strings with different meanings
 - **Variable Interpolation**: Dynamic content with placeholder replacement
-- **Middleware Ready**: Built-in Express and Fastify middleware
-- **TypeScript First**: Full type safety and autocomplete support
-- **Performance Optimized**: Built-in caching with multiple strategies (memory, TTL, none)
-- **Zero Configuration**: Works out of the box with sensible defaults
+- **Middleware Ready**: Express and Fastify helpers with locale detection hooks
+- **TypeScript First**: Strict types, excellent IntelliSense
+- **Flexible Caching**: Choose in-memory, TTL, or no caching depending on your needs
 
 ## Packages
 
@@ -112,6 +112,23 @@ app.get('/', async (request, reply) => {
 app.listen({ port: 3000 });
 ```
 
+### Hot Reload During Development
+
+Enable file watching so catalogs reload automatically when your `.po`/`.mo` files change:
+
+```typescript
+const polingo = await createPolingo({
+  locale: 'es',
+  locales: ['es', 'en'],
+  directory: './locales',
+  watch: process.env.NODE_ENV === 'development',
+  debug: true,
+});
+
+// Later, when shutting down:
+await polingo.stopWatching?.();
+```
+
 ## Directory Structure
 
 Your translation files should be organized by locale:
@@ -133,9 +150,50 @@ locales/
 - `tn(msgid, msgidPlural, count, vars?)` - Translate with pluralization
 - `tnp(context, msgid, msgidPlural, count, vars?)` - Translate with context and pluralization
 
+## Configuration
+
+### `createPolingo(options)`
+
+```typescript
+interface CreatePolingoOptions {
+  locale: string;        // Initial locale (e.g. 'en')
+  locales: string[];     // Locales to preload during startup
+  directory: string;     // Path to the locales folder
+  fallback?: string;     // Fallback locale when a key is missing (default: 'en')
+  domain?: string;       // Translation domain filename prefix (default: 'messages')
+  cache?: boolean;       // Use in-memory caching (default: true)
+  watch?: boolean;       // Watch .po/.mo files and reload on change (default: false)
+  debug?: boolean;       // Log loading and cache activity (default: false)
+}
+```
+
+`NodeLoader` automatically looks for both `<locale>/<domain>.po` and `<locale>/<domain>.mo`, preferring `.po` when both exist.
+
+### `polingoMiddleware(options)`
+
+The middleware shares the same options (minus `locale`) plus:
+
+- `localeExtractor(req)` – customize how the locale is detected (defaults to `Accept-Language` or `?locale=` query parameter).
+- `perLocale` – set to `true` to create dedicated translator instances per locale instead of reusing one shared translator.
+
 ## Development
 
-This project uses `pnpm` workspaces and includes a Makefile for common tasks:
+This project uses `pnpm` workspaces and includes a Makefile for common tasks. Recommended workflow:
+
+```bash
+# Install dependencies without touching the lockfile
+pnpm install --frozen-lockfile
+
+# Type safety and linting
+pnpm typecheck
+pnpm lint
+pnpm format:check
+
+# Unit tests
+pnpm test
+```
+
+Or use the Makefile shortcuts:
 
 ```bash
 # Install dependencies
@@ -160,7 +218,7 @@ make clean
 ## Requirements
 
 - Node.js >= 18.0.0
-- pnpm >= 8.0.0
+- pnpm >= 8.0.0 (developed with pnpm 10.x)
 
 ## Documentation
 
