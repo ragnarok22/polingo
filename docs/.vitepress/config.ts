@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "Polingo",
   description: "Modern i18n library using .po/.mo files for universal JavaScript",
+  base: '/polingo/',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
