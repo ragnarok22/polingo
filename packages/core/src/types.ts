@@ -1,5 +1,5 @@
 /**
- * Estructura de una traducciÛn individual
+ * Estructura de una traducci√≥n individual
  */
 export interface Translation {
   /** ID del mensaje (texto original) */
@@ -13,10 +13,20 @@ export interface Translation {
 }
 
 /**
- * Cat·logo completo de traducciones para un idioma
+ * Resultado de una b√∫squeda de traducci√≥n, incluyendo el idioma de origen.
+ */
+export interface TranslationLookupResult {
+  /** Traducci√≥n encontrada */
+  translation: Translation;
+  /** Locale desde el que proviene la traducci√≥n */
+  locale: string;
+}
+
+/**
+ * Cat√°logo completo de traducciones para un idioma
  */
 export interface TranslationCatalog {
-  /** CodificaciÛn del cat·logo */
+  /** Codificaci√≥n del cat√°logo */
   charset: string;
   /** Cabeceras del archivo .po */
   headers: Record<string, string>;
@@ -29,24 +39,24 @@ export interface TranslationCatalog {
 }
 
 /**
- * ConfiguraciÛn del traductor
+ * Configuraci√≥n del traductor
  */
 export interface PolingoConfig {
   /** Idioma actual (ej: 'es', 'en', 'fr') */
   locale: string;
-  /** Idioma de respaldo cuando no existe traducciÛn */
+  /** Idioma de respaldo cuando no existe traducci√≥n */
   fallback?: string;
-  /** Dominio de traducciÛn (ej: 'messages', 'errors') */
+  /** Dominio de traducci√≥n (ej: 'messages', 'errors') */
   domain?: string;
   /** Activar logs de debug en consola */
   debug?: boolean;
 }
 
 /**
- * Opciones para funciones de traducciÛn
+ * Opciones para funciones de traducci√≥n
  */
 export interface TranslateOptions {
-  /** Contexto del mensaje (para diferenciar homÛnimos) */
+  /** Contexto del mensaje (para diferenciar hom√≥nimos) */
   context?: string;
   /** Variables a interpolar en el texto */
   vars?: Record<string, string | number>;
@@ -57,41 +67,41 @@ export interface TranslateOptions {
  */
 export interface TranslationLoader {
   /**
-   * Carga un cat·logo de traducciones desde el sistema de archivos o red
-   * @param locale - CÛdigo de idioma (ej: 'es', 'en')
-   * @param domain - Dominio del cat·logo (ej: 'messages')
-   * @returns Promesa con el cat·logo de traducciones
+   * Carga un cat√°logo de traducciones desde el sistema de archivos o red
+   * @param locale - C√≥digo de idioma (ej: 'es', 'en')
+   * @param domain - Dominio del cat√°logo (ej: 'messages')
+   * @returns Promesa con el cat√°logo de traducciones
    */
   load(locale: string, domain: string): Promise<TranslationCatalog>;
 }
 
 /**
- * Interfaz para sistemas de cachÈ de cat·logos
+ * Interfaz para sistemas de cach√© de cat√°logos
  */
 export interface TranslationCache {
   /**
-   * Obtiene un cat·logo del cachÈ
-   * @param key - Clave del cat·logo (ej: 'es:messages')
-   * @returns Cat·logo si existe, undefined si no
+   * Obtiene un cat√°logo del cach√©
+   * @param key - Clave del cat√°logo (ej: 'es:messages')
+   * @returns Cat√°logo si existe, undefined si no
    */
   get(key: string): TranslationCatalog | undefined;
 
   /**
-   * Guarda un cat·logo en el cachÈ
-   * @param key - Clave del cat·logo
-   * @param catalog - Cat·logo a guardar
+   * Guarda un cat√°logo en el cach√©
+   * @param key - Clave del cat√°logo
+   * @param catalog - Cat√°logo a guardar
    */
   set(key: string, catalog: TranslationCatalog): void;
 
   /**
-   * Verifica si existe un cat·logo en el cachÈ
-   * @param key - Clave del cat·logo
+   * Verifica si existe un cat√°logo en el cach√©
+   * @param key - Clave del cat√°logo
    * @returns true si existe, false si no
    */
   has(key: string): boolean;
 
   /**
-   * Limpia todo el cachÈ
+   * Limpia todo el cach√©
    */
   clear(): void;
 }
