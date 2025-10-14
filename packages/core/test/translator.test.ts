@@ -16,7 +16,7 @@ class MockLoader implements TranslationLoader {
     ]);
   }
 
-  async load(locale: string, domain: string): Promise<TranslationCatalog> {
+  load(locale: string, domain: string): Promise<TranslationCatalog> {
     const key = `${locale}:${domain}`;
     const catalog = this.catalogs.get(key);
 
@@ -24,7 +24,7 @@ class MockLoader implements TranslationLoader {
       throw new Error(`Catalog not found: ${key}`);
     }
 
-    return catalog;
+    return Promise.resolve(catalog);
   }
 }
 

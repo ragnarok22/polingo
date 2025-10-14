@@ -50,52 +50,56 @@ export class TranslationWatcher {
       ignoreInitial: true,
     });
 
-    this.watcher.on('change', async (path) => {
-      if (this.debug) {
-        console.log(`[Polingo] Translation file changed: ${path}`);
-      }
-
-      // Extract locale from path
-      const locale = this.extractLocaleFromPath(path);
-      if (!locale) {
+    this.watcher.on('change', (path) => {
+      void (async () => {
         if (this.debug) {
-          console.warn(`[Polingo] Could not extract locale from path: ${path}`);
+          console.log(`[Polingo] Translation file changed: ${path}`);
         }
-        return;
-      }
 
-      // Reload the catalog
-      try {
-        // Clear cache for this locale
-        this.translator.clearCache();
-
-        // Reload the locale
-        await this.translator.load(locale);
-
-        if (this.debug) {
-          console.log(`[Polingo] Reloaded translations for locale: ${locale}`);
+        // Extract locale from path
+        const locale = this.extractLocaleFromPath(path);
+        if (!locale) {
+          if (this.debug) {
+            console.warn(`[Polingo] Could not extract locale from path: ${path}`);
+          }
+          return;
         }
-      } catch (error) {
-        console.error(`[Polingo] Failed to reload translations for locale "${locale}":`, error);
-      }
+
+        // Reload the catalog
+        try {
+          // Clear cache for this locale
+          this.translator.clearCache();
+
+          // Reload the locale
+          await this.translator.load(locale);
+
+          if (this.debug) {
+            console.log(`[Polingo] Reloaded translations for locale: ${locale}`);
+          }
+        } catch (error) {
+          console.error(`[Polingo] Failed to reload translations for locale "${locale}":`, error);
+        }
+      })();
     });
 
-    this.watcher.on('add', async (path) => {
-      if (this.debug) {
-        console.log(`[Polingo] New translation file detected: ${path}`);
-      }
-
-      const locale = this.extractLocaleFromPath(path);
-      if (!locale) return;
-
-      try {
-        await this.translator.load(locale);
+    this.watcher.on('add', (path) => {
+      void (async () => {
         if (this.debug) {
-          console.log(`[Polingo] Loaded new translations for locale: ${locale}`);
+          console.log(`[Polingo] New translation file detected: ${path}`);
         }
-      } catch (error) {
-        console.error(`[Polingo] Failed to load new translations for locale "${locale}":`, error);
-      }
+
+        const locale = this.extractLocaleFromPath(path);
+        if (!locale) return;
+
+        try {
+          await this.translator.load(locale);
+          if (this.debug) {
+            console.log(`[Polingo] Loaded new translations for locale: ${locale}`);
+          }
+        } catch (error) {
+          console.error(`[Polingo] Failed to load new translations for locale "${locale}":`, error);
+        }
+      })();
     });
 
     if (this.debug) {

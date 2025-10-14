@@ -97,8 +97,9 @@ export async function createPolingo(options: CreatePolingoOptions): Promise<Poli
   // Extend translator with watcher cleanup
   const instance = translator as PolingoInstance;
   if (watcher) {
+    const currentWatcher = watcher;
     instance.stopWatching = async () => {
-      await watcher!.stop();
+      await currentWatcher.stop();
     };
   }
 

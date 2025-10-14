@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises';
-import { join, extname } from 'path';
+import { join } from 'path';
 import { po, mo } from 'gettext-parser';
 import type { TranslationLoader, TranslationCatalog, Translation } from '@polingo/core';
 
@@ -39,7 +39,7 @@ export class NodeLoader implements TranslationLoader {
       try {
         buffer = await readFile(`${basePath}.mo`);
         isPo = false;
-      } catch (error) {
+      } catch {
         throw new Error(
           `Translation file not found for locale "${locale}" and domain "${domain}" at ${basePath}.po or ${basePath}.mo`
         );
@@ -56,7 +56,7 @@ export class NodeLoader implements TranslationLoader {
   /**
    * Convert gettext-parser output to TranslationCatalog format
    */
-  private convertToTranslationCatalog(parsed: any): TranslationCatalog {
+  private convertToTranslationCatalog(parsed: GettextParserOutput): TranslationCatalog {
     const catalog: TranslationCatalog = {
       charset: parsed.charset || 'utf-8',
       headers: parsed.headers || {},
@@ -69,7 +69,7 @@ export class NodeLoader implements TranslationLoader {
     for (const [context, messages] of Object.entries(translations)) {
       catalog.translations[context] = {};
 
-      for (const [msgid, msgData] of Object.entries(messages as Record<string, any>)) {
+      for (const [msgid, msgData] of Object.entries(messages)) {
         // Skip empty msgid (metadata)
         if (msgid === '') continue;
 
@@ -80,7 +80,7 @@ export class NodeLoader implements TranslationLoader {
         const translation: Translation = {
           msgid,
           // Keep as array for plurals, convert to string for singular
-          msgstr: isPlural ? msgstr : msgstr[0] || '',
+          msgstr: isPlural ? msgstr : (msgstr[0] ?? ''),
         };
 
         // Add optional fields
@@ -97,4 +97,20 @@ export class NodeLoader implements TranslationLoader {
 
     return catalog;
   }
+}
+
+/**
+ * Type definitions for gettext-parser output
+ */
+interface GettextMessage {
+  msgid: string;
+  msgstr: string[];
+  msgid_plural?: string;
+  msgctxt?: string;
+}
+
+interface GettextParserOutput {
+  charset?: string;
+  headers?: Record<string, string>;
+  translations?: Record<string, Record<string, GettextMessage>>;
 }

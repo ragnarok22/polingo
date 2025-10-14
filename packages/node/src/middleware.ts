@@ -7,7 +7,7 @@ import { createPolingo } from './create';
  */
 export interface MiddlewareOptions extends Omit<CreatePolingoOptions, 'locale'> {
   /** Function to extract locale from request (default: reads Accept-Language header) */
-  localeExtractor?: (req: any) => string;
+  localeExtractor?: (req: RequestLike) => string;
   /** Store translator instances per locale (default: false, uses single instance) */
   perLocale?: boolean;
 }
@@ -18,6 +18,20 @@ export interface MiddlewareOptions extends Omit<CreatePolingoOptions, 'locale'> 
 export interface PolingoRequest {
   polingo: Translator;
 }
+
+/**
+ * Request-like object with common properties
+ */
+interface RequestLike {
+  query?: Record<string, unknown>;
+  headers?: Record<string, unknown>;
+}
+
+/**
+ * Response-like object
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface ResponseLike {}
 
 /**
  * Express/Fastify middleware for Polingo
@@ -79,8 +93,8 @@ export function polingoMiddleware(options: MiddlewareOptions) {
       });
 
   return async function polingoMiddlewareHandler(
-    req: any,
-    res: any,
+    req: RequestLike & Partial<PolingoRequest>,
+    res: ResponseLike,
     next: () => void
   ): Promise<void> {
     // Wait for initialization
@@ -131,20 +145,29 @@ export function polingoMiddleware(options: MiddlewareOptions) {
  * @param req - Request object
  * @returns Detected locale or 'en'
  */
-function defaultLocaleExtractor(req: any): string {
+function defaultLocaleExtractor(req: RequestLike): string {
   // Try query parameter first
-  if (req.query?.locale) {
-    return req.query.locale;
+  const queryLocale = req.query?.locale;
+  if (typeof queryLocale === 'string') {
+    return queryLocale;
   }
 
   // Try Accept-Language header
-  const acceptLanguage = req.headers['accept-language'];
-  if (acceptLanguage) {
+  const acceptLanguage = req.headers?.['accept-language'];
+  if (typeof acceptLanguage === 'string') {
     // Parse Accept-Language header (e.g., "es-ES,es;q=0.9,en;q=0.8")
     const parts = acceptLanguage.split(',');
     if (parts.length > 0) {
-      const firstLang = parts[0].split(';')[0].split('-')[0].trim();
-      return firstLang;
+      const firstPart = parts[0];
+      if (firstPart) {
+        const splitByQuality = firstPart.split(';')[0];
+        if (splitByQuality) {
+          const splitByRegion = splitByQuality.split('-')[0];
+          if (splitByRegion) {
+            return splitByRegion.trim();
+          }
+        }
+      }
     }
   }
 
