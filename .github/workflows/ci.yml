@@ -153,6 +153,8 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/lcov.info
+          files: |
+            ./coverage/lcov.info
+            packages/*/coverage/lcov.info
           fail_ci_if_error: true
           verbose: true
