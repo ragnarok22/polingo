@@ -1,7 +1,6 @@
 {
   "name": "polingo",
   "version": "0.0.1",
-  "private": true,
   "type": "module",
   "description": "Modern i18n library using .po/.mo files",
   "scripts": {
