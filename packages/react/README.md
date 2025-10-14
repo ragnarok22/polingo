@@ -1,29 +1,55 @@
 # @polingo/react
 
-> React bindings for the Polingo translation engine. _(Work in progress)_
+React bindings for the Polingo translation engine.
 
-The React package will provide idiomatic hooks, context providers, and suspense-friendly helpers built on top of `@polingo/core`. It is not ready for production yet; the module currently only exists as a placeholder while the API takes shape.
+This package exposes a context provider, data hooks, and a rich-text `<Trans />` component that wrap the framework-agnostic `Translator` from `@polingo/core`.
 
-## Design goals
+## Usage
 
-- Simple provider that makes a `Translator` available to any component tree.
-- Hooks such as `useTranslator()` and `useTranslate()` with automatic re-render when the locale changes.
-- Server Components support for frameworks like Next.js and Remix.
-- Optional suspense-based loaders to defer translation until catalogs are ready.
+```tsx
+import { PolingoProvider, Trans, useTranslation } from '@polingo/react';
+import { createPolingo } from '@polingo/web';
 
-## Current status
+function Example(): JSX.Element {
+  const { t, tn, setLocale, locale } = useTranslation();
 
-- No runtime code is published yet—imports will resolve to an empty module.
-- Documentation, types, and testing strategy are still being drafted.
-- Expect breaking changes between prereleases while we iterate on ergonomics.
+  return (
+    <div>
+      <p>{t('Hello {name}', { name: 'Polingo' })}</p>
+      <p>{tn('You have {n} message', 'You have {n} messages', 3)}</p>
 
-## How to contribute
+      <button type="button" onClick={() => setLocale(locale === 'en' ? 'es' : 'en')}>
+        <Trans message="Switch to <0>Spanish</0>" components={[<strong />]} />
+      </button>
+    </div>
+  );
+}
 
-We welcome early feedback on API shape and ecosystem integration. Please open an issue with:
+export function App(): JSX.Element {
+  return (
+    <PolingoProvider
+      create={() =>
+        createPolingo({
+          locale: 'en',
+          locales: ['en', 'es'],
+          loader: { baseUrl: '/i18n' },
+        })
+      }
+    >
+      <Example />
+    </PolingoProvider>
+  );
+}
+```
 
-- Scenarios you would like first-class support for (e.g., SSR, React Native, React Server Components).
-- Existing i18n patterns you would like to migrate from.
-- Performance constraints we should keep in mind (bundle size, re-render frequency, etc.).
+The provider also accepts an existing `Translator` instance (useful for SSR pipelines) and exposes loading and error states while catalogs are being fetched.
+
+## API surface
+
+- `PolingoProvider` – wires a translator (created on demand or injected) into React context.
+- `useTranslation()` – access helper methods, locale, loading state, and `setLocale`.
+- `useTranslator()` / `usePolingo()` / `useLocale()` – low-level access helpers.
+- `Trans` – render translations that contain interpolation variables or component placeholders.
 
 ## Related packages
 

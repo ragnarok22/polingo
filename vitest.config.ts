@@ -21,6 +21,7 @@ export default defineConfig({
     alias: {
       '@polingo/core': resolve(__dirname, './packages/core/src'),
       '@polingo/web': resolve(__dirname, './packages/web/src'),
+      '@polingo/react': resolve(__dirname, './packages/react/src'),
     },
   },
 });
