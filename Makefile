@@ -1,4 +1,4 @@
-.PHONY: help install build test coverage lint clean
+.PHONY: help install build test coverage lint clean publish
 
 # Default target
 help:
@@ -9,6 +9,7 @@ help:
 	@echo "  make coverage  - Run tests with coverage"
 	@echo "  make lint      - Run linter"
 	@echo "  make clean     - Clean build artifacts"
+	@echo "  make publish   - Publish workspaces to npm (override PUBLISH_TAG/PUBLISH_FILTERS)"
 
 # Install dependencies
 install:
@@ -35,3 +36,10 @@ clean:
 	pnpm -r exec rm -rf dist
 	rm -rf node_modules
 	pnpm -r exec rm -rf node_modules
+
+# Publish all publishable workspaces to npm
+PUBLISH_TAG ?= latest
+PUBLISH_FILTERS ?=
+
+publish:
+	pnpm publish -r --access public --tag $(PUBLISH_TAG) $(PUBLISH_FILTERS)
