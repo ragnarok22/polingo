@@ -5,18 +5,18 @@ import { PolingoContext } from './context';
 export interface UseTranslationResult {
   locale: string;
   loading: boolean;
-  error: unknown | null;
-  setLocale(locale: string): Promise<void>;
-  t(msgid: string, vars?: InterpolationValues): string;
-  tp(context: string, msgid: string, vars?: InterpolationValues): string;
-  tn(msgid: string, msgidPlural: string, count: number, vars?: InterpolationValues): string;
-  tnp(
+  error: unknown;
+  setLocale: (locale: string) => Promise<void>;
+  t: (msgid: string, vars?: InterpolationValues) => string;
+  tp: (context: string, msgid: string, vars?: InterpolationValues) => string;
+  tn: (msgid: string, msgidPlural: string, count: number, vars?: InterpolationValues) => string;
+  tnp: (
     context: string,
     msgid: string,
     msgidPlural: string,
     count: number,
     vars?: InterpolationValues
-  ): string;
+  ) => string;
 }
 
 export function usePolingo(): PolingoContextValue {

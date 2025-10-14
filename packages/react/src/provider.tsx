@@ -17,7 +17,7 @@ interface ProviderState {
   translator: Translator | null;
   locale: string;
   loading: boolean;
-  error: unknown | null;
+  error: unknown;
 }
 
 type ProvidedTranslatorProps = ProviderBaseProps & {
