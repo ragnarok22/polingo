@@ -1,0 +1,49 @@
+{
+  "name": "@polingo/node",
+  "version": "0.1.0",
+  "description": "Node.js loader for Polingo translation system",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@polingo/core": "workspace:*",
+    "chokidar": "^3.5.3",
+    "gettext-parser": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/gettext-parser": "^8.0.0",
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.4"
+  },
+  "keywords": [
+    "polingo",
+    "i18n",
+    "internationalization",
+    "gettext",
+    "translation",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT"
+}

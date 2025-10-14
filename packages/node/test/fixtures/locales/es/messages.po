@@ -1,0 +1,15 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Hello"
+msgstr "Hola"
+
+msgid "Welcome, {name}!"
+msgstr "¡Bienvenido, {name}!"
+
+#, fuzzy
+msgid "{n} item"
+msgid_plural "{n} items"
+msgstr[0] "{n} artículo"
+msgstr[1] "{n} artículos"
