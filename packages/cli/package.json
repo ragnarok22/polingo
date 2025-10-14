@@ -1,4 +1,36 @@
 {
   "name": "@polingo/cli",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "description": "Command line tooling for the Polingo translation workflow",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "polingo": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "gettext-parser": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  }
 }

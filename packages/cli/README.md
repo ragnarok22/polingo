@@ -1,29 +1,38 @@
 # @polingo/cli
 
-> Command line tooling for the Polingo translation workflow. _(Work in progress)_
+Command line tooling for the Polingo translation workflow.
 
-This package will eventually house the official CLI used to extract messages, validate catalogs, and compile runtime assets for all Polingo adapters. The implementation is still in early development; until a stable release ships, consider the contents experimental.
+```
+pnpm dlx @polingo/cli@latest extract ./src -o locales/messages.pot
+```
 
-## Planned capabilities
+## Features
 
-- Scan source files and extract gettext-ready message IDs.
-- Validate `.po` catalogs for missing translations, plural mismatches, and formatting issues.
-- Compile `.po` files into `.mo` or JSON catalogs consumable by `@polingo/node` and `@polingo/web`.
-- Provide project scaffolding utilities for new Polingo installations.
+- `polingo extract` scans source files and produces a gettext `.pot` template containing all discovered message IDs (`t`, `tp`, `tn`, `tnp` helpers are recognised).
+- `polingo compile` converts `.po` catalogs into runtime artifacts. Emit JSON catalogs (default) or binary `.mo` files ready for `@polingo/node`.
+- `polingo validate` lint checks `.po` files for missing translations, empty plural forms, and fuzzy entries when `--strict` is supplied.
 
-## Current status
+The CLI is implemented in TypeScript and ships both programmatic APIs and a binary entry point. See `polingo <command> --help` for the available flags.
 
-- `package.json` placeholder published for internal testing.
-- No distributable commands are bundled yet; invoking the binary will do nothing.
-- API contract and configuration format are still being finalised.
+## Usage
 
-## Contributing
+Extract strings into a template catalog:
 
-Interested in helping design or implement the CLI? Please open an issue in the main repository describing your use case. We are particularly interested in feedback around:
+```
+polingo extract src --out locales/messages.pot
+```
 
-- Framework-specific extraction patterns (React, Vue, Svelte, server templates, etc.).
-- Integration with existing gettext pipelines.
-- Desired output formats (JSON, `.mo`, custom bundles).
+Compile localisation files:
+
+```
+polingo compile locales --out build/locales --format json
+```
+
+Validate catalogs prior to publishing:
+
+```
+polingo validate locales --strict
+```
 
 ## Related packages
 
