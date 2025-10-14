@@ -36,7 +36,7 @@ We ask that you do **not** open a public GitHub issue for security reports.
 
 ### Non-Security Issues
 
-Please use GitHub issues for bug reports or feature requests that are not security related. For conduct concerns, contact **conduct@polingo.dev** as noted in our [Code of Conduct](./CODE_OF_CONDUCT.md).
+Please use GitHub issues for bug reports or feature requests that are not security related. For conduct concerns, contact **conduct@polingo.dev** as noted in our [Code of Conduct](../CODE_OF_CONDUCT.md).
 
 Thank you for helping secure Polingo!
 

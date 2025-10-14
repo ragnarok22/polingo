@@ -172,6 +172,10 @@ For detailed documentation, see the individual package READMEs:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Security
+
+If you discover a security vulnerability, please follow our [security policy](.github/SECURITY.md) for responsible disclosure guidelines.
+
 ## License
 
 MIT © [Reinier Hernández](LICENSE)
