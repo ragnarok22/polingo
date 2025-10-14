@@ -1,0 +1,81 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Welcome to Polingo"
+msgstr "Welcome to Polingo"
+
+msgid "A modern i18n library for JavaScript"
+msgstr "A modern i18n library for JavaScript"
+
+msgid "Current language"
+msgstr "Current language"
+
+msgid "Switch Language"
+msgstr "Switch Language"
+
+msgid "Hello {name}!"
+msgstr "Hello {name}!"
+
+msgid "You have {count} new message"
+msgid_plural "You have {count} new messages"
+msgstr[0] "You have {count} new message"
+msgstr[1] "You have {count} new messages"
+
+msgid "Basic Translation"
+msgstr "Basic Translation"
+
+msgid "Translation with Variables"
+msgstr "Translation with Variables"
+
+msgid "Plural Translation"
+msgstr "Plural Translation"
+
+msgid "Rich Text Translation"
+msgstr "Rich Text Translation"
+
+msgid "Translation with Context"
+msgstr "Translation with Context"
+
+msgctxt "menu"
+msgid "File"
+msgstr "File"
+
+msgctxt "document"
+msgid "File"
+msgstr "File (Document)"
+
+msgid "Read the <0>documentation</0> to learn more"
+msgstr "Read the <0>documentation</0> to learn more"
+
+msgid "This text is <0>bold</0> and this is <1>italic</1>"
+msgstr "This text is <0>bold</0> and this is <1>italic</1>"
+
+msgid "Increment Counter"
+msgstr "Increment Counter"
+
+msgid "Reset Counter"
+msgstr "Reset Counter"
+
+msgid "Features"
+msgstr "Features"
+
+msgid "Industry-standard .po/.mo files"
+msgstr "Industry-standard .po/.mo files"
+
+msgid "Framework-agnostic core"
+msgstr "Framework-agnostic core"
+
+msgid "React hooks and components"
+msgstr "React hooks and components"
+
+msgid "CLI tools for workflow"
+msgstr "CLI tools for workflow"
+
+msgid "TypeScript support"
+msgstr "TypeScript support"
+
+msgid "Multiple domains support"
+msgstr "Multiple domains support"

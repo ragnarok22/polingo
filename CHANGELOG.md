@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive test suite with 176+ tests
 - TypeScript-first with strict type checking
 - Dual ESM/CJS package exports
+- React + Vite example application demonstrating all core features
 
 ### Changed
 - N/A
