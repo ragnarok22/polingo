@@ -128,8 +128,8 @@ export class Translator {
    * @returns Translated text
    *
    * @example
-   * t('Hello') // "Hola"
-   * t('Hello, {name}!', { name: 'Juan' }) // "�Hola, Juan!"
+   * t('Hello') // returns the localized string for "Hello"
+   * t('Hello, {name}!', { name: 'Jane' }) // injects variables into the localized result
    */
   t(msgid: string, vars?: Record<string, string | number>): string {
     return this.translate(msgid, '', vars);
@@ -146,8 +146,8 @@ export class Translator {
    * @returns Translated text
    *
    * @example
-   * tp('menu', 'File') // "Archivo"
-   * tp('verb', 'File') // "Archivar"
+   * tp('menu', 'File') // selects the translation for a menu label
+   * tp('verb', 'File') // selects the translation for the verb sense
    */
   tp(context: string, msgid: string, vars?: Record<string, string | number>): string {
     return this.translate(msgid, context, vars);
@@ -163,8 +163,8 @@ export class Translator {
    * @returns Translated text
    *
    * @example
-   * tn('{n} item', '{n} items', 1, { n: 1 }) // "1 art�culo"
-   * tn('{n} item', '{n} items', 5, { n: 5 }) // "5 art�culos"
+   * tn('{n} item', '{n} items', 1, { n: 1 }) // returns the singular translation
+   * tn('{n} item', '{n} items', 5, { n: 5 }) // returns the plural translation
    */
   tn(
     msgid: string,
@@ -188,8 +188,8 @@ export class Translator {
    * @returns Translated text
    *
    * @example
-   * tnp('items', '{n} file', '{n} files', 1, { n: 1 }) // "1 archivo"
-   * tnp('items', '{n} file', '{n} files', 5, { n: 5 }) // "5 archivos"
+   * tnp('items', '{n} file', '{n} files', 1, { n: 1 }) // picks the singular form within the given context
+   * tnp('items', '{n} file', '{n} files', 5, { n: 5 }) // picks the plural form within the given context
    */
   tnp(
     context: string,

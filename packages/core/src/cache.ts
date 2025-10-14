@@ -1,18 +1,18 @@
 import type { TranslationCache, TranslationCatalog } from './types';
 
 /**
- * Caché simple en memoria usando Map
+ * Simple in-memory cache backed by a Map.
  *
- * Opcionalmente soporta LRU (Least Recently Used) con tamaño máximo
+ * Optionally supports LRU-style eviction when a maximum size is provided.
  */
 export class MemoryCache implements TranslationCache {
   private cache: Map<string, TranslationCatalog>;
   private maxSize: number;
 
   /**
-   * Crea una nueva instancia de MemoryCache
+   * Create a new MemoryCache instance.
    *
-   * @param maxSize - Tamaño máximo del caché (0 = ilimitado)
+   * @param maxSize - Maximum number of entries to keep (0 = unlimited)
    */
   constructor(maxSize: number = 0) {
     this.cache = new Map();
@@ -20,12 +20,12 @@ export class MemoryCache implements TranslationCache {
   }
 
   /**
-   * Obtiene un catálogo del caché
+   * Retrieve a catalog from the cache.
    */
   get(key: string): TranslationCatalog | undefined {
     const catalog = this.cache.get(key);
 
-    // Si usamos LRU, mover al final (más reciente)
+    // When using LRU semantics, move the entry to the end to mark it as most recent.
     if (catalog && this.maxSize > 0) {
       this.cache.delete(key);
       this.cache.set(key, catalog);
@@ -35,17 +35,17 @@ export class MemoryCache implements TranslationCache {
   }
 
   /**
-   * Guarda un catálogo en el caché
+   * Store a catalog in the cache.
    *
-   * Si se alcanza maxSize, elimina la entrada más antigua
+   * Evicts the oldest entry when the maximum size is reached.
    */
   set(key: string, catalog: TranslationCatalog): void {
-    // Si ya existe, eliminar primero para actualizar posición
+    // Remove existing entry first so iteration order updates.
     if (this.cache.has(key)) {
       this.cache.delete(key);
     }
 
-    // Si alcanzamos el límite, eliminar el más antiguo (primero en el Map)
+    // If at capacity, remove the oldest entry (first key in the Map).
     if (this.maxSize > 0 && this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
       if (firstKey !== undefined) {
@@ -57,21 +57,21 @@ export class MemoryCache implements TranslationCache {
   }
 
   /**
-   * Verifica si existe un catálogo en el caché
+   * Determine whether a catalog exists in the cache.
    */
   has(key: string): boolean {
     return this.cache.has(key);
   }
 
   /**
-   * Limpia todo el caché
+   * Remove all cached catalogs.
    */
   clear(): void {
     this.cache.clear();
   }
 
   /**
-   * Obtiene el tamaño actual del caché
+   * Current number of cached catalogs.
    */
   get size(): number {
     return this.cache.size;
@@ -79,26 +79,26 @@ export class MemoryCache implements TranslationCache {
 }
 
 /**
- * Entrada de caché con tiempo de expiración
+ * Cache entry with expiration metadata.
  */
 interface CacheEntry {
   catalog: TranslationCatalog;
-  expiry: number; // Timestamp en ms
+  expiry: number; // Expiration timestamp in milliseconds
 }
 
 /**
- * Caché con expiración (TTL - Time To Live)
+ * Cache implementation with time-based expiration (TTL).
  *
- * Las entradas se eliminan automáticamente después del tiempo especificado
+ * Entries are automatically removed after the configured lifetime.
  */
 export class TtlCache implements TranslationCache {
   private cache: Map<string, CacheEntry>;
   private ttlMs: number;
 
   /**
-   * Crea una nueva instancia de TtlCache
+   * Create a new TtlCache instance.
    *
-   * @param ttlMs - Tiempo de vida en milisegundos (default: 1 hora)
+   * @param ttlMs - Time to live in milliseconds (default: 1 hour)
    */
   constructor(ttlMs: number = 3600000) {
     this.cache = new Map();
@@ -106,9 +106,9 @@ export class TtlCache implements TranslationCache {
   }
 
   /**
-   * Obtiene un catálogo del caché
+   * Retrieve a catalog from the cache.
    *
-   * Retorna undefined si la entrada ha expirado
+   * Returns undefined when the entry has expired.
    */
   get(key: string): TranslationCatalog | undefined {
     const entry = this.cache.get(key);
@@ -117,7 +117,7 @@ export class TtlCache implements TranslationCache {
       return undefined;
     }
 
-    // Verificar si ha expirado
+    // Remove expired entry.
     if (Date.now() > entry.expiry) {
       this.cache.delete(key);
       return undefined;
@@ -127,7 +127,7 @@ export class TtlCache implements TranslationCache {
   }
 
   /**
-   * Guarda un catálogo en el caché con tiempo de expiración
+   * Store a catalog with an expiration timestamp.
    */
   set(key: string, catalog: TranslationCatalog): void {
     const entry: CacheEntry = {
@@ -139,7 +139,7 @@ export class TtlCache implements TranslationCache {
   }
 
   /**
-   * Verifica si existe un catálogo válido en el caché
+   * Check whether a non-expired catalog exists in the cache.
    */
   has(key: string): boolean {
     const entry = this.cache.get(key);
@@ -148,7 +148,7 @@ export class TtlCache implements TranslationCache {
       return false;
     }
 
-    // Verificar si ha expirado
+    // Remove expired entry.
     if (Date.now() > entry.expiry) {
       this.cache.delete(key);
       return false;
@@ -158,16 +158,16 @@ export class TtlCache implements TranslationCache {
   }
 
   /**
-   * Limpia todo el caché
+   * Remove all cached catalogs.
    */
   clear(): void {
     this.cache.clear();
   }
 
   /**
-   * Elimina entradas expiradas del caché
+   * Remove all expired entries from the cache.
    *
-   * @returns Número de entradas eliminadas
+   * @returns Number of pruned entries
    */
   prune(): number {
     const now = Date.now();
@@ -184,7 +184,7 @@ export class TtlCache implements TranslationCache {
   }
 
   /**
-   * Obtiene el tamaño actual del caché
+   * Current number of cached catalogs.
    */
   get size(): number {
     return this.cache.size;
@@ -192,34 +192,34 @@ export class TtlCache implements TranslationCache {
 }
 
 /**
- * Caché que no almacena nada
+ * Cache implementation that never stores anything.
  *
- * Útil para testing o cuando no se desea usar caché
+ * Useful for tests or when caching is disabled.
  */
 export class NoCache implements TranslationCache {
   /**
-   * Siempre retorna undefined
+   * Always returns undefined.
    */
   get(_key: string): TranslationCatalog | undefined {
     return undefined;
   }
 
   /**
-   * No hace nada
+   * No-op.
    */
   set(_key: string, _catalog: TranslationCatalog): void {
     // No-op
   }
 
   /**
-   * Siempre retorna false
+   * Always returns false.
    */
   has(_key: string): boolean {
     return false;
   }
 
   /**
-   * No hace nada
+   * No-op.
    */
   clear(): void {
     // No-op
