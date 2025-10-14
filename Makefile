@@ -24,7 +24,7 @@ test:
 
 # Run tests with coverage
 coverage:
-	pnpm -r test:coverage
+	pnpm -r --if-present test:coverage
 
 # Run linter
 lint:
