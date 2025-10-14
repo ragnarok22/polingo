@@ -459,7 +459,7 @@ export async function validateCatalogs(options: ValidateOptions): Promise<Valida
     const parsed = po.parse(buffer);
     const relativePath = path.relative(cwd, file) || path.basename(file);
 
-    const translations = parsed.translations ?? {};
+    const translations = parsed.translations;
     for (const [context, messages] of Object.entries(translations)) {
       for (const [msgid, entry] of Object.entries(messages)) {
         if (!msgid) continue;
@@ -798,7 +798,7 @@ function convertToTranslationCatalog(parsed: GettextParserOutput): TranslationCa
     translations: {},
   };
 
-  const translations = parsed.translations || {};
+  const translations = parsed.translations;
 
   for (const [context, messages] of Object.entries(translations)) {
     catalog.translations[context] = {};
@@ -901,11 +901,14 @@ interface GettextMessage {
   msgstr: string[];
   msgid_plural?: string;
   msgctxt?: string;
+  comments?: {
+    flag?: string;
+  };
 }
 
 interface GettextParserOutput {
   charset?: string;
   headers?: Record<string, string>;
-  translations?: Record<string, Record<string, GettextMessage>>;
+  translations: Record<string, Record<string, GettextMessage>>;
   comments?: Record<string, unknown>;
 }
