@@ -121,4 +121,89 @@ describe('polingoMiddleware', () => {
     expect(createPolingoMock).toHaveBeenCalledTimes(2);
     expect(next).toHaveBeenCalledTimes(3);
   });
+
+  it('falls back to the default locale for unsupported locales with shared translator', async () => {
+    const setLocaleMock = vi.fn().mockImplementation((locale: string) => {
+      if (locale === 'fr') {
+        return Promise.reject(new Error('Unsupported locale'));
+      }
+      return Promise.resolve();
+    });
+    const translatorStub = {
+      setLocale: setLocaleMock,
+    } as unknown as PolingoInstance;
+
+    createPolingoMock.mockResolvedValue(translatorStub);
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      const middleware = polingoMiddleware({
+        ...baseOptions,
+        debug: true,
+        localeExtractor: () => 'fr',
+      });
+
+      const req: TestRequest = {};
+      const next = vi.fn();
+
+      await middleware(req, {} as TestResponse, next);
+
+      expect(createPolingoMock).toHaveBeenCalledTimes(1);
+      expect(setLocaleMock).toHaveBeenCalledTimes(1);
+      expect(setLocaleMock).toHaveBeenCalledWith(baseOptions.fallback);
+      expect(req.polingo).toBe(translatorStub);
+      expect(next).toHaveBeenCalledOnce();
+      expect(warnSpy).toHaveBeenCalledWith(
+        `[Polingo] Invalid locale "fr", using fallback "${baseOptions.fallback}"`
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('reuses the fallback translator for unsupported locales when per-locale caching is enabled', async () => {
+    const translatorEn = {} as unknown as PolingoInstance;
+    const translatorEs = {} as unknown as PolingoInstance;
+
+    createPolingoMock.mockImplementation((options) => {
+      if (options.locale === 'en') {
+        return Promise.resolve(translatorEn);
+      }
+      if (options.locale === 'es') {
+        return Promise.resolve(translatorEs);
+      }
+      return Promise.reject(new Error(`Unexpected locale ${options.locale}`));
+    });
+
+    const middleware = polingoMiddleware({
+      ...baseOptions,
+      perLocale: true,
+      localeExtractor: (req) => {
+        const locale = req.query?.locale;
+        return typeof locale === 'string' ? locale : 'fr';
+      },
+    });
+
+    const next = vi.fn();
+
+    const unsupportedReq: TestRequest = {};
+    await middleware(unsupportedReq, {} as TestResponse, next);
+    expect(unsupportedReq.polingo).toBe(translatorEn);
+
+    const unsupportedReqAgain: TestRequest = {};
+    await middleware(unsupportedReqAgain, {} as TestResponse, next);
+    expect(unsupportedReqAgain.polingo).toBe(translatorEn);
+
+    const supportedReq: TestRequest = { query: { locale: 'es' } };
+    await middleware(supportedReq, {} as TestResponse, next);
+    expect(supportedReq.polingo).toBe(translatorEs);
+
+    expect(createPolingoMock).toHaveBeenCalledTimes(2);
+    expect(createPolingoMock).toHaveBeenCalledWith(
+      expect.objectContaining({ locale: baseOptions.fallback })
+    );
+    expect(createPolingoMock).toHaveBeenCalledWith(expect.objectContaining({ locale: 'es' }));
+    expect(next).toHaveBeenCalledTimes(3);
+  });
 });
