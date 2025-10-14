@@ -1,6 +1,6 @@
 {
   "name": "@polingo/web",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Browser adapter for Polingo with fetch loader and localStorage caching",
   "type": "module",
   "main": "./dist/index.cjs",
