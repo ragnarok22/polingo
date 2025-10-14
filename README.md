@@ -1,6 +1,6 @@
 # Polingo
 
-[![CI](https://github.com/ragnarok22/polingo/actions/workflows/ci.yml/badge.svg)](https://github.com/ragnarok22/polingo/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/ragnarok22/polingo/ci.yml?branch=main&logo=github&label=CI)](https://github.com/ragnarok22/polingo/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Modern internationalization (i18n) library using industry-standard `.po` and `.mo` files for JavaScript/TypeScript projects.
