@@ -2,6 +2,7 @@ import { readdir, readFile, stat, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { po, mo } from 'gettext-parser';
+import packageJson from '../package.json' assert { type: 'json' };
 
 const DEFAULT_EXTRACT_EXTENSIONS = [
   '.ts',
@@ -99,9 +100,8 @@ export async function runCli(argv = process.argv.slice(2)): Promise<number> {
   }
 
   if (command === '--version' || command === '-v') {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const pkg = require('../package.json') as { version?: string };
-    console.log(pkg.version ?? '0.0.0');
+    const version = (packageJson as { version?: string }).version ?? '0.0.0';
+    console.log(version);
     return 0;
   }
 
