@@ -83,11 +83,11 @@ describe('createPolingo', () => {
   });
 
   it('creates a translator with defaults and preloads locales', async () => {
-    const instance = (await createPolingo({
+    const instance: PolingoInstance = await createPolingo({
       locale: 'es',
       locales: ['es', 'en'],
       directory: '/tmp/test-locales',
-    })) as PolingoInstance;
+    });
 
     expect(NodeLoaderMock).toHaveBeenCalledTimes(1);
     expect(NodeLoaderMock).toHaveBeenCalledWith('/tmp/test-locales');
@@ -129,14 +129,14 @@ describe('createPolingo', () => {
   });
 
   it('wires up file watching when watch option is true', async () => {
-    const instance = (await createPolingo({
+    const instance: PolingoInstance = await createPolingo({
       locale: 'fr',
       locales: ['fr', 'en'],
       directory: '/tmp/watch',
       domain: 'custom',
       watch: true,
       debug: true,
-    })) as PolingoInstance;
+    });
 
     expect(TranslationWatcherMock).toHaveBeenCalledTimes(1);
 
