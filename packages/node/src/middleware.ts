@@ -94,7 +94,7 @@ export function polingoMiddleware(options: MiddlewareOptions) {
 
   return async function polingoMiddlewareHandler(
     req: RequestLike & Partial<PolingoRequest>,
-    res: ResponseLike,
+    _res: ResponseLike,
     next: () => void
   ): Promise<void> {
     // Wait for initialization
