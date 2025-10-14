@@ -1,11 +1,55 @@
 {
   "charset": "utf-8",
+  "headers": {
+    "language": "es",
+    "plural-forms": "nplurals=2; plural=(n != 1);"
+  },
   "translations": {
     "": {
-      "Hello": { "msgid": "Hello", "msgstr": "Hola" },
+      "Hello": {
+        "msgid": "Hello",
+        "msgstr": "Hola"
+      },
       "Welcome, {name}!": {
         "msgid": "Welcome, {name}!",
         "msgstr": "¡Bienvenido, {name}!"
+      },
+      "You have {count} messages": {
+        "msgid": "You have {count} messages",
+        "msgstr": "Tienes {count} mensajes"
+      },
+      "{n} item": {
+        "msgid": "{n} item",
+        "msgid_plural": "{n} items",
+        "msgstr": ["{n} artículo", "{n} artículos"]
+      },
+      "{n} file": {
+        "msgid": "{n} file",
+        "msgid_plural": "{n} files",
+        "msgstr": ["{n} archivo", "{n} archivos"]
+      },
+      "Missing translation": {
+        "msgid": "Missing translation",
+        "msgstr": ""
+      }
+    },
+    "menu": {
+      "File": {
+        "msgid": "File",
+        "msgstr": "Archivo",
+        "msgctxt": "menu"
+      },
+      "Edit": {
+        "msgid": "Edit",
+        "msgstr": "Editar",
+        "msgctxt": "menu"
+      }
+    },
+    "verb": {
+      "File": {
+        "msgid": "File",
+        "msgstr": "Archivar",
+        "msgctxt": "verb"
       }
     }
   }
