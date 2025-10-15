@@ -15,6 +15,7 @@ import { useTranslation } from './composables';
 type ComponentRenderer = (children: VNodeChild[]) => VNodeChild;
 type ComponentValue = VNodeChild | Component | ComponentRenderer;
 type ComponentsProp = ComponentValue[] | Record<string, ComponentValue>;
+type RenderableChild = Exclude<VNodeChild, null | undefined | boolean | void>;
 
 interface TextNode {
   type: 'text';
@@ -129,8 +130,26 @@ function getComponent(name: string, components?: ComponentsProp): ComponentValue
   return components[name];
 }
 
+function isRenderableChild(child: VNodeChild): child is RenderableChild {
+  if (child === null || child === undefined) {
+    return false;
+  }
+  if (typeof child === 'boolean') {
+    return false;
+  }
+  return true;
+}
+
+function normalizeArrayChildren(children: VNodeChild[]): RenderableChild[] {
+  return children.filter(isRenderableChild);
+}
+
 function wrapWithKey(node: VNodeChild | VNodeChild[], key: string): VNodeChild {
-  return h(Fragment, { key }, Array.isArray(node) ? node : [node]);
+  const normalized = normalizeArrayChildren(Array.isArray(node) ? node : [node]);
+  if (normalized.length === 0) {
+    return h(Fragment, { key });
+  }
+  return h(Fragment, { key }, normalized);
 }
 
 function isComponent(value: ComponentValue): value is Component {
@@ -158,21 +177,42 @@ function materializeComponent(
       children.length === 0
         ? (component.children ?? [])
         : children.map((child) =>
-            typeof child === 'string' || typeof child === 'number' ? createTextVNode(child) : child
+            typeof child === 'string' || typeof child === 'number'
+              ? createTextVNode(String(child))
+              : child
           );
 
-    return h(
-      component.type as Component,
-      {
-        ...(component.props ?? {}),
-        key,
-      },
-      Array.isArray(baseChildren) && baseChildren.length === 1 ? baseChildren[0] : baseChildren
-    );
+    const props = {
+      ...(component.props ?? {}),
+      key,
+    };
+
+    if (!Array.isArray(baseChildren)) {
+      return h(component.type as Component, props, baseChildren);
+    }
+
+    const normalizedChildren = normalizeArrayChildren(baseChildren);
+
+    if (normalizedChildren.length === 0) {
+      return h(component.type as Component, props);
+    }
+
+    if (normalizedChildren.length === 1) {
+      return h(component.type as Component, props, normalizedChildren[0]);
+    }
+
+    return h(component.type as Component, props, normalizedChildren);
   }
 
   if (isComponent(component)) {
-    return h(component, { key }, children);
+    const normalizedChildren = normalizeArrayChildren(children);
+    if (normalizedChildren.length === 0) {
+      return h(component, { key });
+    }
+    if (normalizedChildren.length === 1) {
+      return h(component, { key }, normalizedChildren[0]);
+    }
+    return h(component, { key }, normalizedChildren);
   }
 
   if (children.length === 0) {
