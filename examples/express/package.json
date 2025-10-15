@@ -1,0 +1,22 @@
+{
+  "name": "polingo-express-example",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@polingo/core": "workspace:*",
+    "@polingo/node": "workspace:*",
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^24.7.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.9.3"
+  }
+}

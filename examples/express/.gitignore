@@ -1,0 +1,18 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+
+# Logs
+*.log
+pnpm-debug.log*
+npm-debug.log*
+
+# Editors
+.DS_Store
+*.swp
+*.swo
+
+# Environment
+.env
