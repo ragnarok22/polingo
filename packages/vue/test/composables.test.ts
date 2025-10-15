@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 // @vitest-environment jsdom
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createApp, defineComponent, h, nextTick, ref } from 'vue';
 import type { TranslationCatalog, TranslationLoader } from '@polingo/core';
 import { NoCache, Translator } from '@polingo/core';
@@ -18,6 +18,17 @@ const HEADERS = {
   'content-type': 'text/plain; charset=utf-8',
   'plural-forms': 'nplurals=2; plural=(n != 1);',
 };
+
+function suppressVueWarnings(run: () => void): void {
+  const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    run();
+  } finally {
+    warnSpy.mockRestore();
+    errorSpy.mockRestore();
+  }
+}
 
 function buildCatalog(msgid: string, translation: string): TranslationCatalog {
   return {
@@ -70,10 +81,12 @@ describe('usePolingo', () => {
 
     const container = document.createElement('div');
 
-    expect(() => {
-      const app = createApp(Caller);
-      app.mount(container);
-    }).toThrowError('usePolingo must be used within a <PolingoProvider>.');
+    suppressVueWarnings(() => {
+      expect(() => {
+        const app = createApp(Caller);
+        app.mount(container);
+      }).toThrowError('usePolingo must be used within a <PolingoProvider>.');
+    });
 
     container.remove();
   });
@@ -133,10 +146,12 @@ describe('useTranslator', () => {
 
     const container = document.createElement('div');
 
-    expect(() => {
-      const app = createApp(Caller);
-      app.mount(container);
-    }).toThrowError('usePolingo must be used within a <PolingoProvider>.');
+    suppressVueWarnings(() => {
+      expect(() => {
+        const app = createApp(Caller);
+        app.mount(container);
+      }).toThrowError('usePolingo must be used within a <PolingoProvider>.');
+    });
 
     container.remove();
   });
