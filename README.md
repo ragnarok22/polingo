@@ -3,7 +3,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/ragnarok22/polingo/ci.yml?branch=main&logo=github&label=CI)](https://github.com/ragnarok22/polingo/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/ragnarok22/polingo/graph/badge.svg?token=3QVHN9LWNN)](https://codecov.io/gh/ragnarok22/polingo)
 [![pnpm](https://img.shields.io/badge/pnpm-10.18.3-f69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ragnarok22/polingo/blob/main/LICENSE)
 [![Downloads @polingo/core](https://img.shields.io/npm/dm/@polingo/core?label=%40polingo%2Fcore)](https://www.npmjs.com/package/@polingo/core)
 [![Downloads @polingo/node](https://img.shields.io/npm/dm/@polingo/node?label=%40polingo%2Fnode)](https://www.npmjs.com/package/@polingo/node)
 [![Downloads @polingo/web](https://img.shields.io/npm/dm/@polingo/web?label=%40polingo%2Fweb)](https://www.npmjs.com/package/@polingo/web)
@@ -34,11 +34,11 @@ Modern internationalization (i18n) library using industry-standard `.po` and `.m
 
 Polingo is organized as a monorepo with the following packages:
 
-- **[@polingo/core](./packages/core)**: Environment-agnostic translation engine
-- **[@polingo/node](./packages/node)**: Node.js loader with filesystem support and middleware
-- **[@polingo/web](./packages/web)**: Browser adapter using fetch + localStorage caching
-- **[@polingo/react](./packages/react)**: React bindings with hooks, context provider, and Trans component
-- **[@polingo/cli](./packages/cli)**: Command-line tools for extraction, compilation, and validation
+- **[@polingo/core](https://github.com/ragnarok22/polingo/tree/main/packages/core)**: Environment-agnostic translation engine
+- **[@polingo/node](https://github.com/ragnarok22/polingo/tree/main/packages/node)**: Node.js loader with filesystem support and middleware
+- **[@polingo/web](https://github.com/ragnarok22/polingo/tree/main/packages/web)**: Browser adapter using fetch + localStorage caching
+- **[@polingo/react](https://github.com/ragnarok22/polingo/tree/main/packages/react)**: React bindings with hooks, context provider, and Trans component
+- **[@polingo/cli](https://github.com/ragnarok22/polingo/tree/main/packages/cli)**: Command-line tools for extraction, compilation, and validation
 
 ## Installation
 
@@ -195,7 +195,7 @@ function MyComponent() {
 }
 ```
 
-For a complete React example, see the [React + Vite example](./examples/react-vite).
+For a complete React example, see the [React + Vite example](https://github.com/ragnarok22/polingo/tree/main/examples/react-vite).
 
 ### CLI Workflow
 
@@ -215,7 +215,7 @@ pnpm polingo compile locales -o public/i18n --format json
 pnpm polingo validate locales --strict
 ```
 
-See the [@polingo/cli documentation](./packages/cli) for detailed command reference.
+See the [@polingo/cli documentation](https://github.com/ragnarok22/polingo/tree/main/packages/cli) for detailed command reference.
 
 ### Hot Reload During Development
 
@@ -329,17 +329,17 @@ make clean
 
 Check out our working examples to see Polingo in action:
 
-- **[React + Vite Example](./examples/react-vite)**: Full-featured React app demonstrating hooks, Trans component, locale switching, and complete translation workflow
+- **[React + Vite Example](https://github.com/ragnarok22/polingo/tree/main/examples/react-vite)**: Full-featured React app demonstrating hooks, Trans component, locale switching, and complete translation workflow
 
 ## Documentation
 
 For detailed documentation, see the individual package READMEs:
 
-- [@polingo/core documentation](./packages/core)
-- [@polingo/node documentation](./packages/node)
-- [@polingo/web documentation](./packages/web)
-- [@polingo/react documentation](./packages/react)
-- [@polingo/cli documentation](./packages/cli)
+- [@polingo/core documentation](https://github.com/ragnarok22/polingo/tree/main/packages/core)
+- [@polingo/node documentation](https://github.com/ragnarok22/polingo/tree/main/packages/node)
+- [@polingo/web documentation](https://github.com/ragnarok22/polingo/tree/main/packages/web)
+- [@polingo/react documentation](https://github.com/ragnarok22/polingo/tree/main/packages/react)
+- [@polingo/cli documentation](https://github.com/ragnarok22/polingo/tree/main/packages/cli)
 
 ## Contributing
 
@@ -347,8 +347,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Security
 
-If you discover a security vulnerability, please follow our [security policy](.github/SECURITY.md) for responsible disclosure guidelines.
+If you discover a security vulnerability, please follow our [security policy](https://github.com/ragnarok22/polingo/blob/main/.github/SECURITY.md) for responsible disclosure guidelines.
 
 ## License
 
-MIT © [Reinier Hernández Avila](LICENSE)
+MIT © [Reinier Hernández Avila](https://github.com/ragnarok22/polingo/blob/main/LICENSE)
