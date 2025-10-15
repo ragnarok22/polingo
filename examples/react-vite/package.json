@@ -7,9 +7,9 @@
     "dev": "vite",
     "build": "pnpm compile && vite build",
     "preview": "vite preview",
-    "extract": "polingo extract src -o locales/messages.pot",
-    "compile": "polingo compile locales/en -o public/i18n/en --format json && polingo compile locales/es -o public/i18n/es --format json && polingo compile locales/fr -o public/i18n/fr --format json",
-    "validate": "polingo validate locales"
+    "extract": "pnpm exec polingo extract src -o locales/messages.pot",
+    "compile": "pnpm exec polingo compile locales/en -o public/i18n/en --format json && pnpm exec polingo compile locales/es -o public/i18n/es --format json && pnpm exec polingo compile locales/fr -o public/i18n/fr --format json",
+    "validate": "pnpm exec polingo validate locales"
   },
   "dependencies": {
     "@polingo/core": "workspace:*",
