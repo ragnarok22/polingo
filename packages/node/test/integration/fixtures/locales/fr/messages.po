@@ -1,0 +1,27 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Hello"
+msgstr "Bonjour"
+
+msgid "Welcome, {name}!"
+msgstr "Bienvenue, {name}!"
+
+msgid "Goodbye"
+msgstr "Au revoir"
+
+msgid "{count} message"
+msgid_plural "{count} messages"
+msgstr[0] "{count} message"
+msgstr[1] "{count} messages"
+
+msgctxt "menu"
+msgid "File"
+msgstr "Fichier"
+
+msgctxt "verb"
+msgid "File"
+msgstr "Classer"

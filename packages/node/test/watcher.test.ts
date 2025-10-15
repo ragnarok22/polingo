@@ -67,19 +67,19 @@ msgstr "Hello"
     expect(watcher).toBeDefined();
   });
 
-  it('should start watching translation files', () => {
+  it('should start watching translation files', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages');
-    watcher.start();
+    await watcher.start();
     // No error should be thrown
     expect(watcher).toBeDefined();
   });
 
-  it('should not start watcher twice', () => {
+  it('should not start watcher twice', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
 
-    watcher.start();
-    watcher.start(); // Should log that watcher is already started
+    await watcher.start();
+    await watcher.start(); // Should log that watcher is already started
 
     expect(consoleSpy).toHaveBeenCalledWith('[Polingo] Watcher already started');
     consoleSpy.mockRestore();
@@ -87,7 +87,7 @@ msgstr "Hello"
 
   it('should stop watching translation files', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages');
-    watcher.start();
+    await watcher.start();
     await watcher.stop();
     // No error should be thrown
     expect(watcher).toBeDefined();
@@ -101,10 +101,7 @@ msgstr "Hello"
 
   it('should start watching and be ready to detect changes', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
-    watcher.start();
-
-    // Wait for watcher to initialize
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await watcher.start();
 
     const originalTranslation = translator.t('Hello');
     expect(originalTranslation).toBe('Hola');
@@ -115,20 +112,17 @@ msgstr "Hello"
 
   it('should watch multiple locales for file additions', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en', 'fr'], 'messages', true);
-    watcher.start();
-
-    // Wait for watcher to initialize
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await watcher.start();
 
     // Watcher is now set up to detect new files
     expect(watcher).toBeDefined();
   });
 
-  it('should handle file changes with debug mode', () => {
+  it('should handle file changes with debug mode', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
-    watcher.start();
+    await watcher.start();
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('[Polingo] Started watching translations in:')
@@ -147,10 +141,7 @@ msgstr "Hello"
     });
 
     watcher = new TranslationWatcher(invalidTranslator, testDir, ['es'], 'messages', true);
-    watcher.start();
-
-    // Wait for watcher to initialize
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await watcher.start();
 
     // Watcher is set up with error handling
     expect(watcher).toBeDefined();
@@ -166,10 +157,7 @@ msgstr "Hello"
     });
 
     watcher = new TranslationWatcher(invalidTranslator, testDir, ['fr'], 'messages', true);
-    watcher.start();
-
-    // Wait for watcher to initialize
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await watcher.start();
 
     // Watcher is set up with error handling
     expect(watcher).toBeDefined();
@@ -177,10 +165,7 @@ msgstr "Hello"
 
   it('should extract locale from file path correctly', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
-    watcher.start();
-
-    // Wait for watcher to initialize
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await watcher.start();
 
     // Trigger a file change with a valid path
     await writeFile(join(esDir, 'messages.po'), esPoContent);
@@ -196,10 +181,7 @@ msgstr "Hello"
     const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
-    watcher.start();
-
-    // Wait for watcher to initialize
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await watcher.start();
 
     // Create a file that doesn't match the expected pattern
     const invalidPath = join(testDir, 'invalid.po');
@@ -214,15 +196,15 @@ msgstr "Hello"
     consoleWarnSpy.mockRestore();
   });
 
-  it('should work with custom domain name', () => {
+  it('should work with custom domain name', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'custom-domain');
-    watcher.start();
+    await watcher.start();
     expect(watcher).toBeDefined();
   });
 
-  it('should work without debug mode', () => {
+  it('should work without debug mode', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', false);
-    watcher.start();
+    await watcher.start();
     expect(watcher).toBeDefined();
   });
 
@@ -230,7 +212,7 @@ msgstr "Hello"
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
-    watcher.start();
+    await watcher.start();
     await watcher.stop();
 
     expect(consoleSpy).toHaveBeenCalledWith('[Polingo] Stopped watching translations');
@@ -239,10 +221,7 @@ msgstr "Hello"
 
   it('should watch multiple locales', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en', 'fr'], 'messages');
-    watcher.start();
-
-    // Wait for watcher to initialize
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await watcher.start();
 
     expect(watcher).toBeDefined();
   });
@@ -250,10 +229,7 @@ msgstr "Hello"
   it('should have clearCache logic in change handler', async () => {
     // The watcher has clearCache logic built into its change handler
     watcher = new TranslationWatcher(translator, testDir, ['es'], 'messages', false);
-    watcher.start();
-
-    // Wait for watcher to initialize
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await watcher.start();
 
     // The watcher's change handler includes clearCache()
     expect(watcher).toBeDefined();
@@ -264,10 +240,7 @@ msgstr "Hello"
 
     // The extractLocaleFromPath is private, but we can test it indirectly
     // by ensuring the watcher handles various path formats
-    watcher.start();
-
-    // Wait for watcher to initialize
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await watcher.start();
 
     expect(watcher).toBeDefined();
   });

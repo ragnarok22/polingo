@@ -1,0 +1,27 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Hello"
+msgstr "Hola"
+
+msgid "Welcome, {name}!"
+msgstr "¡Bienvenido, {name}!"
+
+msgid "Goodbye"
+msgstr "Adiós"
+
+msgid "{count} message"
+msgid_plural "{count} messages"
+msgstr[0] "{count} mensaje"
+msgstr[1] "{count} mensajes"
+
+msgctxt "menu"
+msgid "File"
+msgstr "Archivo"
+
+msgctxt "verb"
+msgid "File"
+msgstr "Archivar"

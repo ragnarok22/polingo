@@ -91,7 +91,7 @@ export async function createPolingo(options: CreatePolingoOptions): Promise<Poli
   let watcher: TranslationWatcher | undefined;
   if (watch) {
     watcher = new TranslationWatcher(translator, directory, locales, domain, debug);
-    watcher.start();
+    await watcher.start();
   }
 
   // Extend translator with watcher cleanup
