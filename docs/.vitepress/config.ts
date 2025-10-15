@@ -8,8 +8,10 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
-      { text: 'API', link: '/api/node' },
-      { text: 'Examples', link: '/examples/express-and-fastify' },
+      { text: 'Step-by-Step', link: '/guide/step-by-step-guide' },
+      { text: 'API', link: '/api/reference' },
+      { text: 'Examples', link: '/examples/interactive' },
+      { text: 'FAQ', link: '/guide/faq' },
     ],
     sidebar: {
       '/guide/': [
@@ -17,9 +19,13 @@ export default defineConfig({
           text: 'Guide',
           items: [
             { text: 'Getting Started', link: '/guide/getting-started' },
+            { text: 'Step-by-Step Project', link: '/guide/step-by-step-guide' },
             { text: 'Catalog Management', link: '/guide/catalog-management' },
             { text: 'Runtime Translators', link: '/guide/runtime' },
             { text: 'Development Workflow', link: '/guide/development-workflow' },
+            { text: 'Polingo vs i18next & react-intl', link: '/guide/comparison' },
+            { text: 'FAQ', link: '/guide/faq' },
+            { text: 'Troubleshooting', link: '/guide/troubleshooting' },
           ],
         },
       ],
@@ -27,6 +33,7 @@ export default defineConfig({
         {
           text: 'API Reference',
           items: [
+            { text: 'Full Reference', link: '/api/reference' },
             { text: 'Node', link: '/api/node' },
             { text: 'Web', link: '/api/web' },
             { text: 'Core', link: '/api/core' },
@@ -37,6 +44,7 @@ export default defineConfig({
         {
           text: 'Examples',
           items: [
+            { text: 'Interactive Playground', link: '/examples/interactive' },
             { text: 'Express & Fastify', link: '/examples/express-and-fastify' },
             { text: 'Browser Integration', link: '/examples/browser' },
           ],
