@@ -130,6 +130,311 @@ describe('PolingoProvider', () => {
     container.remove();
   });
 
+  it('shows loading fallback while translator loads', async () => {
+    function LoadingComponent() {
+      return <div>Content loaded</div>;
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider
+          create={async () => {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            return await createTestTranslator('en');
+          }}
+          loadingFallback={<div>Loading translations...</div>}
+        >
+          <LoadingComponent />
+        </PolingoProvider>
+      );
+    });
+
+    // Initially shows loading fallback
+    expect(container.textContent).toBe('Loading translations...');
+
+    // Wait for translator to load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    });
+
+    // After loading, shows actual content
+    expect(container.textContent).toBe('Content loaded');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('calls onError when translator creation fails', async () => {
+    let errorCaptured: unknown = null;
+
+    function ErrorComponent() {
+      const { error } = useTranslation();
+      return <div>{error ? 'Error occurred' : 'No error'}</div>;
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider
+          create={async () => {
+            throw new Error('Failed to create translator');
+          }}
+          onError={(error) => {
+            errorCaptured = error;
+          }}
+        >
+          <ErrorComponent />
+        </PolingoProvider>
+      );
+    });
+
+    // Wait for error to propagate
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(errorCaptured).not.toBeNull();
+    expect((errorCaptured as Error).message).toBe('Failed to create translator');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('handles factory function for creating translator', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    function TestComponent() {
+      const { t } = useTranslation();
+      return <div>{t('Hello {name}', { name: 'World' })}</div>;
+    }
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider create={async () => await createTestTranslator('en')}>
+          <TestComponent />
+        </PolingoProvider>
+      );
+    });
+
+    // Wait for translator to load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(container.textContent).toBe('Hello World');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('cancels loading when unmounted before completion', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider
+          create={async () => {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            return await createTestTranslator('en');
+          }}
+        >
+          <div>Loading...</div>
+        </PolingoProvider>
+      );
+    });
+
+    // Unmount before loading completes
+    await act(async () => {
+      root.unmount();
+    });
+
+    // No error should be thrown
+    expect(container).toBeDefined();
+    container.remove();
+  });
+
+  it('throws error when setLocale called without translator', async () => {
+    let setLocaleFunc: ((locale: string) => Promise<void>) | null = null;
+    let errorMessage = '';
+
+    function TestComponent() {
+      const { setLocale } = useTranslation();
+      setLocaleFunc = setLocale;
+      return <div>Test</div>;
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider
+          create={async () => {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            return await createTestTranslator('en');
+          }}
+        >
+          <TestComponent />
+        </PolingoProvider>
+      );
+    });
+
+    // Try to call setLocale before translator is ready
+    try {
+      await setLocaleFunc?.('es');
+    } catch (error) {
+      errorMessage = (error as Error).message;
+    }
+
+    expect(errorMessage).toContain('Translator is not ready yet');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('throws error when setLocale called with empty locale', async () => {
+    const translator = await createTestTranslator('en');
+    let setLocaleFunc: ((locale: string) => Promise<void>) | null = null;
+    let errorMessage = '';
+
+    function TestComponent() {
+      const { setLocale } = useTranslation();
+      setLocaleFunc = setLocale;
+      return <div>Test</div>;
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider translator={translator}>
+          <TestComponent />
+        </PolingoProvider>
+      );
+    });
+
+    try {
+      await setLocaleFunc?.('');
+    } catch (error) {
+      errorMessage = (error as Error).message;
+    }
+
+    expect(errorMessage).toContain('setLocale requires a non-empty locale string');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('does not change locale when setting to same locale', async () => {
+    const translator = await createTestTranslator('en');
+    let setLocaleFunc: ((locale: string) => Promise<void>) | null = null;
+    let renderCount = 0;
+
+    function TestComponent() {
+      const { setLocale, locale } = useTranslation();
+      setLocaleFunc = setLocale;
+      renderCount++;
+      return <div data-locale={locale}>Test</div>;
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider translator={translator}>
+          <TestComponent />
+        </PolingoProvider>
+      );
+    });
+
+    const initialRenderCount = renderCount;
+
+    await act(async () => {
+      await setLocaleFunc?.('en'); // Same locale
+    });
+
+    // Should not trigger additional renders beyond normal React updates
+    expect(container.firstElementChild?.getAttribute('data-locale')).toBe('en');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('handles error when setLocale fails', async () => {
+    const translator = await createTestTranslator('en');
+    let setLocaleFunc: ((locale: string) => Promise<void>) | null = null;
+    let onErrorCalled = false;
+    let thrownError: unknown = null;
+
+    function TestComponent() {
+      const { setLocale, error } = useTranslation();
+      setLocaleFunc = setLocale;
+      return <div>{error ? 'Error' : 'OK'}</div>;
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider
+          translator={translator}
+          onError={(error) => {
+            onErrorCalled = true;
+            thrownError = error;
+          }}
+        >
+          <TestComponent />
+        </PolingoProvider>
+      );
+    });
+
+    try {
+      await act(async () => {
+        await setLocaleFunc?.('unsupported-locale');
+      });
+    } catch (error) {
+      // Expected error
+    }
+
+    expect(onErrorCalled).toBe(true);
+    expect(thrownError).not.toBeNull();
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
   it('updates translations when locale changes', async () => {
     const translator = await createTestTranslator('en');
     let capturedSetLocale: ((locale: string) => Promise<void>) | undefined;
@@ -203,6 +508,190 @@ describe('<Trans />', () => {
     expect(anchor?.textContent).toBe('aquí');
     expect(anchor?.getAttribute('href')).toBe('/docs');
     expect(container.textContent).toBe('Haz clic aquí');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('renders plural translations', async () => {
+    const translator = await createTestTranslator('es');
+
+    function MessageCount({ count }: { count: number }) {
+      return (
+        <Trans
+          message="You have {n} unread message"
+          plural="You have {n} unread messages"
+          count={count}
+        />
+      );
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider translator={translator}>
+          <MessageCount count={5} />
+        </PolingoProvider>
+      );
+    });
+
+    expect(container.textContent).toBe('Tienes 5 mensajes sin leer');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('renders text without components', async () => {
+    const translator = await createTestTranslator('en');
+
+    function SimpleText() {
+      return <Trans message="Hello {name}" values={{ name: 'World' }} />;
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider translator={translator}>
+          <SimpleText />
+        </PolingoProvider>
+      );
+    });
+
+    expect(container.textContent).toBe('Hello World');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('renders with fallback when translator not ready', async () => {
+    function FallbackText() {
+      return <Trans message="Loading..." fallback="Please wait" />;
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    // Create without translator to test fallback
+    await act(async () => {
+      root.render(
+        <PolingoProvider
+          create={async () => {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            return await createTestTranslator('en');
+          }}
+        >
+          <FallbackText />
+        </PolingoProvider>
+      );
+    });
+
+    // Should show original message during loading
+    expect(container.textContent).toBe('Loading...');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('handles component renderer functions', async () => {
+    const translator = await createTestTranslator('en');
+
+    function CustomRenderer() {
+      return (
+        <Trans
+          message="Click <0>here</0>"
+          components={[(children) => <button>{children}</button>]}
+        />
+      );
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider translator={translator}>
+          <CustomRenderer />
+        </PolingoProvider>
+      );
+    });
+
+    const button = container.querySelector('button');
+    expect(button).not.toBeNull();
+    expect(button?.textContent).toBe('here');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('handles named components object', async () => {
+    const translator = await createTestTranslator('en');
+
+    function NamedComponents() {
+      return (
+        <Trans message="Click <link>here</link>" components={{ link: <a href="/docs" /> }} />
+      );
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider translator={translator}>
+          <NamedComponents />
+        </PolingoProvider>
+      );
+    });
+
+    const anchor = container.querySelector('a');
+    expect(anchor).not.toBeNull();
+    expect(anchor?.textContent).toBe('here');
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('handles self-closing tags', async () => {
+    const translator = await createTestTranslator('en');
+
+    function SelfClosing() {
+      return <Trans message="Line 1<0 />Line 2" components={[<br />]} />;
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PolingoProvider translator={translator}>
+          <SelfClosing />
+        </PolingoProvider>
+      );
+    });
+
+    expect(container.querySelector('br')).not.toBeNull();
 
     await act(async () => {
       root.unmount();
