@@ -206,6 +206,7 @@ function parseExtractArgs(args: string[]): ParsedExtractArgs {
       case '-h':
         return { ...options, showHelp: true };
       case '--out':
+      case '--output':
       case '-o':
         options.outFile = readNextValue(args, ++index, arg);
         break;

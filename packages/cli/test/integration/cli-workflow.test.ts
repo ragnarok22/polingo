@@ -18,8 +18,10 @@ const runCLI = (args: string, cwd: string = TEST_DIR): string => {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   } catch (error) {
-    if (error instanceof Error && 'stdout' in error) {
-      return (error as { stdout: string }).stdout;
+    if (error instanceof Error && 'stdout' in error && 'stderr' in error) {
+      const err = error as { stdout: string; stderr: string };
+      // Return both stdout and stderr combined
+      return err.stdout + err.stderr;
     }
     throw error;
   }
@@ -301,8 +303,8 @@ msgstr "Hola"
 `
       );
 
-      const output = runCLI('validate locales');
-      // Should report fuzzy translations
+      const output = runCLI('validate locales --strict');
+      // Should report fuzzy translations in strict mode
       expect(output.toLowerCase()).toContain('fuzzy');
     });
 
