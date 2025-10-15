@@ -2,6 +2,7 @@ import { readdir, readFile, stat, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { po, mo } from 'gettext-parser';
+import type { GetTextTranslations } from 'gettext-parser';
 import packageJson from '../package.json' with { type: 'json' };
 
 const DEFAULT_EXTRACT_EXTENSIONS = [
@@ -652,7 +653,7 @@ function applyEntriesToCatalog(
     }
 
     if (!entry.msgidPlural && message.msgstr.length > 1) {
-      message.msgstr = [message.msgstr[0]];
+      message.msgstr = [message.msgstr[0] ?? ''];
     }
 
     if (message.msgstr.length !== previousLength) {
@@ -1203,22 +1204,4 @@ interface TranslationCatalog {
   translations: Record<string, Record<string, Translation>>;
 }
 
-interface GettextMessage {
-  msgid: string;
-  msgstr: string[];
-  msgid_plural?: string;
-  msgctxt?: string;
-  comments?: {
-    flag?: string;
-    reference?: string;
-    extracted?: string;
-    translator?: string;
-  };
-}
-
-interface GettextParserOutput {
-  charset?: string;
-  headers?: Record<string, string>;
-  translations: Record<string, Record<string, GettextMessage>>;
-  comments?: Record<string, unknown>;
-}
+type GettextParserOutput = GetTextTranslations;
