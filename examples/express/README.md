@@ -1,6 +1,6 @@
 # Polingo Express Example
 
-This example demonstrates how to mount the `@polingo/node` middleware in an Express server. Each request gets a translator attached to `req.polingo`, so routes can respond in the requested language using `?locale=...` or the `Accept-Language` header.
+This example demonstrates how to mount the `@polingo/node` middleware in an Express server. Each request gets a translator attached to `req.polingo`, so routes can respond in the requested language using `?locale=...` or the `Accept-Language` header. The project is standalone—copy the `express` folder anywhere and install dependencies to try it out.
 
 ## Project Layout
 
@@ -16,16 +16,12 @@ express/
 
 ## Getting Started
 
-From the monorepo root:
-
 ```bash
-pnpm install --frozen-lockfile
-pnpm build
-cd examples/express
+pnpm install
 pnpm dev
 ```
 
-You can also install dependencies from this directory with `pnpm install`.
+> Prefer `npm` or `yarn`? Swap the commands to match your package manager.
 
 By default the server listens on `http://localhost:3000`. Pass a custom port with `PORT=4000 pnpm dev`.
 

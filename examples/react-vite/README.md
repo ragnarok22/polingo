@@ -1,6 +1,6 @@
 # Polingo React + Vite Example
 
-This example demonstrates how to use Polingo in a React application with Vite. It showcases all the main features of the `@polingo/react` package including hooks, components, and translation workflows.
+This example demonstrates how to use Polingo in a React application with Vite. It showcases all the main features of the `@polingo/react` package including hooks, components, and translation workflows. The project is fully standalone—copy the `react-vite` folder anywhere and install dependencies to try it out.
 
 ## Features Demonstrated
 
@@ -56,46 +56,23 @@ react-vite/
 
 ### 1. Install dependencies
 
-From the monorepo root:
-
 ```bash
-pnpm install --frozen-lockfile
-```
-
-Or from this directory:
-
-```bash
-cd examples/react-vite
 pnpm install
 ```
 
-### 2. Build the Polingo packages
+> Tip: feel free to swap `pnpm` for `npm` or `yarn` if you prefer.
 
-You need to build the packages first:
-
-```bash
-# From monorepo root
-pnpm build
-
-# Or individually
-pnpm --filter @polingo/core build
-pnpm --filter @polingo/web build
-pnpm --filter @polingo/react build
-pnpm --filter @polingo/cli build
-```
-
-### 3. Compile translations
+### 2. Compile translations
 
 Compile the `.po` files to JSON format:
 
 ```bash
-cd examples/react-vite
 pnpm compile
 ```
 
 This generates JSON catalogs in `public/i18n/` that the web loader can fetch.
 
-### 4. Run the development server
+### 3. Run the development server
 
 ```bash
 pnpm dev
