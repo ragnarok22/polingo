@@ -42,6 +42,12 @@ Thanks for taking the time to contribute! We want Polingo to be a friendly and p
 - Any new npm dependency includes a justification in the PR description.
 - Screenshots or recordings included for UI-affecting changes (if applicable).
 
+### Version Management
+- We use [Changesets](https://github.com/changesets/changesets) to manage package versions and changelogs.
+- For any change that affects published packages, run `pnpm run changeset` and follow the prompts to create a changeset file.
+- Each changeset should describe the change and mark the appropriate packages with a `patch`, `minor`, or `major` bump.
+- After changesets land on `main`, maintainers run `pnpm run version-packages` to apply version bumps, and `pnpm run release` when publishing to npm.
+
 ### Reviewing and Merging
 - Maintainers aim to review PRs within a few business days.
 - Address review feedback promptly; push follow-up commits instead of force-pushing unless asked.
@@ -54,4 +60,3 @@ Please do **not** open public issues for security concerns. Follow the [security
 If you have questions about contributing, open a discussion or reach out to the maintainers through GitHub issues. For conduct-related matters, please open an issue or contact the repository maintainers directly through GitHub.
 
 We appreciate your contributions—thank you for helping make Polingo better!
-
