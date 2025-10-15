@@ -17,7 +17,8 @@ install:
 
 # Build all packages
 build:
-	pnpm -r build
+	pnpm --filter "./packages/*" build
+	pnpm --filter "./examples/*" build
 
 # Run tests
 test:
