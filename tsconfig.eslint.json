@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "lib": ["ES2020", "DOM"],
     "paths": {
       "@polingo/core": ["packages/core/src/index.ts"],
       "@polingo/core/*": ["packages/core/src/*"],

@@ -36,14 +36,14 @@ function buildCatalog(msgid: string, translation: string): TranslationCatalog {
 const EN_CATALOG = buildCatalog('Hello', 'Hello');
 
 const loader: TranslationLoader = {
-  async load(locale, domain) {
+  load(locale, domain) {
     if (domain !== 'messages') {
-      throw new Error(`Unknown domain ${domain}`);
+      return Promise.reject(new Error(`Unknown domain ${domain}`));
     }
     if (locale === 'en') {
-      return JSON.parse(JSON.stringify(EN_CATALOG)) as TranslationCatalog;
+      return Promise.resolve(JSON.parse(JSON.stringify(EN_CATALOG)) as TranslationCatalog);
     }
-    throw new Error(`Unsupported locale ${locale}`);
+    return Promise.reject(new Error(`Unsupported locale ${locale}`));
   },
 };
 
@@ -110,9 +110,10 @@ describe('usePolingo', () => {
     await nextTick();
 
     expect(context).not.toBeNull();
-    expect(context?.translator.value).toBe(translator);
-    expect(context?.locale.value).toBe('en');
-    expect(context?.loading.value).toBe(false);
+    const resolvedContext = context!;
+    expect(resolvedContext.translator.value).toBe(translator);
+    expect(resolvedContext.locale.value).toBe('en');
+    expect(resolvedContext.loading.value).toBe(false);
 
     app.unmount();
     container.remove();
@@ -162,7 +163,7 @@ describe('useTranslator', () => {
             {
               create: async () => {
                 await new Promise((resolve) => setTimeout(resolve, 20));
-                return await createTestTranslator('en');
+                return createTestTranslator('en');
               },
             },
             {
@@ -256,10 +257,12 @@ describe('useTranslation', () => {
     await nextTick();
 
     expect(result).not.toBeNull();
-    expect(result?.locale.value).toBe('en');
-    expect(result?.loading.value).toBe(false);
-    expect(typeof result?.t).toBe('function');
-    expect(result?.t('Hello')).toBe('Hello');
+    const resolved = result!;
+
+    expect(resolved.locale.value).toBe('en');
+    expect(resolved.loading.value).toBe(false);
+    expect(typeof resolved.t).toBe('function');
+    expect(resolved.t('Hello')).toBe('Hello');
 
     app.unmount();
     container.remove();
@@ -304,9 +307,11 @@ describe('useLocale', () => {
     await nextTick();
 
     expect(localeAccessor).not.toBeNull();
-    expect(localeAccessor?.locale.value).toBe('en');
-    expect(localeAccessor?.loading.value).toBe(false);
-    expect(typeof localeAccessor?.setLocale).toBe('function');
+    const resolved = localeAccessor!;
+
+    expect(resolved.locale.value).toBe('en');
+    expect(resolved.loading.value).toBe(false);
+    expect(typeof resolved.setLocale).toBe('function');
 
     app.unmount();
     container.remove();

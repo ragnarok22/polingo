@@ -77,10 +77,10 @@ export class WebLoader implements TranslationLoader {
       );
     }
 
-    const payload = await response.json();
-    const catalog = this.transformResponse ? this.transformResponse(payload) : payload;
+    const payload = (await response.json()) as unknown;
+    const transformed = this.transformResponse?.(payload) ?? payload;
 
-    return assertCatalog(catalog);
+    return assertCatalog(transformed);
   }
 }
 

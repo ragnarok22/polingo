@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { createApp, defineComponent, h, nextTick, ref, type VNodeChild } from 'vue';
-import type { TranslationCatalog, TranslationLoader } from '@polingo/core';
+import type { Translation, TranslationCatalog, TranslationLoader } from '@polingo/core';
 import { NoCache, Translator } from '@polingo/core';
 import { PolingoProvider, Trans, useTranslation, type PolingoProviderProps } from '../src';
 
@@ -25,25 +25,26 @@ type CatalogEntry =
     };
 
 function buildCatalog(entries: CatalogEntry[]): TranslationCatalog {
-  const translations: TranslationCatalog['translations'] = {};
+  const translations: Record<string, Record<string, Translation>> = {};
 
   for (const entry of entries) {
     const contextKey = entry.context ?? '';
-    if (!translations[contextKey]) {
-      translations[contextKey] = {};
-    }
+    const bucket: Record<string, Translation> =
+      translations[contextKey] ?? (translations[contextKey] = {});
 
-    if (Array.isArray(entry.translation)) {
-      translations[contextKey][entry.msgid] = {
+    if ('plural' in entry) {
+      const translationEntry: Translation = {
         msgid: entry.msgid,
         msgid_plural: entry.plural,
         msgstr: entry.translation,
       };
+      bucket[entry.msgid] = translationEntry;
     } else {
-      translations[contextKey][entry.msgid] = {
+      const translationEntry: Translation = {
         msgid: entry.msgid,
         msgstr: entry.translation,
       };
+      bucket[entry.msgid] = translationEntry;
     }
   }
 
@@ -75,17 +76,17 @@ const ES_CATALOG = buildCatalog([
 ]);
 
 const loader: TranslationLoader = {
-  async load(locale, domain) {
+  load(locale, domain) {
     if (domain !== 'messages') {
-      throw new Error(`Unknown domain ${domain}`);
+      return Promise.reject(new Error(`Unknown domain ${domain}`));
     }
     if (locale === 'en') {
-      return JSON.parse(JSON.stringify(EN_CATALOG)) as TranslationCatalog;
+      return Promise.resolve(JSON.parse(JSON.stringify(EN_CATALOG)) as TranslationCatalog);
     }
     if (locale === 'es') {
-      return JSON.parse(JSON.stringify(ES_CATALOG)) as TranslationCatalog;
+      return Promise.resolve(JSON.parse(JSON.stringify(ES_CATALOG)) as TranslationCatalog);
     }
-    throw new Error(`Unsupported locale ${locale}`);
+    return Promise.reject(new Error(`Unsupported locale ${locale}`));
   },
 };
 
@@ -158,7 +159,7 @@ describe('PolingoProvider', () => {
       {
         create: async () => {
           await wait(30);
-          return await createTestTranslator('en');
+          return createTestTranslator('en');
         },
         loadingFallback: h('div', 'Loading translations...'),
       },
@@ -188,9 +189,7 @@ describe('PolingoProvider', () => {
 
     const mounted = mountWithProvider(
       {
-        create: async () => {
-          throw new Error('Failed to create translator');
-        },
+        create: () => Promise.reject(new Error('Failed to create translator')),
         onError(error) {
           captured = error;
         },
@@ -261,7 +260,7 @@ describe('PolingoProvider', () => {
       {
         create: async () => {
           await wait(40);
-          return await createTestTranslator('en');
+          return createTestTranslator('en');
         },
       },
       () => h(Caller)
@@ -394,7 +393,7 @@ describe('<Trans />', () => {
       {
         create: async () => {
           await wait(100);
-          return await createTestTranslator('en');
+          return createTestTranslator('en');
         },
       },
       () =>
