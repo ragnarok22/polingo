@@ -1,6 +1,6 @@
 {
   "name": "@polingo/core",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Core translation engine for Polingo (environment-agnostic)",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,6 +1,6 @@
 {
   "name": "@polingo/cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Command line tooling for the Polingo translation workflow",
   "type": "module",
   "main": "./dist/index.cjs",

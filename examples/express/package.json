@@ -1,6 +1,6 @@
 {
   "name": "polingo-express-example",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,8 +9,8 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@polingo/core": "^0.0.1",
-    "@polingo/node": "^0.0.1",
+    "@polingo/core": "^0.0.2",
+    "@polingo/node": "^0.0.2",
     "express": "^4.21.1"
   },
   "devDependencies": {

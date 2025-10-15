@@ -1,6 +1,6 @@
 {
   "name": "polingo-react-example",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,14 +12,14 @@
     "validate": "pnpm exec polingo validate locales"
   },
   "dependencies": {
-    "@polingo/core": "^0.0.1",
-    "@polingo/react": "^0.0.1",
-    "@polingo/web": "^0.0.1",
+    "@polingo/core": "^0.0.2",
+    "@polingo/react": "^0.0.2",
+    "@polingo/web": "^0.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@polingo/cli": "^0.0.1",
+    "@polingo/cli": "^0.0.2",
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
