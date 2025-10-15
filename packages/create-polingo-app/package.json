@@ -1,0 +1,40 @@
+{
+  "name": "create-polingo-app",
+  "version": "0.0.1",
+  "description": "Interactive scaffolder for Polingo example applications",
+  "type": "module",
+  "bin": {
+    "create-polingo-app": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "polingo",
+    "create",
+    "scaffold",
+    "cli"
+  ],
+  "author": "Reinier Hernández Avila",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ragnarok22/polingo.git",
+    "directory": "packages/create-polingo-app"
+  },
+  "bugs": {
+    "url": "https://github.com/ragnarok22/polingo/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  }
+}

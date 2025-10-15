@@ -64,6 +64,18 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/create-polingo-app:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.7.2
+        version: 24.7.2
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.0(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/core:
     devDependencies:
       '@types/node':

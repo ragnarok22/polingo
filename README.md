@@ -39,6 +39,7 @@ Polingo is organized as a monorepo with the following packages:
 - **[@polingo/web](https://github.com/ragnarok22/polingo/tree/main/packages/web)**: Browser adapter using fetch + localStorage caching
 - **[@polingo/react](https://github.com/ragnarok22/polingo/tree/main/packages/react)**: React bindings with hooks, context provider, and Trans component
 - **[@polingo/cli](https://github.com/ragnarok22/polingo/tree/main/packages/cli)**: Command-line tools for extraction, compilation, and validation
+- **[create-polingo-app](https://github.com/ragnarok22/polingo/tree/main/packages/create-polingo-app)**: Interactive scaffolding for example applications
 
 ## Installation
 
@@ -71,6 +72,16 @@ pnpm add -D @polingo/cli
 ```bash
 npm install @polingo/core
 ```
+
+## Example Templates
+
+Scaffold a working starter directly from the `examples/` catalog using the interactive creator:
+
+```bash
+pnpm create polingo-app
+```
+
+You'll be prompted to pick one of the maintained examples (React + Vite, Express, etc.) and a destination folder. The generator copies the selected template, refreshes the package name, and leaves you ready to install dependencies and start coding.
 
 ## Quick Start
 
