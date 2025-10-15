@@ -14,21 +14,38 @@ Polingo brings industry-standard gettext catalogs to modern JavaScript runtimes.
 
 ## Installation
 
-Install the package that matches your runtime. The Node.js bundle includes filesystem loading and middleware helpers, while the core package gives you the low-level translator.
+Pick the packages that match your runtime. You can mix and match them in the same project.
+
+### Node.js backends
 
 ```bash
 pnpm add @polingo/node
-# or
-npm install @polingo/node
 ```
 
-If you only need the framework-agnostic translator (for example in edge runtimes or custom loaders), install the core package instead:
+### Browser or edge environments
+
+```bash
+pnpm add @polingo/web
+```
+
+### Framework-agnostic usage
 
 ```bash
 pnpm add @polingo/core
 ```
 
-For browser apps, use the web adapter which wraps the core translator with an HTTP loader and localStorage cache:
+### Framework bindings
+
+- React: `pnpm add @polingo/react @polingo/web`
+- Vue: `pnpm add @polingo/vue @polingo/web`
+
+### CLI tooling (recommended)
+
+Install the CLI as a dev dependency when you need to extract, compile, or validate catalogs:
+
+```bash
+pnpm add -D @polingo/cli
+```
 
 ## Verify your environment
 
@@ -62,10 +79,6 @@ For browser apps, use the web adapter which wraps the core translator with an HT
 
 3. If you are using TypeScript, add `"@polingo/*"` to your `types` array or rely on automatic type acquisition.
 4. When the setup looks good, continue with the runtime-specific quick starts below.
-
-```bash
-pnpm add @polingo/web
-```
 
 ## Project structure
 
@@ -114,7 +127,7 @@ const polingo = await createPolingo({
 document.querySelector('#headline')!.textContent = polingo.t('Welcome');
 ```
 
-Ship JSON exports of your catalogs at `<baseUrl>/<locale>/<domain>.json`. Use the same domain naming convention as the Node.js package. To generate these files, run `pnpm polingo export --format=json --out public/locales`.
+Ship JSON exports of your catalogs at `<baseUrl>/<locale>/<domain>.json`. Use the same domain naming convention as the Node.js package. To generate these files, run `pnpm exec polingo compile locales --out public/locales --format json --pretty`.
 
 ## Next steps
 
