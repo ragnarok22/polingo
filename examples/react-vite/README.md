@@ -9,9 +9,9 @@ This example demonstrates how to use Polingo in a React application with Vite. I
 - **Pluralization** - Using `tn()` for plural-aware translations
 - **Rich text translations** - Using `<Trans>` component with embedded React elements
 - **Context-aware translations** - Using `tp()` to disambiguate homonyms
-- **Locale switching** - Dynamic language switching with `setLocale()`
-- **Loading states** - Proper handling of async catalog loading
-- **Error handling** - Graceful error display
+- **Locale switching** - Dynamic language switching with `setLocale()` and disabled buttons while loading
+- **Loading fallback UI** - `loadingFallback` keeps the UI responsive while catalogs load
+- **Error handling** - `onError` callback surfaces failures with a friendly message
 
 ## Project Structure
 
@@ -34,7 +34,7 @@ react-vite/
 │       └── messages.po
 ├── src/
 │   ├── components/
-│   │   ├── AppContent.tsx        # Main app content with routing
+│   │   ├── AppContent.tsx        # Main app content and feature showcase
 │   │   ├── BasicTranslation.tsx  # Basic t() example
 │   │   ├── VariableTranslation.tsx # Variable interpolation example
 │   │   ├── PluralTranslation.tsx  # Plural forms example
@@ -120,23 +120,32 @@ The app is wrapped with `PolingoProvider` in `src/App.tsx`:
 
 ```tsx
 <PolingoProvider
-  create={() =>
-    createPolingo({
-      locale: 'en',
-      locales: ['en', 'es', 'fr'],
-      loader: {
-        baseUrl: '/i18n',
-      },
-    })
+  create={{
+    locale: 'en',
+    locales: ['en', 'es', 'fr'],
+    fallback: 'en',
+    cache: true,
+    loader: {
+      baseUrl: '/i18n',
+    },
+  }}
+  loadingFallback={
+    <div className="container">
+      <div className="loading">Loading translations...</div>
+    </div>
   }
+  onError={(error) => {
+    console.error('[Polingo] Failed to initialize translator', error);
+  }}
 >
   <AppContent />
 </PolingoProvider>
 ```
 
-The `create` prop is a factory function that returns a `Promise<Translator>`. The provider handles:
+The `create` prop accepts either a configuration object (shown above) or a factory that returns a `Promise<Translator>`. The provider handles:
 - Loading catalogs asynchronously
-- Providing loading/error states
+- Rendering a fallback while translations load
+- Invoking `onError` if translator creation fails
 - Making the translator available to all child components
 
 ### Using Translations
@@ -144,7 +153,7 @@ The `create` prop is a factory function that returns a `Promise<Translator>`. Th
 Components can access translations via the `useTranslation` hook:
 
 ```tsx
-const { t, tp, tn, tnp, locale, setLocale } = useTranslation();
+const { t, tp, tn, tnp, locale, loading, error, setLocale } = useTranslation();
 
 // Basic translation
 t('Welcome to Polingo')
@@ -160,6 +169,14 @@ tp('menu', 'File')
 
 // Switch locale
 setLocale('es')
+
+if (loading) {
+  // Disable UI while catalogs are loading
+}
+
+if (error) {
+  // Surface errors reported by the provider
+}
 ```
 
 ### Rich Text Translations
@@ -226,7 +243,7 @@ Check for missing or fuzzy translations before deploying.
 
 ### LanguageSwitcher
 
-A simple component that shows buttons for each available language. Clicking a button calls `setLocale()` to switch the current language.
+Displays accessible buttons for each available language. Buttons disable while catalogs reload, and clicking one calls `setLocale()` to switch locales.
 
 ### BasicTranslation
 
@@ -269,17 +286,21 @@ A simple list that demonstrates batch translation of multiple strings.
 You can customize where catalogs are loaded from:
 
 ```tsx
-createPolingo({
-  locale: 'en',
-  locales: ['en', 'es', 'fr'],
-  loader: {
-    buildUrl: (locale, domain) =>
-      `https://cdn.example.com/translations/${locale}/${domain}.json`,
-    requestInit: {
-      credentials: 'include',
+<PolingoProvider
+  create={{
+    locale: 'en',
+    locales: ['en', 'es', 'fr'],
+    loader: {
+      buildUrl: (locale, domain) =>
+        `https://cdn.example.com/translations/${locale}/${domain}.json`,
+      requestInit: {
+        credentials: 'include',
+      },
     },
-  },
-})
+  }}
+>
+  <AppContent />
+</PolingoProvider>
 ```
 
 ### Enabling Cache
@@ -287,16 +308,30 @@ createPolingo({
 Enable localStorage caching to avoid re-fetching catalogs:
 
 ```tsx
-createPolingo({
-  locale: 'en',
-  locales: ['en', 'es', 'fr'],
-  loader: { baseUrl: '/i18n' },
-  cache: true,
-  cacheOptions: {
-    prefix: 'my-app',
-    ttlMs: 86_400_000, // 24 hours
-  },
-})
+<PolingoProvider
+  create={{
+    locale: 'en',
+    locales: ['en', 'es', 'fr'],
+    loader: { baseUrl: '/i18n' },
+    cache: true,
+    cacheOptions: {
+      prefix: 'my-app',
+      ttlMs: 86_400_000, // 24 hours
+    },
+  }}
+>
+  <AppContent />
+</PolingoProvider>
+```
+
+### Customizing the Loading Fallback
+
+Provide any React node to `loadingFallback` to control what renders while catalogs load (where `config` is the same object you pass to `create`):
+
+```tsx
+<PolingoProvider create={config} loadingFallback={<FullScreenSpinner />}>
+  <AppContent />
+</PolingoProvider>
 ```
 
 ## Production Build
@@ -326,7 +361,7 @@ pnpm preview
 - Make sure you ran `pnpm compile` to generate JSON catalogs
 - Check that `public/i18n/{locale}/messages.json` files exist
 - Check the browser console for network errors
-- Verify the `baseUrl` in `createPolingo()` matches your public directory structure
+- Verify the `baseUrl` in your provider config (`create.loader.baseUrl`) matches your public directory structure
 
 ### "Cannot read property 't' of undefined"
 

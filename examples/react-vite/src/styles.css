@@ -48,6 +48,12 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.header-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  margin-bottom: 2rem;
+}
+
 .language-switcher {
   display: flex;
   gap: 0.5rem;
@@ -79,6 +85,16 @@ body {
   border-color: var(--primary);
   background-color: var(--primary);
   color: white;
+}
+
+.lang-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.lang-button.active:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .flag {
@@ -291,6 +307,26 @@ body {
 
 .error {
   color: var(--error);
+}
+
+.error-banner {
+  background-color: white;
+  border: 1px solid var(--error);
+  border-left-width: 4px;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  color: var(--error);
+}
+
+.error-banner h2 {
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.error-banner p {
+  color: var(--text);
 }
 
 @media (max-width: 640px) {

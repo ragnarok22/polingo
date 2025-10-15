@@ -8,20 +8,15 @@ import { ContextTranslation } from './ContextTranslation';
 import { Features } from './Features';
 
 export function AppContent() {
-  const { loading, error } = useTranslation();
-
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="loading">Loading translations...</div>
-      </div>
-    );
-  }
+  const { error, t } = useTranslation();
 
   if (error) {
     return (
       <div className="container">
-        <div className="error">Failed to load translations: {error.message}</div>
+        <div className="error-banner">
+          <h2>{t('Failed to load translations')}</h2>
+          <p>{t('Check the console for more details and reload the page.')}</p>
+        </div>
       </div>
     );
   }
@@ -29,7 +24,8 @@ export function AppContent() {
   return (
     <div className="container">
       <header className="header">
-        <h1>Polingo React Example</h1>
+        <h1>{t('Polingo React Example')}</h1>
+        <p className="header-subtitle">{t('Explore how Polingo works with React and Vite')}</p>
         <LanguageSwitcher />
       </header>
 

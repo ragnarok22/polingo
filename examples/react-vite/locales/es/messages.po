@@ -10,6 +10,12 @@ msgstr "Bienvenido a Polingo"
 msgid "A modern i18n library for JavaScript"
 msgstr "Una biblioteca moderna de i18n para JavaScript"
 
+msgid "Polingo React Example"
+msgstr "Ejemplo de Polingo con React"
+
+msgid "Explore how Polingo works with React and Vite"
+msgstr "Explora cómo funciona Polingo con React y Vite"
+
 msgid "Current language"
 msgstr "Idioma actual"
 
@@ -38,6 +44,12 @@ msgstr "Traducción de texto enriquecido"
 
 msgid "Translation with Context"
 msgstr "Traducción con contexto"
+
+msgid "Failed to load translations"
+msgstr "No se pudieron cargar las traducciones"
+
+msgid "Check the console for more details and reload the page."
+msgstr "Revisa la consola para más detalles y recarga la página."
 
 msgctxt "menu"
 msgid "File"
