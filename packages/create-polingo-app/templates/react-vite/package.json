@@ -1,0 +1,29 @@
+{
+  "name": "polingo-react-example",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm compile && vite build",
+    "preview": "vite preview",
+    "extract": "pnpm exec polingo extract src --default-locale en",
+    "compile": "pnpm exec polingo compile locales/en -o public/i18n/en --format json && pnpm exec polingo compile locales/es -o public/i18n/es --format json && pnpm exec polingo compile locales/fr -o public/i18n/fr --format json",
+    "validate": "pnpm exec polingo validate locales"
+  },
+  "dependencies": {
+    "@polingo/core": "^0.0.1",
+    "@polingo/react": "^0.0.1",
+    "@polingo/web": "^0.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@polingo/cli": "^0.0.1",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.11"
+  }
+}

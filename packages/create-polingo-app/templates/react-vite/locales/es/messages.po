@@ -1,0 +1,93 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Welcome to Polingo"
+msgstr "Bienvenido a Polingo"
+
+msgid "A modern i18n library for JavaScript"
+msgstr "Una biblioteca moderna de i18n para JavaScript"
+
+msgid "Polingo React Example"
+msgstr "Ejemplo de Polingo con React"
+
+msgid "Explore how Polingo works with React and Vite"
+msgstr "Explora cómo funciona Polingo con React y Vite"
+
+msgid "Current language"
+msgstr "Idioma actual"
+
+msgid "Switch Language"
+msgstr "Cambiar idioma"
+
+msgid "Hello {name}!"
+msgstr "¡Hola {name}!"
+
+msgid "You have {count} new message"
+msgid_plural "You have {count} new messages"
+msgstr[0] "Tienes {count} mensaje nuevo"
+msgstr[1] "Tienes {count} mensajes nuevos"
+
+msgid "Basic Translation"
+msgstr "Traducción básica"
+
+msgid "Translation with Variables"
+msgstr "Traducción con variables"
+
+msgid "Plural Translation"
+msgstr "Traducción plural"
+
+msgid "Rich Text Translation"
+msgstr "Traducción de texto enriquecido"
+
+msgid "Translation with Context"
+msgstr "Traducción con contexto"
+
+msgid "Failed to load translations"
+msgstr "No se pudieron cargar las traducciones"
+
+msgid "Check the console for more details and reload the page."
+msgstr "Revisa la consola para más detalles y recarga la página."
+
+msgctxt "menu"
+msgid "File"
+msgstr "Archivo"
+
+msgctxt "document"
+msgid "File"
+msgstr "Archivo (Documento)"
+
+msgid "Read the <0>documentation</0> to learn more"
+msgstr "Lee la <0>documentación</0> para aprender más"
+
+msgid "This text is <0>bold</0> and this is <1>italic</1>"
+msgstr "Este texto está en <0>negrita</0> y esto en <1>cursiva</1>"
+
+msgid "Increment Counter"
+msgstr "Incrementar contador"
+
+msgid "Reset Counter"
+msgstr "Reiniciar contador"
+
+msgid "Features"
+msgstr "Características"
+
+msgid "Industry-standard .po/.mo files"
+msgstr "Archivos .po/.mo estándar de la industria"
+
+msgid "Framework-agnostic core"
+msgstr "Núcleo independiente del framework"
+
+msgid "React hooks and components"
+msgstr "Hooks y componentes de React"
+
+msgid "CLI tools for workflow"
+msgstr "Herramientas CLI para el flujo de trabajo"
+
+msgid "TypeScript support"
+msgstr "Soporte de TypeScript"
+
+msgid "Multiple domains support"
+msgstr "Soporte para múltiples dominios"

@@ -37,18 +37,18 @@ async function main(): Promise<void> {
     return;
   }
 
-  const examplesDir = await findExamplesDirectory();
-  if (!examplesDir) {
+  const templatesDir = await findTemplatesDirectory();
+  if (!templatesDir) {
     console.error(
-      'No se pudo localizar la carpeta "examples". Ejecuta este comando desde el repositorio de Polingo o instala el paquete desde npm.'
+      'No se pudo localizar el directorio de plantillas. Asegúrate de ejecutar este comando desde el repositorio de Polingo o de instalar el paquete desde npm.'
     );
     process.exitCode = 1;
     return;
   }
 
-  const templates = await discoverTemplates(examplesDir);
+  const templates = await discoverTemplates(templatesDir);
   if (templates.length === 0) {
-    console.error(`No se encontraron ejemplos dentro de ${examplesDir}.`);
+    console.error(`No se encontraron ejemplos dentro de ${templatesDir}.`);
     process.exitCode = 1;
     return;
   }
@@ -144,10 +144,15 @@ Opciones:
   -h, --help                  Muestra esta ayuda.`);
 }
 
-async function findExamplesDirectory(): Promise<string | undefined> {
+async function findTemplatesDirectory(): Promise<string | undefined> {
   const currentFile = fileURLToPath(import.meta.url);
   let currentDir = path.dirname(currentFile);
   const root = path.parse(currentDir).root;
+
+  const bundledTemplates = path.resolve(currentDir, '../templates');
+  if (await pathExists(bundledTemplates)) {
+    return bundledTemplates;
+  }
 
   while (currentDir !== root) {
     const candidate = path.resolve(currentDir, 'examples');
@@ -370,6 +375,15 @@ async function updatePackageName(destination: string, appName: string): Promise<
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return Boolean(error) && typeof error === 'object' && 'code' in error;
+}
+
+async function pathExists(candidate: string): Promise<boolean> {
+  try {
+    const stats = await stat(candidate);
+    return stats.isDirectory();
+  } catch {
+    return false;
+  }
 }
 
 void main().catch((error: unknown) => {

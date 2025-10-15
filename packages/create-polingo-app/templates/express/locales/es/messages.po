@@ -1,0 +1,24 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: polingo-express-example 0.0.1\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Welcome to the Polingo Express example!"
+msgstr "Bienvenido al ejemplo de Polingo con Express"
+
+msgid "Try visiting /greeting/Alice?locale=es or /notifications?count=3&locale=es."
+msgstr "Visita /greeting/Alice?locale=es o /notifications?count=3&locale=es."
+
+msgid "Using locale: {locale}"
+msgstr "Usando el locale: {locale}"
+
+msgid "Hello {name}!"
+msgstr "Hola {name}!"
+
+msgid "You have {count} notification"
+msgid_plural "You have {count} notifications"
+msgstr[0] "Tienes {count} notificacion"
+msgstr[1] "Tienes {count} notificaciones"

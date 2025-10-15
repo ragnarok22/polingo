@@ -1,0 +1,348 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --secondary: #64748b;
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --error: #ef4444;
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+}
+
+.header-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  margin-bottom: 2rem;
+}
+
+.language-switcher {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.lang-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lang-button:hover {
+  border-color: var(--primary);
+  background-color: var(--background);
+}
+
+.lang-button.active {
+  border-color: var(--primary);
+  background-color: var(--primary);
+  color: white;
+}
+
+.lang-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.lang-button.active:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.flag {
+  font-size: 1.25rem;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card {
+  background-color: var(--surface);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.card h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border);
+}
+
+.example-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.example-subtitle {
+  font-size: 1rem;
+  color: var(--text-light);
+  margin-bottom: 1rem;
+}
+
+.example-result {
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: var(--background);
+  border-radius: 0.5rem;
+  border-left: 3px solid var(--primary);
+}
+
+.example-description {
+  margin-bottom: 1rem;
+  color: var(--text-light);
+}
+
+.code-block {
+  display: block;
+  background-color: #1e293b;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  margin-top: 1rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.input-group label {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.input-group input {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.button-group button {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button-group button:hover {
+  border-color: var(--primary);
+  background-color: var(--primary);
+  color: white;
+}
+
+.button-group button.reset {
+  margin-left: auto;
+}
+
+.counter {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary);
+  min-width: 3rem;
+  text-align: center;
+}
+
+.context-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.context-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background-color: var(--background);
+  border-radius: 0.5rem;
+}
+
+.context-label {
+  font-weight: 500;
+  color: var(--text-light);
+  min-width: 150px;
+}
+
+.context-value {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.features-card {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  color: white;
+  border: none;
+}
+
+.features-card h2 {
+  color: white;
+  border-bottom-color: rgba(255, 255, 255, 0.3);
+}
+
+.features-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.75rem;
+}
+
+.features-list li {
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 500;
+}
+
+.features-list li::before {
+  content: '✓ ';
+  margin-right: 0.5rem;
+  font-weight: 700;
+}
+
+.footer {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border);
+  text-align: center;
+  color: var(--text-light);
+}
+
+.loading,
+.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.error {
+  color: var(--error);
+}
+
+.error-banner {
+  background-color: white;
+  border: 1px solid var(--error);
+  border-left-width: 4px;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  color: var(--error);
+}
+
+.error-banner h2 {
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.error-banner p {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .lang-name {
+    display: none;
+  }
+
+  .features-list {
+    grid-template-columns: 1fr;
+  }
+}
