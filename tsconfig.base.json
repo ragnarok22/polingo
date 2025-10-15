@@ -9,7 +9,8 @@
     "paths": {
       "@polingo/core": ["packages/core/src/index.ts"],
       "@polingo/web": ["packages/web/src/index.ts"],
-      "@polingo/react": ["packages/react/src/index.ts"]
+      "@polingo/react": ["packages/react/src/index.ts"],
+      "@polingo/vue": ["packages/vue/src/index.ts"]
     },
     
     // Interop

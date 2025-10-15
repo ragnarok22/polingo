@@ -22,6 +22,7 @@ export default defineConfig({
       '@polingo/core': resolve(__dirname, './packages/core/src'),
       '@polingo/web': resolve(__dirname, './packages/web/src'),
       '@polingo/react': resolve(__dirname, './packages/react/src'),
+      '@polingo/vue': resolve(__dirname, './packages/vue/src'),
     },
   },
 });

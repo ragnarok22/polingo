@@ -1,0 +1,62 @@
+{
+  "name": "@polingo/vue",
+  "version": "0.0.1",
+  "description": "Vue bindings for the Polingo translation engine",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "polingo",
+    "i18n",
+    "internationalization",
+    "gettext",
+    "vue",
+    "translations"
+  ],
+  "author": "Reinier Hernández Avila",
+  "license": "MIT",
+  "homepage": "https://github.com/ragnarok22/polingo#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ragnarok22/polingo.git",
+    "directory": "packages/vue"
+  },
+  "bugs": {
+    "url": "https://github.com/ragnarok22/polingo/issues"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0 || ^3.4.0 || ^3.5.0"
+  },
+  "dependencies": {
+    "@polingo/core": "workspace:*",
+    "@polingo/web": "workspace:*"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.3",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4",
+    "vue": "^3.5.13"
+  }
+}
