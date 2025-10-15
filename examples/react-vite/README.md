@@ -186,7 +186,7 @@ function MyComponent() {
 pnpm extract
 ```
 
-This scans your source code and generates/updates `locales/messages.pot` with all translatable strings.
+This scans your source code, updates the locale catalogs under `./locales`, and removes the temporary `locales/messages.pot` template when it finishes. Add `--keep-template` if you need to inspect the generated POT file.
 
 ### 3. Update .po files for each locale
 

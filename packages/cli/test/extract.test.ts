@@ -139,6 +139,7 @@ describe('extract', () => {
     });
 
     expect(result.outFile).toBe(potFile);
+    expect(result.templateRemoved).toBe(false);
 
     const content = await readFile(potFile, 'utf8');
     expect(content).toContain('msgid "Hello"');
@@ -202,7 +203,7 @@ describe('extract', () => {
     await mkdir(srcDir, { recursive: true });
     await writeFile(join(srcDir, 'app.tsx'), `export const msg = t('New location');`);
 
-    await extract({
+    const result = await extract({
       sources: [srcDir],
       outFile: 'locales/messages.pot',
       cwd: tmpDir,
@@ -210,6 +211,9 @@ describe('extract', () => {
       languages: ['en', 'es'],
       defaultLocale: 'en',
     });
+
+    expect(result.templateRemoved).toBe(true);
+    await expect(readFile(join(tmpDir, 'locales/messages.pot'), 'utf8')).rejects.toThrow();
 
     const enCatalogBuffer = await readFile(join(tmpDir, 'locales/en/messages.po'));
     const esCatalogBuffer = await readFile(join(tmpDir, 'locales/es/messages.po'));
@@ -253,7 +257,7 @@ describe('extract', () => {
     };
     await writeFile(join(localesDir, 'messages.po'), po.compile(existingCatalog));
 
-    await extract({
+    const result = await extract({
       sources: [srcDir],
       outFile: 'locales/messages.pot',
       cwd: tmpDir,
@@ -261,6 +265,9 @@ describe('extract', () => {
       languages: ['en', 'es'],
       defaultLocale: 'en',
     });
+
+    expect(result.templateRemoved).toBe(true);
+    await expect(readFile(join(tmpDir, 'locales/messages.pot'), 'utf8')).rejects.toThrow();
 
     const esCatalogBuffer = await readFile(join(tmpDir, 'locales/es/messages.po'));
     const esCatalog = po.parse(esCatalogBuffer);

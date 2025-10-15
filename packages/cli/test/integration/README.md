@@ -60,7 +60,7 @@ fixtures/cli-test/
 │   ├── components.tsx
 │   └── features/
 └── locales/          # Generated translation files
-    ├── messages.pot  # Template file
+    ├── messages.pot  # Template file (only retained when --keep-template is used)
     ├── es/
     │   ├── messages.po
     │   └── messages.json
@@ -87,8 +87,8 @@ pnpm test test/integration/cli-workflow.test.ts
 The tests verify these CLI commands work correctly:
 
 ```bash
-# Extract translations from source code
-node dist/cli.js extract src --output locales/messages.pot
+# Extract translations from source code (keep the POT template for inspection)
+node dist/cli.js extract src --output locales/messages.pot --keep-template
 
 # Compile .po files to JSON
 node dist/cli.js compile locales --format json

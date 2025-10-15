@@ -1,4 +1,4 @@
-import { readdir, readFile, stat, writeFile, mkdir } from 'node:fs/promises';
+import { readdir, readFile, stat, writeFile, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { po, mo } from 'gettext-parser';
@@ -48,12 +48,14 @@ export interface ExtractOptions {
   localesDir?: string;
   languages?: string[];
   defaultLocale?: string;
+  keepTemplate?: boolean;
 }
 
 export interface ExtractResult {
   entries: ExtractEntry[];
   outFile: string;
   skipped: string[];
+  templateRemoved: boolean;
 }
 
 interface LocaleSyncOptions {
@@ -132,7 +134,10 @@ export async function runCli(argv = process.argv.slice(2)): Promise<number> {
         }
         const result = await extract(options);
         if (!options.quiet) {
-          console.log(`Extracted ${result.entries.length} messages into ${result.outFile}`);
+          const removalNote = result.templateRemoved ? ' (template removed)' : '';
+          console.log(
+            `Extracted ${result.entries.length} messages into ${result.outFile}${removalNote}`
+          );
           if (result.skipped.length > 0) {
             console.warn(`Skipped ${result.skipped.length} path(s): ${result.skipped.join(', ')}`);
           }
@@ -206,14 +211,15 @@ interface ParsedValidateArgs extends ValidateOptions {
 function parseExtractArgs(args: string[]): ParsedExtractArgs {
   const options: ParsedExtractArgs = {
     sources: [],
-    outFile: 'messages.pot',
+    outFile: path.join('locales', 'messages.pot'),
     cwd: process.cwd(),
     extensions: [...DEFAULT_EXTRACT_EXTENSIONS],
     dryRun: false,
     quiet: false,
-    localesDir: undefined,
+    localesDir: 'locales',
     languages: undefined,
     defaultLocale: undefined,
+    keepTemplate: false,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -248,6 +254,9 @@ function parseExtractArgs(args: string[]): ParsedExtractArgs {
         break;
       case '--quiet':
         options.quiet = true;
+        break;
+      case '--keep-template':
+        options.keepTemplate = true;
         break;
       case '--locales':
       case '--locales-dir': {
@@ -380,6 +389,7 @@ export async function extract(options: ExtractOptions): Promise<ExtractResult> {
 
   const { files, skipped } = await collectFiles(options.sources, cwd, extensions);
   const messages = new Map<string, PendingMessage>();
+  let templateRemoved = false;
 
   for (const file of files) {
     const content = await readFile(file, 'utf8');
@@ -449,10 +459,21 @@ export async function extract(options: ExtractOptions): Promise<ExtractResult> {
           console.log(`Synced locales (${parts.join(', ')}).`);
         }
       }
+
+      if (!options.keepTemplate) {
+        try {
+          await rm(outFile);
+          templateRemoved = true;
+        } catch (error) {
+          if (!isEnoent(error)) {
+            throw error;
+          }
+        }
+      }
     }
   }
 
-  return { entries, outFile, skipped };
+  return { entries, outFile, skipped, templateRemoved };
 }
 
 async function syncLocaleCatalogs(
@@ -1160,13 +1181,14 @@ function printExtractHelp(): void {
   console.log(`Usage: polingo extract [paths...] [options]
 
 Options:
-  -o, --out <file>        Output POT file (default: messages.pot)
+  -o, --out <file>        Output POT file (default: locales/messages.pot)
       --cwd <dir>         Working directory for relative paths
       --extensions <ext>  Comma-separated list of file extensions to scan
-      --locales <dir>     Locale root; sync per-language PO files alongside POT
+      --locales <dir>     Locale root; sync per-language PO files alongside POT (default: locales)
       --languages <list>  Comma-separated locale codes to ensure are present
       --default-locale    Locale code whose catalog copies source strings
       --dry-run           Print extracted strings without writing to disk
+      --keep-template     Retain the generated POT file instead of cleaning it up
       --quiet             Suppress completion message
   -h, --help              Show this help text`);
 }

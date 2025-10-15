@@ -204,8 +204,8 @@ Use the CLI to extract, compile, and validate translations:
 # Install CLI tools
 pnpm add -D @polingo/cli
 
-# Extract translatable strings from source code
-pnpm polingo extract src -o locales/messages.pot
+# Extract translatable strings from source code (updates ./locales)
+pnpm polingo extract
 
 # After translating .po files, compile to runtime format
 pnpm polingo compile locales -o public/i18n --format json

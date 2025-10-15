@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "pnpm compile && vite build",
     "preview": "vite preview",
-    "extract": "pnpm exec polingo extract src -o locales/messages.pot",
+    "extract": "pnpm exec polingo extract src --default-locale en",
     "compile": "pnpm exec polingo compile locales/en -o public/i18n/en --format json && pnpm exec polingo compile locales/es -o public/i18n/es --format json && pnpm exec polingo compile locales/fr -o public/i18n/fr --format json",
     "validate": "pnpm exec polingo validate locales"
   },

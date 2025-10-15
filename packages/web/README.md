@@ -1,5 +1,7 @@
 # @polingo/web
 
+![npm bundle size](https://img.shields.io/bundlephobia/min/%40polingo%2Fweb)
+
 > Browser-oriented loader and cache for the Polingo translation engine.
 
 `@polingo/web` bundles a Fetch-based loader and a resilient `localStorage` cache so you can use `@polingo/core` inside traditional SPAs, server-rendered apps that hydrate on the client, or edge runtimes with a compatible fetch implementation.

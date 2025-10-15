@@ -1,5 +1,7 @@
 # @polingo/react
 
+![npm bundle size](https://img.shields.io/bundlephobia/min/%40polingo%2Freact)
+
 React bindings for the Polingo translation engine.
 
 This package exposes a context provider, data hooks, and a rich-text `<Trans />` component that wrap the framework-agnostic `Translator` from `@polingo/core`.
@@ -197,17 +199,17 @@ function RichTextExample() {
 
 ### 6. Extract translatable strings from your code
 
-Use the CLI to scan your source code and generate a `.pot` template file:
+Use the CLI to scan your source code and update your locale catalogs:
 
 ```bash
-# Extract from src directory, sync locale catalogs, and output to locales/messages.pot
-pnpm polingo extract src -o locales/messages.pot --locales locales --languages en,es --default-locale en
+# Extract from src, sync locale catalogs, and auto-clean the temporary POT template
+pnpm polingo extract src --locales locales --languages en,es --default-locale en
 
 # Or use npx
-npx @polingo/cli extract src -o locales/messages.pot --locales locales --languages en,es --default-locale en
+npx @polingo/cli extract src --locales locales --languages en,es --default-locale en
 ```
 
-This command will find all calls to `t()`, `tp()`, `tn()`, `tnp()`, and `<Trans>` in your codebase, generate a template file at `locales/messages.pot`, and update (or create) `locales/<lang>/messages.po` for every locale you list. The default locale copies the source strings into `msgstr`, while other locales get empty placeholders ready for translators.
+This command finds all calls to `t()`, `tp()`, `tn()`, `tnp()`, and `<Trans>` in your codebase and updates (or creates) `locales/<lang>/messages.po` for every locale you list. The default locale copies the source strings into `msgstr`, while other locales get empty placeholders ready for translators. Add `--keep-template` if you need the generated `locales/messages.pot` for manual review.
 
 ### 7. Create locale-specific .po files
 
@@ -278,7 +280,7 @@ Add these commands to your `package.json`:
 ```json
 {
   "scripts": {
-    "extract": "polingo extract src -o locales/messages.pot",
+    "extract": "polingo extract src",
     "compile": "polingo compile locales -o public/i18n --format json",
     "validate": "polingo validate locales --strict",
     "prebuild": "pnpm extract && pnpm compile && pnpm validate",
@@ -294,7 +296,7 @@ Now running `pnpm build` will automatically extract, compile, and validate trans
 Here's the recommended workflow for managing translations:
 
 1. **Development**: Write code using `t()`, `tn()`, `tp()`, `tnp()`, and `<Trans>` components
-2. **Extract**: Run `pnpm extract` to generate/update `messages.pot`
+2. **Extract**: Run `pnpm extract` to update your locale catalogs (add `--keep-template` if you need the `messages.pot` artifact)
 3. **Update .po files**: Update each locale's `.po` file with new strings (manually or with tools)
 4. **Translate**: Add translations for new strings in each `.po` file
 5. **Validate**: Run `pnpm validate --strict` to check for missing translations

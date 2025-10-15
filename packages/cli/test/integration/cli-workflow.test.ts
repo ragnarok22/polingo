@@ -73,7 +73,7 @@ export const Component = () => {
       );
 
       // Run extract command
-      const output = runCLI('extract src --output locales/messages.pot');
+      const output = runCLI('extract src --output locales/messages.pot --keep-template');
 
       expect(output).toContain('Extracted');
 
@@ -113,7 +113,7 @@ const messages = {
 `
       );
 
-      const output = runCLI('extract src --output locales/messages.pot');
+      const output = runCLI('extract src --output locales/messages.pot --keep-template');
       expect(output).toContain('Extracted');
 
       const potContent = readFileSync(join(TEST_DIR, 'locales', 'messages.pot'), 'utf-8');
@@ -138,7 +138,7 @@ console.log(t('Hello'));
 `
       );
 
-      runCLI('extract src --output locales/messages.pot');
+      runCLI('extract src --output locales/messages.pot --keep-template');
 
       const potContent = readFileSync(join(TEST_DIR, 'locales', 'messages.pot'), 'utf-8');
 
@@ -146,6 +146,22 @@ console.log(t('Hello'));
       const matches = potContent.match(/msgid "Hello"/g);
       // Should appear only once in the .pot file
       expect(matches?.length).toBe(1);
+    });
+
+    it('should remove the POT template after syncing catalogs by default', () => {
+      mkdirSync(join(TEST_DIR, 'locales', 'en'), { recursive: true });
+      writeFileSync(
+        join(TEST_DIR, 'src', 'cleanup.ts'),
+        `
+console.log(t('Clean me'));
+`
+      );
+
+      const output = runCLI('extract src --output locales/messages.pot');
+      expect(output).toContain('template removed');
+
+      expect(existsSync(join(TEST_DIR, 'locales', 'messages.pot'))).toBe(false);
+      expect(existsSync(join(TEST_DIR, 'locales', 'en', 'messages.po'))).toBe(true);
     });
   });
 
@@ -352,7 +368,7 @@ console.log(t('Goodbye'));
       );
 
       // Step 2: Extract translations
-      runCLI('extract src --output locales/messages.pot');
+      runCLI('extract src --output locales/messages.pot --keep-template');
       expect(existsSync(join(TEST_DIR, 'locales', 'messages.pot'))).toBe(true);
 
       // Step 3: Create translated .po files (simulating manual translation)
@@ -437,7 +453,7 @@ msgstr "Configuración-${locale}"
 
   describe('Edge Cases', () => {
     it('should handle empty source directory', () => {
-      const output = runCLI('extract src --output locales/messages.pot');
+      const output = runCLI('extract src --output locales/messages.pot --keep-template');
       expect(output).toBeDefined();
       // Should create empty or minimal .pot file
     });
@@ -463,7 +479,7 @@ console.log(t('Newline:\\nTest'));
 `
       );
 
-      const output = runCLI('extract src --output locales/messages.pot');
+      const output = runCLI('extract src --output locales/messages.pot --keep-template');
       expect(output).toBeDefined();
 
       const potContent = readFileSync(join(TEST_DIR, 'locales', 'messages.pot'), 'utf-8');
