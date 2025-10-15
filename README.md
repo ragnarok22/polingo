@@ -8,6 +8,7 @@
 [![Downloads @polingo/node](https://img.shields.io/npm/dm/@polingo/node?label=%40polingo%2Fnode)](https://www.npmjs.com/package/@polingo/node)
 [![Downloads @polingo/web](https://img.shields.io/npm/dm/@polingo/web?label=%40polingo%2Fweb)](https://www.npmjs.com/package/@polingo/web)
 [![Downloads @polingo/react](https://img.shields.io/npm/dm/@polingo/react?label=%40polingo%2Freact)](https://www.npmjs.com/package/@polingo/react)
+[![Downloads @polingo/vue](https://img.shields.io/npm/dm/@polingo/vue?label=%40polingo%2Fvue)](https://www.npmjs.com/package/@polingo/vue)
 [![Downloads @polingo/cli](https://img.shields.io/npm/dm/@polingo/cli?label=%40polingo%2Fcli)](https://www.npmjs.com/package/@polingo/cli)
 
 Modern internationalization (i18n) library using industry-standard `.po` and `.mo` files for JavaScript/TypeScript projects.
