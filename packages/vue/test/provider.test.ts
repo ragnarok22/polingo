@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 // @vitest-environment jsdom
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createApp, defineComponent, h, nextTick, ref, type VNodeChild } from 'vue';
 import type { Translation, TranslationCatalog, TranslationLoader } from '@polingo/core';
 import { NoCache, Translator } from '@polingo/core';
@@ -64,6 +64,19 @@ const EN_CATALOG = buildCatalog([
     translation: ['You have {n} unread message', 'You have {n} unread messages'],
   },
   { msgid: 'Click <0>here</0>', translation: 'Click <0>here</0>' },
+  { msgid: 'Save', context: 'buttons', translation: 'Save' },
+  {
+    msgid: 'Invite {n} friend',
+    plural: 'Invite {n} friends',
+    translation: ['Invite {n} friend', 'Invite {n} friends'],
+    context: 'emails',
+  },
+  {
+    msgid: 'Decorated <bold>{name}</bold> and <italic>bye</italic>',
+    translation: 'Decorated <bold>{name}</bold> and <italic>bye</italic>',
+  },
+  { msgid: 'Wrap <0>{name}</0>', translation: 'Wrap <0>{name}</0>' },
+  { msgid: 'Icons <0/> done', translation: 'Icons <0/> done' },
 ]);
 
 const ES_CATALOG = buildCatalog([
@@ -74,6 +87,19 @@ const ES_CATALOG = buildCatalog([
     translation: ['Tienes {n} mensaje sin leer', 'Tienes {n} mensajes sin leer'],
   },
   { msgid: 'Click <0>here</0>', translation: 'Haz clic <0>aquí</0>' },
+  { msgid: 'Save', context: 'buttons', translation: 'Guardar' },
+  {
+    msgid: 'Invite {n} friend',
+    plural: 'Invite {n} friends',
+    translation: ['Invita a {n} amigo', 'Invita a {n} amigos'],
+    context: 'emails',
+  },
+  {
+    msgid: 'Decorated <bold>{name}</bold> and <italic>bye</italic>',
+    translation: 'Decorado <bold>{name}</bold> y <italic>adiós</italic>',
+  },
+  { msgid: 'Wrap <0>{name}</0>', translation: 'Envuelve <0>{name}</0>' },
+  { msgid: 'Icons <0/> done', translation: 'Iconos <0/> listo' },
 ]);
 
 const loader: TranslationLoader = {
@@ -308,6 +334,156 @@ describe('PolingoProvider', () => {
     expect(thrown).toBeInstanceOf(Error);
     mounted.unmount();
   });
+
+  it('does not trigger loading when setting current locale', async () => {
+    const translator = await createTestTranslator('en');
+    const setLocaleSpy = vi.spyOn(translator, 'setLocale');
+    let capturedSetLocale: ((locale: string) => Promise<void>) | undefined;
+
+    const Status = defineComponent({
+      name: 'Status',
+      setup() {
+        const { setLocale, loading } = useTranslation();
+        capturedSetLocale = setLocale;
+        return () => h('div', loading.value ? 'loading' : 'idle');
+      },
+    });
+
+    const mounted = mountWithProvider({ translator }, () => h(Status));
+
+    await nextTick();
+    expect(mounted.container.textContent).toBe('idle');
+
+    await capturedSetLocale?.('en');
+    await nextTick();
+
+    expect(setLocaleSpy).not.toHaveBeenCalled();
+    expect(mounted.container.textContent).toBe('idle');
+
+    mounted.unmount();
+    setLocaleSpy.mockRestore();
+  });
+
+  it('rejects empty locale changes', async () => {
+    const translator = await createTestTranslator('en');
+    const message = ref('');
+
+    const Caller = defineComponent({
+      name: 'Caller',
+      setup() {
+        const { setLocale } = useTranslation();
+        void setLocale('  ').catch((error) => {
+          message.value = (error as Error).message;
+        });
+        return () => h('div', 'Caller');
+      },
+    });
+
+    const mounted = mountWithProvider({ translator }, () => h(Caller));
+
+    await nextTick();
+
+    expect(message.value).toContain('requires a non-empty locale string');
+
+    mounted.unmount();
+  });
+
+  it('reacts to translator prop changes', async () => {
+    const translatorEn = await createTestTranslator('en');
+    const translatorEs = await createTestTranslator('es');
+    const provided = ref<Translator | null>(translatorEn);
+
+    const Display = defineComponent({
+      name: 'Display',
+      setup() {
+        const { locale, loading } = useTranslation();
+        return () =>
+          h('div', {
+            'data-locale': locale.value,
+            'data-loading': loading.value ? 'yes' : 'no',
+          });
+      },
+    });
+
+    const Root = defineComponent({
+      name: 'RootContainer',
+      setup() {
+        return () =>
+          h(
+            PolingoProvider,
+            {
+              translator: provided.value ?? undefined,
+            },
+            {
+              default: () => [h(Display)],
+            }
+          );
+      },
+    });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const app = createApp(Root);
+    app.mount(container);
+
+    await nextTick();
+    const element = container.querySelector('div[data-locale]');
+    expect(element?.getAttribute('data-locale')).toBe('en');
+    expect(element?.getAttribute('data-loading')).toBe('no');
+
+    provided.value = translatorEs;
+    await nextTick();
+
+    expect(element?.getAttribute('data-locale')).toBe('es');
+    expect(element?.getAttribute('data-loading')).toBe('no');
+
+    provided.value = null;
+    await nextTick();
+
+    expect(element?.getAttribute('data-locale')).toBe('');
+    expect(element?.getAttribute('data-loading')).toBe('no');
+
+    app.unmount();
+    container.remove();
+  });
+
+  it('uses plural fallbacks while translator initializes', async () => {
+    const Viewer = defineComponent({
+      name: 'FallbackViewer',
+      setup() {
+        const { tn, tnp } = useTranslation();
+        return () =>
+          h('div', [
+            h('p', { id: 'tn' }, tn('I have {n} apple', 'I have {n} apples', 3)),
+            h(
+              'p',
+              { id: 'tnp' },
+              tnp('ctx', 'Invite {n} guest', 'Invite {n} guests', 1, { guest: 'Luis' })
+            ),
+          ]);
+      },
+    });
+
+    const mounted = mountWithProvider(
+      {
+        create: async () => {
+          await wait(60);
+          return createTestTranslator('en');
+        },
+      },
+      () => h(Viewer)
+    );
+
+    await nextTick();
+
+    expect(mounted.container.querySelector('#tn')?.textContent).toBe('I have 3 apples');
+    expect(mounted.container.querySelector('#tnp')?.textContent).toBe('Invite 1 guest');
+
+    await wait(80);
+    await nextTick();
+
+    mounted.unmount();
+  });
 });
 
 describe('<Trans />', () => {
@@ -428,6 +604,137 @@ describe('<Trans />', () => {
     const button = mounted.container.querySelector('button');
     expect(button).not.toBeNull();
     expect(button?.textContent).toBe('here');
+
+    mounted.unmount();
+  });
+
+  it('renders contextual translations', async () => {
+    const translator = await createTestTranslator('es');
+
+    const mounted = mountWithProvider({ translator }, () =>
+      h(Trans, {
+        message: 'Save',
+        context: 'buttons',
+      })
+    );
+
+    await nextTick();
+
+    expect(mounted.container.textContent).toBe('Guardar');
+    mounted.unmount();
+  });
+
+  it('renders contextual plural translations', async () => {
+    const translator = await createTestTranslator('es');
+
+    const mounted = mountWithProvider({ translator }, () =>
+      h(Trans, {
+        message: 'Invite {n} friend',
+        plural: 'Invite {n} friends',
+        context: 'emails',
+        count: 3,
+      })
+    );
+
+    await nextTick();
+
+    expect(mounted.container.textContent).toBe('Invita a 3 amigos');
+    mounted.unmount();
+  });
+
+  it('supports component records and objects', async () => {
+    const translator = await createTestTranslator('en');
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const Bold = defineComponent({
+      name: 'BoldWord',
+      setup(_, { slots }) {
+        return () => h('strong', slots.default ? slots.default() : []);
+      },
+    });
+
+    const mounted = mountWithProvider({ translator }, () =>
+      h(Trans, {
+        message: 'Decorated <bold>{name}</bold> and <italic>bye</italic>',
+        values: { name: 'Ana' },
+        components: {
+          bold: Bold,
+          italic: h('em'),
+        },
+      })
+    );
+
+    await nextTick();
+
+    const strong = mounted.container.querySelector('strong');
+    expect(strong?.textContent).toBe('Ana');
+
+    const italic = mounted.container.querySelector('em');
+    expect(italic?.textContent).toBe('bye');
+
+    mounted.unmount();
+    warnSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it('wraps unknown component placeholders', async () => {
+    const translator = await createTestTranslator('en');
+
+    const mounted = mountWithProvider({ translator }, () =>
+      h(Trans, {
+        message: 'Decorated <bold>{name}</bold> and <italic>bye</italic>',
+        values: { name: 'Eva' },
+        components: {
+          bold: h('strong'),
+        },
+      })
+    );
+
+    await nextTick();
+
+    const html = mounted.container.innerHTML;
+    expect(html).toContain('Decorated');
+    expect(html).toContain('bye');
+    expect(mounted.container.querySelector('em')).toBeNull();
+
+    mounted.unmount();
+  });
+
+  it('merges primitive component values with children', async () => {
+    const translator = await createTestTranslator('en');
+
+    const mounted = mountWithProvider({ translator }, () =>
+      h(Trans, {
+        message: 'Wrap <0>{name}</0>',
+        values: { name: 'Zoe' },
+        components: ['⭐'],
+      })
+    );
+
+    await nextTick();
+
+    expect(mounted.container.textContent).toBe('Wrap ⭐Zoe');
+    mounted.unmount();
+  });
+
+  it('renders self-closing component placeholders', async () => {
+    const translator = await createTestTranslator('en');
+
+    const mounted = mountWithProvider({ translator }, () =>
+      h(Trans, {
+        message: 'Icons <0/> done',
+        components: [h('span', { class: 'icon' }, '✓')],
+      })
+    );
+
+    await nextTick();
+
+    const icon = mounted.container.querySelector('span.icon');
+    expect(icon?.textContent).toBe('✓');
+    expect(mounted.container.textContent).toContain('Icons');
+    expect(mounted.container.textContent).toContain('done');
 
     mounted.unmount();
   });
