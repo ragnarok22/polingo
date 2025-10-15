@@ -3,6 +3,7 @@ import { mkdir, writeFile, rm, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import { po } from 'gettext-parser';
 import { extract } from '../src/index.js';
 
 describe('extract', () => {
@@ -194,6 +195,81 @@ describe('extract', () => {
 
     expect(result.entries).toHaveLength(1);
     expect(result.entries[0].msgid).toBe('Hello\nWorld');
+  });
+
+  it('should sync locale catalogs when localesDir is provided', async () => {
+    const srcDir = join(tmpDir, 'src');
+    await mkdir(srcDir, { recursive: true });
+    await writeFile(join(srcDir, 'app.tsx'), `export const msg = t('New location');`);
+
+    await extract({
+      sources: [srcDir],
+      outFile: 'locales/messages.pot',
+      cwd: tmpDir,
+      localesDir: 'locales',
+      languages: ['en', 'es'],
+      defaultLocale: 'en',
+    });
+
+    const enCatalogBuffer = await readFile(join(tmpDir, 'locales/en/messages.po'));
+    const esCatalogBuffer = await readFile(join(tmpDir, 'locales/es/messages.po'));
+
+    const enCatalog = po.parse(enCatalogBuffer);
+    const esCatalog = po.parse(esCatalogBuffer);
+
+    const enMessage = enCatalog.translations['']['New location'];
+    const esMessage = esCatalog.translations['']['New location'];
+
+    expect(enMessage).toBeDefined();
+    expect(enMessage.msgstr[0]).toBe('New location');
+    expect(esMessage).toBeDefined();
+    expect(esMessage.msgstr[0]).toBe('');
+  });
+
+  it('should preserve existing translations while adding new keys', async () => {
+    const srcDir = join(tmpDir, 'src');
+    await mkdir(srcDir, { recursive: true });
+    await writeFile(
+      join(srcDir, 'app.tsx'),
+      `
+        t('Hello');
+        t('Goodbye');
+      `
+    );
+
+    const localesDir = join(tmpDir, 'locales/es');
+    await mkdir(localesDir, { recursive: true });
+    const existingCatalog = {
+      charset: 'utf-8',
+      headers: { Language: 'es' },
+      translations: {
+        '': {
+          Hello: {
+            msgid: 'Hello',
+            msgstr: ['Hola'],
+          },
+        },
+      },
+    };
+    await writeFile(join(localesDir, 'messages.po'), po.compile(existingCatalog));
+
+    await extract({
+      sources: [srcDir],
+      outFile: 'locales/messages.pot',
+      cwd: tmpDir,
+      localesDir: 'locales',
+      languages: ['en', 'es'],
+      defaultLocale: 'en',
+    });
+
+    const esCatalogBuffer = await readFile(join(tmpDir, 'locales/es/messages.po'));
+    const esCatalog = po.parse(esCatalogBuffer);
+
+    const hello = esCatalog.translations['']['Hello'];
+    const goodbye = esCatalog.translations['']['Goodbye'];
+
+    expect(hello.msgstr[0]).toBe('Hola');
+    expect(goodbye.msgstr[0]).toBe('');
   });
 
   it('should skip non-existent paths', async () => {

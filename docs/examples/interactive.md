@@ -25,12 +25,12 @@ Use `pnpm --filter polingo-react-example compile` whenever you add locales. The 
 The CLI ships with three commands that make translation workflows interactive:
 
 ```bash
-pnpm exec polingo extract src --out locales/messages.pot
+pnpm exec polingo extract src --out locales/messages.pot --locales locales --languages en,es --default-locale en
 pnpm exec polingo compile locales/en --out public/i18n/en --format json
 pnpm exec polingo validate locales --strict
 ```
 
-- `extract` scans source files for gettext calls and emits a `.pot` template.
+- `extract` scans source files for gettext calls, emits a `.pot` template, and (when `--locales` is passed) keeps each locale's `.po` file up to date—copying strings into the default locale automatically.
 - `compile` transforms `.po` or `.mo` catalogs into JSON or compiled binaries.
 - `validate` checks for missing plurals, inconsistent placeholders, and syntax errors.
 

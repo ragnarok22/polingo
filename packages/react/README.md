@@ -200,18 +200,18 @@ function RichTextExample() {
 Use the CLI to scan your source code and generate a `.pot` template file:
 
 ```bash
-# Extract from src directory, output to locales/messages.pot
-pnpm polingo extract src -o locales/messages.pot
+# Extract from src directory, sync locale catalogs, and output to locales/messages.pot
+pnpm polingo extract src -o locales/messages.pot --locales locales --languages en,es --default-locale en
 
 # Or use npx
-npx @polingo/cli extract src -o locales/messages.pot
+npx @polingo/cli extract src -o locales/messages.pot --locales locales --languages en,es --default-locale en
 ```
 
-This command will find all calls to `t()`, `tp()`, `tn()`, `tnp()`, and `<Trans>` in your codebase and generate a template file at `locales/messages.pot`.
+This command will find all calls to `t()`, `tp()`, `tn()`, `tnp()`, and `<Trans>` in your codebase, generate a template file at `locales/messages.pot`, and update (or create) `locales/<lang>/messages.po` for every locale you list. The default locale copies the source strings into `msgstr`, while other locales get empty placeholders ready for translators.
 
 ### 7. Create locale-specific .po files
 
-For each language you want to support, create a `.po` file based on the template:
+For each language you want to support, create a `.po` file based on the template (if you ran `polingo extract` with `--locales`, these files were created for you automatically):
 
 ```bash
 # Create directories

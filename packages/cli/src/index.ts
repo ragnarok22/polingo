@@ -44,12 +44,28 @@ export interface ExtractOptions {
   extensions?: string[];
   dryRun?: boolean;
   quiet?: boolean;
+  localesDir?: string;
+  languages?: string[];
+  defaultLocale?: string;
 }
 
 export interface ExtractResult {
   entries: ExtractEntry[];
   outFile: string;
   skipped: string[];
+}
+
+interface LocaleSyncOptions {
+  cwd: string;
+  localesDir: string;
+  potFile: string;
+  languages?: string[];
+  defaultLocale?: string;
+}
+
+interface LocaleSyncSummary {
+  created: string[];
+  updated: string[];
 }
 
 export interface CompileOptions {
@@ -194,6 +210,9 @@ function parseExtractArgs(args: string[]): ParsedExtractArgs {
     extensions: [...DEFAULT_EXTRACT_EXTENSIONS],
     dryRun: false,
     quiet: false,
+    localesDir: undefined,
+    languages: undefined,
+    defaultLocale: undefined,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -229,6 +248,26 @@ function parseExtractArgs(args: string[]): ParsedExtractArgs {
       case '--quiet':
         options.quiet = true;
         break;
+      case '--locales':
+      case '--locales-dir': {
+        const value = readNextValue(args, ++index, arg);
+        options.localesDir = value;
+        break;
+      }
+      case '--languages':
+      case '--langs': {
+        const value = readNextValue(args, ++index, arg);
+        options.languages = value
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean);
+        break;
+      }
+      case '--default-locale': {
+        const value = readNextValue(args, ++index, arg);
+        options.defaultLocale = value.trim();
+        break;
+      }
       default:
         options.sources.push(arg);
     }
@@ -387,9 +426,273 @@ export async function extract(options: ExtractOptions): Promise<ExtractResult> {
     await mkdir(path.dirname(outFile), { recursive: true });
     const potContent = renderPot(entries);
     await writeFile(outFile, potContent, 'utf8');
+
+    if (options.localesDir) {
+      const summary = await syncLocaleCatalogs(entries, {
+        cwd,
+        localesDir: options.localesDir,
+        potFile: outFile,
+        languages: options.languages,
+        defaultLocale: options.defaultLocale,
+      });
+
+      if (!options.quiet && summary) {
+        const parts: string[] = [];
+        if (summary.created.length > 0) {
+          parts.push(`created ${summary.created.length} catalog(s)`);
+        }
+        if (summary.updated.length > 0) {
+          parts.push(`updated ${summary.updated.length} catalog(s)`);
+        }
+        if (parts.length > 0) {
+          console.log(`Synced locales (${parts.join(', ')}).`);
+        }
+      }
+    }
   }
 
   return { entries, outFile, skipped };
+}
+
+async function syncLocaleCatalogs(
+  entries: ExtractEntry[],
+  options: LocaleSyncOptions
+): Promise<LocaleSyncSummary | null> {
+  const localesRoot = path.isAbsolute(options.localesDir)
+    ? options.localesDir
+    : path.resolve(options.cwd, options.localesDir);
+
+  const languages =
+    options.languages && options.languages.length > 0
+      ? Array.from(new Set(options.languages))
+      : await detectLocaleDirectories(localesRoot);
+
+  if (languages.length === 0) {
+    return null;
+  }
+
+  await mkdir(localesRoot, { recursive: true });
+
+  const poFileName = derivePoFileName(options.potFile);
+  const summary: LocaleSyncSummary = { created: [], updated: [] };
+
+  for (const locale of languages) {
+    if (!locale) continue;
+
+    const localeDir = path.join(localesRoot, locale);
+    await mkdir(localeDir, { recursive: true });
+
+    const catalogPath = path.join(localeDir, poFileName);
+    const exists = await fileExists(catalogPath);
+    const relativePath = path.relative(options.cwd, catalogPath) || catalogPath;
+
+    let catalog: GettextParserOutput;
+
+    if (exists) {
+      const buffer = await readFile(catalogPath);
+      catalog = po.parse(buffer);
+      catalog.translations ??= { '': {} };
+    } else {
+      catalog = createEmptyCatalog(locale);
+      summary.created.push(relativePath);
+    }
+
+    const headersChanged = ensureCatalogHeaders(catalog, locale);
+    const changed = applyEntriesToCatalog(catalog, entries, locale, options.defaultLocale);
+
+    if (exists && (changed || headersChanged)) {
+      summary.updated.push(relativePath);
+    }
+
+    if (headersChanged || changed || !exists) {
+      const compiled = po.compile(catalog);
+      await writeFile(catalogPath, compiled);
+    }
+  }
+
+  return summary;
+}
+
+function derivePoFileName(potFile: string): string {
+  const baseName = path.basename(potFile);
+  if (baseName.toLowerCase().endsWith('.pot')) {
+    return `${baseName.slice(0, -4)}.po`;
+  }
+  if (baseName.toLowerCase().endsWith('.po')) {
+    return baseName;
+  }
+  return `${baseName}.po`;
+}
+
+async function detectLocaleDirectories(root: string): Promise<string[]> {
+  try {
+    const entries = await readdir(root, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .filter((name) => !name.startsWith('.'))
+      .sort();
+  } catch (error) {
+    if (isEnoent(error)) {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await stat(filePath);
+    return true;
+  } catch (error) {
+    if (isEnoent(error)) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+function createEmptyCatalog(locale: string): GettextParserOutput {
+  return {
+    charset: 'utf-8',
+    headers: {
+      'Project-Id-Version': 'PACKAGE VERSION',
+      'Report-Msgid-Bugs-To': '',
+      'PO-Revision-Date': '',
+      'Last-Translator': '',
+      'Language-Team': '',
+      Language: locale,
+      'MIME-Version': '1.0',
+      'Content-Type': 'text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding': '8bit',
+      'Plural-Forms': 'nplurals=2; plural=(n != 1);',
+    },
+    translations: { '': {} },
+  };
+}
+
+function ensureCatalogHeaders(catalog: GettextParserOutput, locale: string): boolean {
+  let changed = false;
+  catalog.headers ??= {};
+  const headers = catalog.headers;
+
+  const ensure = (key: string, value: string) => {
+    if (!headers[key]) {
+      headers[key] = value;
+      changed = true;
+    }
+  };
+
+  ensure('Project-Id-Version', 'PACKAGE VERSION');
+  ensure('Language', locale);
+  ensure('MIME-Version', '1.0');
+  ensure('Content-Type', 'text/plain; charset=UTF-8');
+  ensure('Content-Transfer-Encoding', '8bit');
+  ensure('Plural-Forms', 'nplurals=2; plural=(n != 1);');
+
+  if (!catalog.charset) {
+    catalog.charset = 'utf-8';
+    changed = true;
+  }
+
+  return changed;
+}
+
+function applyEntriesToCatalog(
+  catalog: GettextParserOutput,
+  entries: ExtractEntry[],
+  locale: string,
+  defaultLocale?: string
+): boolean {
+  let changed = false;
+  catalog.translations ??= { '': {} };
+  const translations = catalog.translations;
+
+  for (const entry of entries) {
+    const contextKey = entry.msgctxt ?? '';
+
+    if (!translations[contextKey]) {
+      translations[contextKey] = {};
+      changed = true;
+    }
+
+    const contextMessages = translations[contextKey];
+    let message = contextMessages[entry.msgid];
+
+    if (!message) {
+      message = {
+        msgid: entry.msgid,
+        msgstr: entry.msgidPlural ? ['', ''] : [''],
+      };
+      if (entry.msgctxt) {
+        message.msgctxt = entry.msgctxt;
+      }
+      if (entry.msgidPlural) {
+        message.msgid_plural = entry.msgidPlural;
+      }
+      contextMessages[entry.msgid] = message;
+      changed = true;
+    } else {
+      if (entry.msgctxt && !message.msgctxt) {
+        message.msgctxt = entry.msgctxt;
+        changed = true;
+      }
+      if (entry.msgidPlural && message.msgid_plural !== entry.msgidPlural) {
+        message.msgid_plural = entry.msgidPlural;
+        changed = true;
+      }
+    }
+
+    message.msgstr = message.msgstr ?? [];
+    const previousLength = message.msgstr.length;
+    const expectedLength = entry.msgidPlural ? Math.max(2, previousLength) : 1;
+
+    while (message.msgstr.length < expectedLength) {
+      message.msgstr.push('');
+    }
+
+    if (!entry.msgidPlural && message.msgstr.length > 1) {
+      message.msgstr = [message.msgstr[0]];
+    }
+
+    if (message.msgstr.length !== previousLength) {
+      changed = true;
+    }
+
+    const referenceText = entry.references.join('\n');
+    message.comments ??= {};
+    if (message.comments.reference !== referenceText) {
+      message.comments.reference = referenceText;
+      changed = true;
+    }
+
+    if (defaultLocale && locale === defaultLocale) {
+      if (entry.msgidPlural) {
+        if (!message.msgstr[0]) {
+          message.msgstr[0] = entry.msgid;
+          changed = true;
+        }
+        if (message.msgstr.length > 1 && !message.msgstr[1] && entry.msgidPlural) {
+          message.msgstr[1] = entry.msgidPlural;
+          changed = true;
+        }
+      } else if (!message.msgstr[0]) {
+        message.msgstr[0] = entry.msgid;
+        changed = true;
+      }
+    }
+  }
+
+  return changed;
+}
+
+function isEnoent(error: unknown): boolean {
+  return (
+    Boolean(error) &&
+    typeof error === 'object' &&
+    'code' in (error as NodeJS.ErrnoException) &&
+    (error as NodeJS.ErrnoException).code === 'ENOENT'
+  );
 }
 
 export async function compileCatalogs(options: CompileOptions): Promise<CompileResult> {
@@ -859,6 +1162,9 @@ Options:
   -o, --out <file>        Output POT file (default: messages.pot)
       --cwd <dir>         Working directory for relative paths
       --extensions <ext>  Comma-separated list of file extensions to scan
+      --locales <dir>     Locale root; sync per-language PO files alongside POT
+      --languages <list>  Comma-separated locale codes to ensure are present
+      --default-locale    Locale code whose catalog copies source strings
       --dry-run           Print extracted strings without writing to disk
       --quiet             Suppress completion message
   -h, --help              Show this help text`);
@@ -904,6 +1210,9 @@ interface GettextMessage {
   msgctxt?: string;
   comments?: {
     flag?: string;
+    reference?: string;
+    extracted?: string;
+    translator?: string;
   };
 }
 

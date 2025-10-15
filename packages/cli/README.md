@@ -26,6 +26,7 @@ pnpm dlx @polingo/cli@latest extract ./src -o locales/messages.pot
   - Recognizes `t()`, `tp()`, `tn()`, `tnp()` function calls
   - Detects `<Trans>` component usage in React/JSX files
   - Preserves context and plural forms
+  - Optionally syncs locale catalogs when `--locales` is provided
 - **Compile**: Converts `.po` files to runtime-ready formats
   - JSON format for `@polingo/web` (browser usage)
   - Binary `.mo` format for `@polingo/node` (server usage)
@@ -53,6 +54,9 @@ polingo extract <source> [options]
 
 - `-o, --out <path>` - Output path for the `.pot` template file (default: `locales/messages.pot`)
 - `-e, --extensions <exts>` - File extensions to scan, comma-separated (default: `.ts,.tsx,.js,.jsx`)
+- `--locales <dir>` - Locale root directory; updates/creates per-language `.po` files alongside the template
+- `--languages <codes>` - Comma-separated locale codes to ensure exist under `--locales`
+- `--default-locale <code>` - Locale whose catalog copies the source strings as translations
 
 **Examples:**
 
@@ -68,6 +72,9 @@ polingo extract src -e .ts,.tsx,.vue
 
 # Extract from specific file
 polingo extract src/components/App.tsx -o locales/messages.pot
+
+# Extract and sync locale catalogs (create/update locales/en and locales/es)
+polingo extract src --out locales/messages.pot --locales locales --languages en,es --default-locale en
 ```
 
 **What gets extracted:**
@@ -89,6 +96,8 @@ tnp('cart', '{n} item', '{n} items', count)   // → msgctxt "cart", msgid "{n} 
 // React Trans component
 <Trans message="Click <0>here</0>" />         // → msgid "Click <0>here</0>"
 ```
+
+When `--locales` is passed, the extractor mirrors Django's workflow: it creates or updates `messages.po` under each locale (either detected from the directory or supplied via `--languages`). The default locale receives the source strings as `msgstr` values, while other locales get empty placeholders ready for translators.
 
 ### Compile
 
