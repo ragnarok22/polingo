@@ -88,18 +88,28 @@ function parseArgs(args: string[]): CliOptions {
 
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
+    if (arg === undefined) {
+      continue;
+    }
+
     switch (arg) {
       case '-t':
       case '--template': {
-        options.template = args[i + 1];
-        i += 1;
+        const value = args[i + 1];
+        if (value !== undefined) {
+          options.template = value;
+          i += 1;
+        }
         break;
       }
       case '-d':
       case '--destination':
       case '--dir': {
-        options.destination = args[i + 1];
-        i += 1;
+        const value = args[i + 1];
+        if (value !== undefined) {
+          options.destination = value;
+          i += 1;
+        }
         break;
       }
       case '-f':
@@ -374,7 +384,7 @@ async function updatePackageName(destination: string, appName: string): Promise<
 }
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
-  return Boolean(error) && typeof error === 'object' && 'code' in error;
+  return typeof error === 'object' && error !== null && 'code' in error;
 }
 
 async function pathExists(candidate: string): Promise<boolean> {
