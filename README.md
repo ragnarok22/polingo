@@ -2,7 +2,13 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ragnarok22/polingo/ci.yml?branch=main&logo=github&label=CI)](https://github.com/ragnarok22/polingo/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/ragnarok22/polingo/graph/badge.svg?token=3QVHN9LWNN)](https://codecov.io/gh/ragnarok22/polingo)
+[![pnpm](https://img.shields.io/badge/pnpm-10.18.3-f69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Downloads @polingo/core](https://img.shields.io/npm/dm/@polingo/core?label=%40polingo%2Fcore)](https://www.npmjs.com/package/@polingo/core)
+[![Downloads @polingo/node](https://img.shields.io/npm/dm/@polingo/node?label=%40polingo%2Fnode)](https://www.npmjs.com/package/@polingo/node)
+[![Downloads @polingo/web](https://img.shields.io/npm/dm/@polingo/web?label=%40polingo%2Fweb)](https://www.npmjs.com/package/@polingo/web)
+[![Downloads @polingo/react](https://img.shields.io/npm/dm/@polingo/react?label=%40polingo%2Freact)](https://www.npmjs.com/package/@polingo/react)
+[![Downloads @polingo/cli](https://img.shields.io/npm/dm/@polingo/cli?label=%40polingo%2Fcli)](https://www.npmjs.com/package/@polingo/cli)
 
 Modern internationalization (i18n) library using industry-standard `.po` and `.mo` files for JavaScript/TypeScript projects.
 
