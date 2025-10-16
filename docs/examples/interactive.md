@@ -6,6 +6,8 @@ outline: deep
 
 Explore Polingo in a live environment and iterate on translations without guessing. The examples below mirror the repository layout so you can adapt them to your own project.
 
+Launch the hosted StackBlitz workspace to try Polingo in the browser: [Open interactive example](https://stackblitz.com/edit/polingo-example?file=README.md).
+
 ## React + Vite demo
 
 1. Install dependencies at the repo root: `pnpm install`.
