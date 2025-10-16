@@ -258,17 +258,28 @@ jobs:
         run: make coverage
 
       - name: Upload overall coverage to Codecov
-        if: ${{ hashFiles('packages/core/coverage/lcov.info', 'packages/node/coverage/lcov.info', 'packages/react/coverage/lcov.info', 'packages/vue/coverage/lcov.info', 'packages/web/coverage/lcov.info') != '' }}
+        if: ${{ hashFiles('packages/cli/coverage/lcov.info', 'packages/core/coverage/lcov.info', 'packages/node/coverage/lcov.info', 'packages/react/coverage/lcov.info', 'packages/vue/coverage/lcov.info', 'packages/web/coverage/lcov.info') != '' }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: |
+            packages/cli/coverage/lcov.info
             packages/core/coverage/lcov.info
             packages/node/coverage/lcov.info
             packages/react/coverage/lcov.info
             packages/vue/coverage/lcov.info
             packages/web/coverage/lcov.info
           flags: monorepo
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Upload coverage for @polingo/cli
+        if: ${{ hashFiles('packages/cli/coverage/lcov.info') != '' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: packages/cli/coverage/lcov.info
+          flags: cli
           fail_ci_if_error: true
           verbose: true
 
