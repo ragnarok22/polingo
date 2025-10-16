@@ -39,10 +39,10 @@ bootstrap().catch((error) => {
 Export gettext catalogs as JSON during your build:
 
 ```bash
-pnpm exec po2json locales/es/messages.po public/locales/es/messages.json
+pnpm exec polingo compile locales --out public/locales --format json --pretty
 ```
 
-Use the same domain and locale naming conventions on the server so the loader can find the files automatically.
+Use the same domain and locale naming conventions on the server so the loader can find the files automatically. The command above keeps the output structure aligned with what `@polingo/web` expects (`public/locales/<locale>/messages.json`).
 
 ## Switching Locales at Runtime
 

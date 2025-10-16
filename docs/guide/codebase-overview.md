@@ -22,13 +22,14 @@ The core package holds the framework-agnostic translation engine. Its entry poin
 
 Complementary modules define the in-memory cache implementations, a loader contract, pluralization logic, and interpolation helpers. Tests under `packages/core/test` validate the translation workflows end to end.
 
-## Runtime Integrations (`packages/node`, `packages/web`, `packages/react`)
+## Runtime Integrations (`packages/node`, `packages/web`, `packages/react`, `packages/vue`)
 
 Each runtime package adapts the core translator to a specific environment:
 
 - `@polingo/node` wires the filesystem loader, optional hot-reload via `TranslationWatcher`, and server middleware. `createPolingo` assembles a ready-to-use translator with caching, watching, and Express/Fastify helpers.
 - `@polingo/web` provides a fetch-based loader with optional `localStorage` caching. Its `createPolingo` factory mirrors the Node entry point but targets browsers and edge runtimes.
 - `@polingo/react` wraps the translator with a context provider, hooks like `useTranslator`, and a `<Trans>` component for declarative translation inside JSX.
+- `@polingo/vue` offers composables, a provider component, and `<Trans>` for template-driven translations in Vue 3 applications.
 
 Each package mirrors the same structure—`src/` for implementation, `test/` for Vitest suites, and a package-level README describing usage.
 
@@ -40,7 +41,11 @@ The CLI package exposes three developer-focused commands:
 - `compile` converts `.po` catalogs into either `.mo` binaries or JSON bundles, suitable for runtime loaders.
 - `validate` runs consistency checks (missing plurals, invalid contexts, etc.) across your translation files.
 
-All commands share the same argument parser and emit actionable console output to integrate with CI.
+All commands share the same argument parser and emit actionable console output to integrate with CI. Add the package as a dev dependency to keep extraction and validation scripts local (`pnpm add -D @polingo/cli`).
+
+## App Scaffolding (`packages/create-polingo-app`)
+
+The `create-polingo-app` package powers `pnpm create polingo-app`, an interactive generator that copies curated examples (React + Vite, Express, etc.) into a fresh directory with namespaced dependencies. Use it to bootstrap demos or reproduction repositories quickly.
 
 ## Documentation & Examples
 

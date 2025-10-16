@@ -8,11 +8,15 @@ This page aggregates every public export across the Polingo packages. Jump to th
 
 ## Package map
 
-| Package         | Description                                                             | Entry point              |
-| --------------- | ----------------------------------------------------------------------- | ------------------------ |
-| `@polingo/core` | Framework-agnostic translator, caches, helpers, and shared types        | [`/api/core`](/api/core) |
-| `@polingo/node` | Filesystem loader, middleware, and development tooling for Node.js      | [`/api/node`](/api/node) |
-| `@polingo/web`  | Fetch-based loader, persistent cache, and edge/browser convenience APIs | [`/api/web`](/api/web)   |
+| Package              | Description                                                                | Entry point                     |
+| -------------------- | -------------------------------------------------------------------------- | ------------------------------- |
+| `@polingo/core`      | Framework-agnostic translator, caches, helpers, and shared types           | [`/api/core`](/api/core)        |
+| `@polingo/node`      | Filesystem loader, middleware, and development tooling for Node.js         | [`/api/node`](/api/node)        |
+| `@polingo/web`       | Fetch-based loader, persistent cache, and edge/browser convenience APIs    | [`/api/web`](/api/web)          |
+| `@polingo/react`     | React provider, hooks, and `<Trans>` component built on top of the web SDK | [`/api/react`](/api/react)      |
+| `@polingo/vue`       | Vue 3 provider, composables, and `<Trans>` component                       | [`/api/vue`](/api/vue)          |
+| `@polingo/cli`       | Extraction, compilation, and validation commands for gettext workflows     | [`/api/cli`](/api/cli)          |
+| `create-polingo-app` | Scaffolding tool that copies opinionated examples into a new workspace     | (see `pnpm create polingo-app`) |
 
 ## Core exports (`@polingo/core`)
 
@@ -88,6 +92,34 @@ type PolingoConfig = {
 | `debug`        | `boolean`                  | `false`                   | Log loads, misses, and fallbacks to the console.                |
 
 `WebLoaderOptions` include `baseUrl`, `buildUrl`, `fetch`, `requestInit`, and `transformResponse`. `LocalStorageCacheOptions` include `storage`, `prefix`, and `ttlMs`.
+
+## React binding (`@polingo/react`)
+
+- `PolingoProvider` – Context provider that either accepts an existing translator or creates one via `createPolingo` (web adapter) on mount. Exposes loading states, error handling, and an async `setLocale`.
+- `usePolingo()` – Access the full context object (`translator`, `locale`, `loading`, `setLocale`, translation helpers).
+- `useTranslator()` – Returns the underlying translator instance when you only need low-level control.
+- `useTranslation()` – Convenience hook that exposes `t`, `tn`, `tp`, `tnp`, and the active locale.
+- `useLocale()` – Derived hook for UI bindings that only care about the current locale and a setter.
+- `<Trans>` – Component that renders translated strings directly inside JSX using render props for interpolation.
+
+Every hook throws if used outside `PolingoProvider`, so wrap your application root and pass either a translator instance or creation options.
+
+## Vue binding (`@polingo/vue`)
+
+- `PolingoProvider` – Component that provides the translator to the Vue app via injection. Accepts either a `translator` prop or a `create` factory (mirroring the React provider).
+- `usePolingo()` / `useTranslator()` / `useTranslation()` / `useLocale()` – Vue composables that expose the same data and helpers as the React hooks, returning refs for reactivity.
+- `<Trans>` – Functional component that evaluates gettext strings inside Vue templates and supports slot-based interpolation.
+- `polingoContextKey` – Symbol used for manual injection when building advanced integrations.
+
+The Vue adapter targets Vue 3 with the Composition API. Register the provider at the app root to make translations available everywhere.
+
+## CLI toolkit (`@polingo/cli`)
+
+- `polingo extract [paths...]` – Parse source files (`.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.svelte`, `.vue`, `.astro`, `.md`, `.mdx` by default) and emit a POT template. Flags like `--extensions`, `--languages`, and `--default-locale` let you control catalog synchronization.
+- `polingo compile [paths...]` – Convert `.po` catalogs into JSON (default) or `.mo` binaries. Use `--out` to direct output and `--pretty` for readable JSON.
+- `polingo validate [paths...]` – Scan catalogs for missing translations or plural forms. Pass `--strict` to fail on entries marked as `fuzzy`.
+
+Install the CLI locally (`pnpm add -D @polingo/cli`) and invoke it via `pnpm exec polingo ...` so CI and teammates share the same version. Combine commands inside `package.json` scripts to automate your translation pipeline.
 
 ## Shared patterns
 

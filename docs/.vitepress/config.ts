@@ -34,9 +34,12 @@ export default defineConfig({
           text: 'API Reference',
           items: [
             { text: 'Full Reference', link: '/api/reference' },
+            { text: 'Core', link: '/api/core' },
             { text: 'Node', link: '/api/node' },
             { text: 'Web', link: '/api/web' },
-            { text: 'Core', link: '/api/core' },
+            { text: 'React', link: '/api/react' },
+            { text: 'Vue', link: '/api/vue' },
+            { text: 'CLI', link: '/api/cli' },
           ],
         },
       ],
