@@ -9,8 +9,9 @@ Polingo is a modern internationalization (i18n) library for JavaScript/TypeScrip
 **Key Architecture:**
 - Environment-agnostic core (`@polingo/core`) - contains the Translator class, cache system, interpolator, and plural rules
 - Platform adapters (`@polingo/node`, `@polingo/web`) - implement TranslationLoader interface for different environments
-- Framework integrations (`@polingo/react`) - React hooks and context providers
+- Framework integrations (`@polingo/react`, `@polingo/vue`) - React hooks/Vue composables and context providers
 - CLI tooling (`@polingo/cli`) - workflow commands for extracting, compiling, and validating translations
+- Scaffolding (`create-polingo-app`) - project initialization tool with templates
 
 ## Development Commands
 
@@ -80,29 +81,59 @@ pnpm --filter @polingo/core test
 ### CLI Development
 ```bash
 # The CLI binary is at packages/cli/dist/cli.js after build
-node packages/cli/dist/cli.js extract
-node packages/cli/dist/cli.js compile
-node packages/cli/dist/cli.js validate
+# Build CLI first
+pnpm --filter @polingo/cli build
+
+# Extract messages from source code
+node packages/cli/dist/cli.js extract src/ --out locales/messages.pot --locales locales
+
+# Compile .po files to runtime format
+node packages/cli/dist/cli.js compile locales/ --format json --out dist/i18n
+
+# Validate translation catalogs
+node packages/cli/dist/cli.js validate locales
+node packages/cli/dist/cli.js validate locales --strict  # fails on fuzzy entries
 ```
 
 ## Architecture Details
 
 ### Core Translation Flow
 1. **Loader** (implements `TranslationLoader` interface) loads `.po` or `.mo` files from disk/network
-2. **Cache** (implements `TranslationCache` interface) stores parsed catalogs to avoid re-parsing
-3. **Translator** orchestrates loading, caching, and provides translation methods (`t`, `tp`, `tn`, `tnp`)
-4. **Interpolator** handles variable substitution using `{variable}` syntax
-5. **Plurals** determines correct plural form index based on locale-specific rules
+2. **Parser** converts `.po`/`.mo` to `TranslationCatalog` format (common structure across all platforms)
+3. **Cache** (implements `TranslationCache` interface) stores parsed catalogs to avoid re-parsing
+4. **Translator** orchestrates loading, caching, and provides translation methods (`t`, `tp`, `tn`, `tnp`)
+5. **Interpolator** handles variable substitution using `{variable}` syntax
+6. **Plurals** determines correct plural form index based on locale-specific rules
+
+### TranslationCatalog Format
+All loaders convert to this common format (defined in `packages/core/src/types.ts`):
+```typescript
+{
+  charset: string;
+  headers: Record<string, string>;
+  translations: {
+    [context: string]: {          // "" for no context
+      [msgid: string]: {
+        msgid: string;
+        msgstr: string | string[];  // string for basic, array for plurals
+        msgctxt?: string;
+        msgid_plural?: string;
+      }
+    }
+  }
+}
+```
 
 ### Package Responsibilities
 
 **@polingo/core** (`packages/core/src/`):
 - `translator.ts` - Main Translator class with sync translation methods after async catalog loading
 - `loader.ts` - TranslationLoader interface definition
-- `cache.ts` - In-memory cache implementation
+- `cache.ts` - Three cache implementations: MemoryCache (default with optional LRU), TtlCache (time-based expiration), and NoCache (for testing)
 - `interpolator.ts` - Variable interpolation for `{name}` style placeholders
 - `plurals.ts` - Plural form logic per locale (based on Unicode CLDR rules)
 - `types.ts` - Core TypeScript interfaces
+- Zero external dependencies
 
 **@polingo/node** (`packages/node/src/`):
 - `loader.ts` - NodeLoader that reads `.po`/`.mo` files from filesystem
@@ -112,17 +143,29 @@ node packages/cli/dist/cli.js validate
 - `create.ts` - Factory function `createPolingo()` that wires up loader + cache + translator
 
 **@polingo/web** (`packages/web/src/`):
-- Implements fetch-based loader with localStorage caching for browsers
+- `loader.ts` - WebLoader that fetches catalogs via HTTP (default: from `/assets/i18n`)
+- `cache.ts` - LocalStorageCache that persists parsed catalogs across page reloads
+- `create.ts` - Factory function `createPolingo()` for browser environments
 
 **@polingo/cli** (`packages/cli/src/`):
 - `extract` - Scans source files for `t()`, `tp()`, `tn()`, `tnp()` calls and generates `.pot` template
 - `compile` - Converts `.po` files to `.json` or `.mo` runtime format
 - `validate` - Lints `.po` files for missing/fuzzy translations
+- Self-contained with no dependency on @polingo/core (extraction logic is independent)
+
+**@polingo/react** (`packages/react/src/`):
+- `context.ts` - PolingoContext using React Context API
+- `hooks.ts` - Four hooks: `usePolingo()` (full access), `useTranslation()` (translation methods), `useLocale()` (locale management), `useTranslator()` (raw instance)
+- Manages loading/error states during initialization
+
+**@polingo/vue** (`packages/vue/src/`):
+- Vue 3 composables using Provide/Inject pattern
+- Similar API to React integration but with Vue composition functions
 
 ### Translation Method Naming
 - `t(msgid, vars?)` - Basic translation
 - `tp(context, msgid, vars?)` - Translation with context (disambiguates homonyms)
-- `tn(msgid, msgidPlural, count, vars?)` - Pluralization
+- `tn(msgid, msgidPlural, count, vars?)` - Pluralization (automatically adds `count` as `n` variable)
 - `tnp(context, msgid, msgidPlural, count, vars?)` - Context + pluralization
 
 ### Locale Fallback Logic
@@ -151,23 +194,30 @@ locales/
 - Catalogs are loaded **asynchronously** at startup via `translator.load(locales)`
 - All translation methods (`t`, `tp`, `tn`, `tnp`) are **synchronous** after loading
 - NodeLoader prefers `.po` files when both `.po` and `.mo` exist
-- Plural forms use locale-specific rules from `plurals.ts` (`packages/core/src/plurals.ts:1`)
+- Plural forms use locale-specific CLDR rules from `plurals.ts` (packages/core/src/plurals.ts:1)
+  - Most languages use 2 forms (n != 1): English, Spanish, German, Italian, French, Portuguese, Dutch
+  - Some use 3 forms: Russian, Polish, Romanian, Czech
+  - Some have no pluralization: Chinese, Japanese, Korean, Thai, Vietnamese
 - Cache keys follow format: `{locale}:{domain}` (e.g., `es:messages`)
 - When using middleware with `perLocale: false`, be aware of potential race conditions in high-concurrency scenarios
+- Interpolation preserves undefined variables as-is (e.g., `{missing}` stays `{missing}` if variable not provided)
 
 ## Common Workflows
 
 ### Adding a new translation method
 1. Add method signature to Translator class in `packages/core/src/translator.ts`
 2. Update TypeScript types in `packages/core/src/types.ts` if needed
-3. Add corresponding extraction pattern to CLI in `packages/cli/src/index.ts` (around `extractFromContent` function)
-4. Write tests in `packages/core/test/` or appropriate package
+3. Add corresponding extraction pattern (regex) to CLI in `packages/cli/src/index.ts` (look for `extractFromContent` function)
+4. Write tests in `packages/core/test/translator.test.ts` or appropriate package
+5. Update integration packages (`@polingo/react`, `@polingo/vue`) to expose the new method via hooks/composables
 
 ### Adding support for a new environment
-1. Create new package in `packages/` directory
+1. Create new package in `packages/` directory (e.g., `@polingo/deno`)
 2. Implement `TranslationLoader` interface from `@polingo/core`
-3. Provide environment-specific catalog loading logic
-4. Export factory function similar to `createPolingo` in `@polingo/node`
+3. Optionally implement `TranslationCache` interface if environment has specific storage needs
+4. Provide environment-specific catalog loading logic
+5. Export factory function similar to `createPolingo` in `@polingo/node`
+6. Add tests using mock fixtures (see `packages/core/test/` for patterns)
 
 ### Testing translation catalogs
 The CLI provides validation:
@@ -179,10 +229,17 @@ node packages/cli/dist/cli.js validate locales --strict  # fails on fuzzy flags
 
 ## Build System
 - Uses `tsup` for building packages (see individual `package.json` files)
-- Outputs both ESM (`.js`) and CJS (`.cjs`) formats
-- Vitest for testing with coverage via v8 provider
-- ESLint flat config format (`eslint.config.js`)
-- TypeScript compilation uses shared `tsconfig.json`
+- Outputs both ESM (`.js`) and CJS (`.cjs`) formats with TypeScript declarations
+- Vitest 3.2.4 for testing with coverage via v8 provider
+- ESLint 9.37 with flat config format (`eslint.config.js`)
+- TypeScript compilation uses shared `tsconfig.json` (target: ES2020, strict mode enabled)
+- All packages use ES modules (`"type": "module"` in package.json)
+
+## Testing Patterns
+- **Mock fixtures**: Use JSON fixtures for translation catalogs (see `packages/core/test/`)
+- **Mock loader**: Implement simple `TranslationLoader` with hardcoded catalogs for unit tests
+- **Test utilities**: Core tests demonstrate patterns that other packages follow
+- **Coverage**: Run `make coverage` to generate v8 coverage reports for all packages
 
 ## Requirements
 - Node.js >= 18.0.0
