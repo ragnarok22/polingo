@@ -1,5 +1,7 @@
 # @polingo/core
 
+[![npm version](https://img.shields.io/npm/v/%40polingo%2Fcore.svg)](https://www.npmjs.com/package/@polingo/core)
+
 > Environment-agnostic translation engine that powers every Polingo adapter.
 
 `@polingo/core` provides the runtime that loads catalogs, resolves plural forms, interpolates variables, and caches translations. It ships without any I/O so it can run in Node.js, browsers, React Native, edge runtimes, and test environments alike.

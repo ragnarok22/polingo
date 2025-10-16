@@ -1,5 +1,7 @@
 # @polingo/cli
 
+[![npm version](https://img.shields.io/npm/v/%40polingo%2Fcli.svg)](https://www.npmjs.com/package/@polingo/cli)
+
 Command line tooling for the Polingo translation workflow.
 
 The `@polingo/cli` package provides command-line tools to extract translatable strings from source code, compile `.po` files to runtime formats, and validate translation catalogs.

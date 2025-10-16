@@ -1,5 +1,7 @@
 # @polingo/node
 
+[![npm version](https://img.shields.io/npm/v/%40polingo%2Fnode.svg)](https://www.npmjs.com/package/@polingo/node)
+
 > Node.js adapter that loads gettext catalogs from disk, watches for changes, and plugs into web frameworks.
 
 `@polingo/node` combines a filesystem loader, optional hot-reload watcher, and helper utilities so you can bootstrap Polingo in backend services, CLIs, Electron apps, or server-rendered frameworks.

@@ -1,6 +1,6 @@
 # @polingo/react
 
-![npm bundle size](https://img.shields.io/bundlephobia/min/%40polingo%2Freact)
+[![npm version](https://img.shields.io/npm/v/%40polingo%2Freact.svg)](https://www.npmjs.com/package/@polingo/react) ![npm bundle size](https://img.shields.io/bundlephobia/min/%40polingo%2Freact)
 
 React bindings for the Polingo translation engine.
 

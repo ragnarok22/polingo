@@ -1,6 +1,6 @@
 # @polingo/web
 
-![npm bundle size](https://img.shields.io/bundlephobia/min/%40polingo%2Fweb)
+[![npm version](https://img.shields.io/npm/v/%40polingo%2Fweb.svg)](https://www.npmjs.com/package/@polingo/web) ![npm bundle size](https://img.shields.io/bundlephobia/min/%40polingo%2Fweb)
 
 > Browser-oriented loader and cache for the Polingo translation engine.
 
