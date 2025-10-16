@@ -1,36 +1,36 @@
 /**
- * Estructura de una traducción individual
+ * Structure of a single translation
  */
 export interface Translation {
-  /** ID del mensaje (texto original) */
+  /** Message ID (original text) */
   msgid: string;
-  /** Texto traducido: string para singular, array para plurales */
+  /** Translated text: string for singular, array for plurals */
   msgstr: string | string[];
-  /** Contexto opcional del mensaje */
+  /** Optional message context */
   msgctxt?: string;
-  /** Forma plural del msgid original */
+  /** Plural form of the original msgid */
   msgid_plural?: string;
 }
 
 /**
- * Resultado de una búsqueda de traducción, incluyendo el idioma de origen.
+ * Result of a translation lookup, including the source locale.
  */
 export interface TranslationLookupResult {
-  /** Traducción encontrada */
+  /** Found translation */
   translation: Translation;
-  /** Locale desde el que proviene la traducción */
+  /** Locale the translation came from */
   locale: string;
 }
 
 /**
- * Catálogo completo de traducciones para un idioma
+ * Complete translation catalog for a locale
  */
 export interface TranslationCatalog {
-  /** Codificación del catálogo */
+  /** Catalog encoding */
   charset: string;
-  /** Cabeceras del archivo .po */
+  /** .po file headers */
   headers: Record<string, string>;
-  /** Traducciones organizadas por contexto y msgid */
+  /** Translations organized by context and msgid */
   translations: {
     [context: string]: {
       [msgid: string]: Translation;
@@ -39,69 +39,69 @@ export interface TranslationCatalog {
 }
 
 /**
- * Configuración del traductor
+ * Translator configuration
  */
 export interface PolingoConfig {
-  /** Idioma actual (ej: 'es', 'en', 'fr') */
+  /** Current locale (e.g., 'es', 'en', 'fr') */
   locale: string;
-  /** Idioma de respaldo cuando no existe traducción */
+  /** Fallback locale when a translation is missing */
   fallback?: string;
-  /** Dominio de traducción (ej: 'messages', 'errors') */
+  /** Translation domain (e.g., 'messages', 'errors') */
   domain?: string;
-  /** Activar logs de debug en consola */
+  /** Enable debug logs in the console */
   debug?: boolean;
 }
 
 /**
- * Opciones para funciones de traducción
+ * Options for translation functions
  */
 export interface TranslateOptions {
-  /** Contexto del mensaje (para diferenciar homónimos) */
+  /** Message context (to distinguish homonyms) */
   context?: string;
-  /** Variables a interpolar en el texto */
+  /** Variables to interpolate in the text */
   vars?: Record<string, string | number>;
 }
 
 /**
- * Interfaz que deben implementar los loaders (Node, Web, etc.)
+ * Interface loaders (Node, Web, etc.) must implement
  */
 export interface TranslationLoader {
   /**
-   * Carga un catálogo de traducciones desde el sistema de archivos o red
-   * @param locale - Código de idioma (ej: 'es', 'en')
-   * @param domain - Dominio del catálogo (ej: 'messages')
-   * @returns Promesa con el catálogo de traducciones
+   * Loads a translation catalog from the filesystem or network
+   * @param locale - Locale code (e.g., 'es', 'en')
+   * @param domain - Catalog domain (e.g., 'messages')
+   * @returns Promise with the translation catalog
    */
   load(locale: string, domain: string): Promise<TranslationCatalog>;
 }
 
 /**
- * Interfaz para sistemas de caché de catálogos
+ * Interface for catalog cache systems
  */
 export interface TranslationCache {
   /**
-   * Obtiene un catálogo del caché
-   * @param key - Clave del catálogo (ej: 'es:messages')
-   * @returns Catálogo si existe, undefined si no
+   * Retrieves a catalog from the cache
+   * @param key - Catalog key (e.g., 'es:messages')
+   * @returns Catalog if found, undefined otherwise
    */
   get(key: string): TranslationCatalog | undefined;
 
   /**
-   * Guarda un catálogo en el caché
-   * @param key - Clave del catálogo
-   * @param catalog - Catálogo a guardar
+   * Stores a catalog in the cache
+   * @param key - Catalog key
+   * @param catalog - Catalog to store
    */
   set(key: string, catalog: TranslationCatalog): void;
 
   /**
-   * Verifica si existe un catálogo en el caché
-   * @param key - Clave del catálogo
-   * @returns true si existe, false si no
+   * Checks if a catalog exists in the cache
+   * @param key - Catalog key
+   * @returns true if it exists, false otherwise
    */
   has(key: string): boolean;
 
   /**
-   * Limpia todo el caché
+   * Clears the entire cache
    */
   clear(): void;
 }

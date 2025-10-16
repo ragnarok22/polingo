@@ -40,7 +40,7 @@ async function main(): Promise<void> {
   const templatesDir = await findTemplatesDirectory();
   if (!templatesDir) {
     console.error(
-      'No se pudo localizar el directorio de plantillas. Asegúrate de ejecutar este comando desde el repositorio de Polingo o de instalar el paquete desde npm.'
+      'Could not locate the templates directory. Make sure you run this command from the Polingo repository or install the package from npm.'
     );
     process.exitCode = 1;
     return;
@@ -48,7 +48,7 @@ async function main(): Promise<void> {
 
   const templates = await discoverTemplates(templatesDir);
   if (templates.length === 0) {
-    console.error(`No se encontraron ejemplos dentro de ${templatesDir}.`);
+    console.error(`No examples were found inside ${templatesDir}.`);
     process.exitCode = 1;
     return;
   }
@@ -76,8 +76,8 @@ async function main(): Promise<void> {
   await updatePackageName(destination, path.basename(destination));
 
   const relativePath = path.relative(process.cwd(), destination) || '.';
-  console.log('\n✅ Proyecto creado con éxito.');
-  console.log('Siguientes pasos:');
+  console.log('\n✅ Project created successfully.');
+  console.log('Next steps:');
   console.log(`  cd ${relativePath}`);
   console.log('  pnpm install');
   console.log('  pnpm run dev');
@@ -142,16 +142,16 @@ function parseArgs(args: string[]): CliOptions {
 function printHelp(): void {
   console.log(`create-polingo-app
 
-Uso:
-  pnpm create polingo-app [opciones]
+Usage:
+  pnpm create polingo-app [options]
 
-Opciones:
-  -t, --template <nombre>     Selecciona la plantilla directamente.
-  -d, --destination <ruta>    Carpeta destino donde copiar el proyecto.
-      --dir <ruta>            Alias de --destination.
-  -f, --force                 Permite sobrescribir archivos existentes.
-  -l, --list                  Muestra las plantillas disponibles.
-  -h, --help                  Muestra esta ayuda.`);
+Options:
+  -t, --template <name>       Selects a template directly.
+  -d, --destination <path>    Destination folder where the project is copied.
+      --dir <path>            Alias of --destination.
+  -f, --force                 Allows overwriting existing files.
+  -l, --list                  Prints available templates.
+  -h, --help                  Shows this help message.`);
 }
 
 async function findTemplatesDirectory(): Promise<string | undefined> {
@@ -227,7 +227,7 @@ async function readTemplateDescription(templatePath: string): Promise<string | u
 }
 
 function printTemplates(templates: TemplateInfo[]): void {
-  console.log('Plantillas disponibles:\n');
+  console.log('Available templates:\n');
   for (const template of templates) {
     const description = template.description ? ` - ${template.description}` : '';
     console.log(`  • ${template.name}${description}`);
@@ -241,7 +241,7 @@ async function selectTemplate(
   if (preferredTemplate) {
     const match = templates.find((template) => template.name === preferredTemplate);
     if (!match) {
-      console.error(`La plantilla "${preferredTemplate}" no existe. Usa --list para ver opciones.`);
+      console.error(`Template "${preferredTemplate}" does not exist. Use --list to view options.`);
       return undefined;
     }
     return match;
@@ -249,12 +249,12 @@ async function selectTemplate(
 
   if (!stdout.isTTY || !stdin.isTTY) {
     console.error(
-      'No se pudieron solicitar entradas interactivas. Proporciona la plantilla con el parámetro --template.'
+      'Interactive prompts are unavailable. Provide the template with the --template flag.'
     );
     return undefined;
   }
 
-  console.log('\nSelecciona una plantilla:');
+  console.log('\nSelect a template:');
   templates.forEach((template, index) => {
     const description = template.description ? ` - ${template.description}` : '';
     console.log(`  ${index + 1}) ${template.name}${description}`);
@@ -263,7 +263,7 @@ async function selectTemplate(
   const rl = createInterface({ input: stdin, output: stdout });
   try {
     while (true) {
-      const answer = (await rl.question('\nNúmero de plantilla (1): ')).trim();
+      const answer = (await rl.question('\nTemplate number (1): ')).trim();
       if (!answer) {
         return templates[0];
       }
@@ -273,9 +273,7 @@ async function selectTemplate(
         return templates[index - 1];
       }
 
-      console.log(
-        `Opción inválida: "${answer}". Introduce un número entre 1 y ${templates.length}.`
-      );
+      console.log(`Invalid option: "${answer}". Enter a number between 1 and ${templates.length}.`);
     }
   } finally {
     rl.close();
@@ -292,14 +290,14 @@ async function resolveDestination(
 
   if (!stdout.isTTY || !stdin.isTTY) {
     console.error(
-      'No se pudo solicitar el directorio destino de forma interactiva. Proporciona la ruta con --destination.'
+      'Could not prompt for the destination directory interactively. Provide the path with --destination.'
     );
     return undefined;
   }
 
   const rl = createInterface({ input: stdin, output: stdout });
   try {
-    const answer = (await rl.question(`\nCarpeta destino (${templateName}): `)).trim();
+    const answer = (await rl.question(`\nDestination folder (${templateName}): `)).trim();
     const safeName = answer || templateName;
     return path.resolve(process.cwd(), safeName);
   } finally {
@@ -311,13 +309,13 @@ async function ensureDestination(destination: string, force: boolean): Promise<v
   try {
     const stats = await stat(destination);
     if (!stats.isDirectory()) {
-      throw new Error(`La ruta destino ${destination} existe y no es un directorio.`);
+      throw new Error(`Destination path ${destination} exists and is not a directory.`);
     }
 
     const existingEntries = await readdir(destination);
     if (existingEntries.length > 0 && !force) {
       throw new Error(
-        `La carpeta ${destination} ya contiene archivos. Usa --force para sobrescribirlos o elige otra carpeta.`
+        `Directory ${destination} already contains files. Use --force to overwrite them or choose another folder.`
       );
     }
   } catch (error: unknown) {
@@ -370,7 +368,7 @@ async function updatePackageName(destination: string, appName: string): Promise<
   try {
     pkg = JSON.parse(packageContent) as Record<string, unknown>;
   } catch {
-    console.warn(`No se pudo actualizar el nombre en ${packagePath}: JSON inválido.`);
+    console.warn(`Could not update the name in ${packagePath}: invalid JSON.`);
     return;
   }
 
@@ -398,7 +396,7 @@ async function pathExists(candidate: string): Promise<boolean> {
 
 void main().catch((error: unknown) => {
   console.error(
-    '\nOcurrió un error al crear la aplicación:',
+    '\nAn error occurred while creating the app:',
     error instanceof Error ? error.message : error
   );
   process.exitCode = 1;
