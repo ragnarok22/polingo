@@ -207,6 +207,16 @@ jobs:
       - name: Run tests
         run: make test
 
+      - name: Upload Vitest results to Codecov
+        if: runner.os == 'ubuntu-latest' && matrix.node == 20 && hashFiles('packages/**/test-results/vitest-junit.xml') != ''
+        uses: codecov/test-results@v0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: packages/**/test-results/vitest-junit.xml
+          flags: vitest
+          fail_ci_if_error: true
+          verbose: true
+
   # Coverage (only on main platform and Node version)
   coverage:
     name: Coverage

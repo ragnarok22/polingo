@@ -12,6 +12,7 @@ docs/.vitepress/cache/
 # Testing
 coverage/
 .nyc_output/
+test-results/
 
 # IDE
 .vscode/
