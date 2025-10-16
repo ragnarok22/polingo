@@ -12,10 +12,55 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+              - '**/*.mdx'
+            ci:
+              - '.github/workflows/**'
+              - 'Makefile'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig*.json'
+              - 'tsup.config.shared.ts'
+              - 'vitest.config.ts'
+              - 'packages/**'
+
+      - name: Determine docs-only change
+        id: classify
+        env:
+          DOCS_CHANGED: ${{ steps.filter.outputs.docs }}
+          CI_TOUCHED: ${{ steps.filter.outputs.ci }}
+        run: |
+          if [ "$DOCS_CHANGED" = "true" ] && [ "$CI_TOUCHED" != "true" ]; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # Lint and format checks (fast feedback)
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
 
     steps:
       - name: Check out repository
@@ -29,9 +74,12 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run ESLint
         run: pnpm lint
@@ -43,6 +91,8 @@ jobs:
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
 
     steps:
       - name: Check out repository
@@ -56,9 +106,12 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run type checking
         run: pnpm typecheck
@@ -67,6 +120,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
 
     steps:
       - name: Check out repository
@@ -80,9 +135,12 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build packages
         run: make build
@@ -98,12 +156,23 @@ jobs:
   test:
     name: Test (Node ${{ matrix.node }} on ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
 
     strategy:
       fail-fast: false
       matrix:
-        node: [18, 20, 22]
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - node: 18
+            os: ubuntu-latest
+          - node: 20
+            os: ubuntu-latest
+          - node: 20
+            os: windows-latest
+          - node: 20
+            os: macos-latest
+          - node: 22
+            os: ubuntu-latest
 
     steps:
       - name: Check out repository
@@ -117,9 +186,23 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Cache Vitest output
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.vitest
+            node_modules/.cache/vitest
+            .vitest
+          key: vitest-${{ runner.os }}-${{ matrix.node }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            vitest-${{ runner.os }}-${{ matrix.node }}-
 
       - name: Run tests
         run: make test
@@ -128,7 +211,8 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, build]
+    needs: [changes, lint, typecheck, build]
+    if: needs.changes.outputs.docs_only != 'true'
 
     steps:
       - name: Check out repository
@@ -142,9 +226,23 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Cache Vitest output
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.vitest
+            node_modules/.cache/vitest
+            .vitest
+          key: vitest-${{ runner.os }}-coverage-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            vitest-${{ runner.os }}-coverage-
 
       - name: Run tests with coverage
         run: make coverage
