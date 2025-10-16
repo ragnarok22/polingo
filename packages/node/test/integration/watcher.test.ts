@@ -1,16 +1,87 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs';
 import { createPolingo } from '../../src/create';
 import type { PolingoInstance } from '../../src/create';
 
+type FakeWatcherInstance = {
+  close: vi.Mock<Promise<void>, []>;
+  paths: string[];
+  on: (event: string, listener: (...args: unknown[]) => void) => FakeWatcherInstance;
+  emit: (event: string, ...args: unknown[]) => void;
+};
+
+const chokidarMock = vi.hoisted(() => {
+  const watchers: FakeWatcherInstance[] = [];
+
+  class FakeWatcher {
+    paths: string[];
+    close: vi.Mock<Promise<void>, []>;
+    private listeners: Map<string, Array<(...args: unknown[]) => void>>;
+
+    constructor(patterns: string[] | string) {
+      this.paths = Array.isArray(patterns) ? patterns : [patterns];
+      this.listeners = new Map();
+      this.close = vi.fn(() => Promise.resolve());
+    }
+
+    on(event: string, listener: (...args: unknown[]) => void): FakeWatcherInstance {
+      const handlers = this.listeners.get(event) ?? [];
+      handlers.push(listener);
+      this.listeners.set(event, handlers);
+      return this;
+    }
+
+    emit(event: string, ...args: unknown[]): void {
+      const handlers = this.listeners.get(event);
+      if (!handlers) return;
+      for (const handler of handlers) {
+        handler(...args);
+      }
+    }
+  }
+
+  const watch = vi.fn((patterns: string[] | string) => {
+    const watcher = new FakeWatcher(patterns);
+    watchers.push(watcher);
+    queueMicrotask(() => watcher.emit('ready'));
+    return watcher;
+  });
+
+  const getLastWatcher = (): FakeWatcherInstance | undefined =>
+    watchers.length > 0 ? watchers[watchers.length - 1] : undefined;
+
+  return {
+    watch,
+    getLastWatcher,
+    clear: () => {
+      watchers.length = 0;
+      watch.mockClear();
+    },
+  };
+}) as {
+  watch: vi.Mock<FakeWatcherInstance, [string[] | string]>;
+  getLastWatcher: () => FakeWatcherInstance | undefined;
+  clear: () => void;
+};
+
+vi.mock('chokidar', () => chokidarMock);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const TEST_DIR = join(__dirname, 'fixtures', 'watcher-test');
 
-// Helper to wait for file system changes to be detected
-const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 10));
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const ensureWatcher = (): FakeWatcherInstance => {
+  const instance = chokidarMock.getLastWatcher();
+  if (!instance) {
+    throw new Error('No watcher instance registered');
+  }
+  return instance;
+};
 
 describe('File Watcher Integration Tests', () => {
   beforeEach(() => {
@@ -59,6 +130,7 @@ msgstr "Mundo"
     if (existsSync(TEST_DIR)) {
       rmSync(TEST_DIR, { recursive: true, force: true });
     }
+    chokidarMock.clear();
   });
 
   it.skip('should reload translations when file changes', async () => {
@@ -216,10 +288,28 @@ msgstr "Terre"
     });
 
     expect(polingo.t('Hello')).toBe('Hola');
+    const fakeWatcher = ensureWatcher();
+
+    // Simulate change detection while watcher is active
+    writeFileSync(
+      join(TEST_DIR, 'es', 'messages.po'),
+      `msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Language: es\\n"
+
+msgid "Hello"
+msgstr "Hola Actualizado"
+`
+    );
+    fakeWatcher.emit('change', join(TEST_DIR, 'es', 'messages.po'));
+    await flushAsync();
+    expect(polingo.t('Hello')).toBe('Hola Actualizado');
 
     // Stop watching
     expect(polingo.stopWatching).toBeDefined();
     await polingo.stopWatching!();
+    expect(fakeWatcher.close).toHaveBeenCalled();
 
     // Update file after stopping watcher
     writeFileSync(
@@ -234,10 +324,8 @@ msgstr "Should Not Update"
 `
     );
 
-    await wait(1500);
-
     // Translation should NOT be updated because watcher was stopped
-    expect(polingo.t('Hello')).toBe('Hola');
+    expect(polingo.t('Hello')).toBe('Hola Actualizado');
   }, 10000);
 
   it('should not have stopWatching method when watch is false', async () => {
@@ -249,6 +337,7 @@ msgstr "Should Not Update"
     });
 
     expect(polingo.stopWatching).toBeUndefined();
+    expect(chokidarMock.watch).not.toHaveBeenCalled();
   });
 
   it.skip('should handle file changes with cache enabled', async () => {
@@ -306,12 +395,20 @@ msgstr "Hola Nuevo"
       // Write invalid .po file
       writeFileSync(join(TEST_DIR, 'es', 'messages.po'), 'INVALID CONTENT');
 
-      await wait(1500);
+      const fakeWatcher = ensureWatcher();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      fakeWatcher.emit('change', join(TEST_DIR, 'es', 'messages.po'));
+      await flushAsync();
 
       // Should fall back to previous translation or handle error gracefully
       // The exact behavior depends on implementation, but shouldn't crash
       const result = polingo.t('Hello');
       expect(typeof result).toBe('string');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Polingo] Failed to reload translations for locale "es":'),
+        expect.any(Error)
+      );
+      consoleErrorSpy.mockRestore();
     } finally {
       if (polingo?.stopWatching) {
         await polingo.stopWatching();

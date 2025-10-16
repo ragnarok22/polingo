@@ -6,6 +6,78 @@ import { TranslationWatcher } from '../src/watcher';
 import { Translator, NoCache } from '@polingo/core';
 import { NodeLoader } from '../src/loader';
 
+type FakeWatcherInstance = {
+  close: vi.Mock<Promise<void>, []>;
+  closed: boolean;
+  paths: string[];
+  options: unknown;
+  on: (event: string, listener: (...args: unknown[]) => void) => FakeWatcherInstance;
+  emit: (event: string, ...args: unknown[]) => void;
+};
+
+const chokidarMock = vi.hoisted(() => {
+  const watchers: FakeWatcherInstance[] = [];
+
+  class FakeWatcher {
+    paths: string[];
+    options: unknown;
+    closed: boolean;
+    close: vi.Mock<Promise<void>, []>;
+    private listeners: Map<string, Array<(...args: unknown[]) => void>>;
+
+    constructor(patterns: string[] | string, options: unknown) {
+      this.paths = Array.isArray(patterns) ? patterns : [patterns];
+      this.options = options;
+      this.closed = false;
+      this.listeners = new Map();
+      this.close = vi.fn(() => {
+        this.closed = true;
+        return Promise.resolve();
+      });
+    }
+
+    on(event: string, listener: (...args: unknown[]) => void): FakeWatcherInstance {
+      const handlers = this.listeners.get(event) ?? [];
+      handlers.push(listener);
+      this.listeners.set(event, handlers);
+      return this;
+    }
+
+    emit(event: string, ...args: unknown[]): void {
+      const handlers = this.listeners.get(event);
+      if (!handlers) return;
+      for (const handler of handlers) {
+        handler(...args);
+      }
+    }
+  }
+
+  const watch = vi.fn((patterns: string[] | string, options: unknown) => {
+    const watcher = new FakeWatcher(patterns, options);
+    watchers.push(watcher);
+    queueMicrotask(() => watcher.emit('ready'));
+    return watcher;
+  });
+
+  const getLastWatcher = (): FakeWatcherInstance | undefined =>
+    watchers.length > 0 ? watchers[watchers.length - 1] : undefined;
+
+  return {
+    watch,
+    getLastWatcher,
+    clear: () => {
+      watchers.length = 0;
+      watch.mockClear();
+    },
+  };
+}) as {
+  watch: vi.Mock<FakeWatcherInstance, [string[] | string, unknown]>;
+  getLastWatcher: () => FakeWatcherInstance | undefined;
+  clear: () => void;
+};
+
+vi.mock('chokidar', () => chokidarMock);
+
 describe('TranslationWatcher', () => {
   const testDir = join(tmpdir(), 'polingo-watcher-test-' + Date.now());
   const esDir = join(testDir, 'es');
@@ -13,7 +85,7 @@ describe('TranslationWatcher', () => {
   const frDir = join(testDir, 'fr');
 
   let translator: Translator;
-  let watcher: TranslationWatcher;
+  let watcher: TranslationWatcher | undefined;
 
   const esPoContent = `
 msgid ""
@@ -35,6 +107,26 @@ msgid "Hello"
 msgstr "Hello"
 `;
 
+  const frPoContent = `
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Language: fr\\n"
+
+msgid "Hello"
+msgstr "Bonjour"
+`;
+
+  const ensureWatcher = (): FakeWatcherInstance => {
+    const instance = chokidarMock.getLastWatcher();
+    if (!instance) {
+      throw new Error('No watcher instance registered');
+    }
+    return instance;
+  };
+
+  const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 10));
+
   beforeAll(async () => {
     // Create test directories
     await mkdir(esDir, { recursive: true });
@@ -44,6 +136,7 @@ msgstr "Hello"
     // Create initial .po files
     await writeFile(join(esDir, 'messages.po'), esPoContent);
     await writeFile(join(enDir, 'messages.po'), enPoContent);
+    await writeFile(join(frDir, 'messages.po'), frPoContent);
 
     // Initialize translator
     const loader = new NodeLoader(testDir);
@@ -59,7 +152,9 @@ msgstr "Hello"
   afterEach(async () => {
     if (watcher) {
       await watcher.stop();
+      watcher = undefined;
     }
+    chokidarMock.clear();
   });
 
   it('should create a watcher instance', () => {
@@ -71,7 +166,16 @@ msgstr "Hello"
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages');
     await watcher.start();
     // No error should be thrown
-    expect(watcher).toBeDefined();
+    expect(chokidarMock.watch).toHaveBeenCalledTimes(1);
+    const fakeWatcher = ensureWatcher();
+    expect(fakeWatcher.paths).toEqual([
+      join(testDir, 'es', 'messages.{po,mo}'),
+      join(testDir, 'en', 'messages.{po,mo}'),
+    ]);
+    expect(fakeWatcher.options).toMatchObject({
+      persistent: true,
+      ignoreInitial: true,
+    });
   });
 
   it('should not start watcher twice', async () => {
@@ -82,6 +186,7 @@ msgstr "Hello"
     await watcher.start(); // Should log that watcher is already started
 
     expect(consoleSpy).toHaveBeenCalledWith('[Polingo] Watcher already started');
+    expect(chokidarMock.watch).toHaveBeenCalledTimes(1);
     consoleSpy.mockRestore();
   });
 
@@ -90,7 +195,9 @@ msgstr "Hello"
     await watcher.start();
     await watcher.stop();
     // No error should be thrown
-    expect(watcher).toBeDefined();
+    const fakeWatcher = ensureWatcher();
+    expect(fakeWatcher.close).toHaveBeenCalledTimes(1);
+    expect(fakeWatcher.closed).toBe(true);
   });
 
   it('should handle stopping when not started', async () => {
@@ -106,16 +213,32 @@ msgstr "Hello"
     const originalTranslation = translator.t('Hello');
     expect(originalTranslation).toBe('Hola');
 
-    // Watcher is now monitoring for changes
-    expect(watcher).toBeDefined();
+    const clearCacheSpy = vi.spyOn(translator, 'clearCache');
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
+
+    fakeWatcher.emit('change', join(esDir, 'messages.po'));
+    await flushAsync();
+
+    expect(clearCacheSpy).toHaveBeenCalled();
+    expect(loadSpy).toHaveBeenCalledWith('es');
+
+    clearCacheSpy.mockRestore();
+    loadSpy.mockRestore();
   });
 
   it('should watch multiple locales for file additions', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en', 'fr'], 'messages', true);
     await watcher.start();
 
-    // Watcher is now set up to detect new files
-    expect(watcher).toBeDefined();
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
+
+    fakeWatcher.emit('add', join(frDir, 'messages.po'));
+    await flushAsync();
+
+    expect(loadSpy).toHaveBeenCalledWith('fr');
+    loadSpy.mockRestore();
   });
 
   it('should handle file changes with debug mode', async () => {
@@ -126,6 +249,14 @@ msgstr "Hello"
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('[Polingo] Started watching translations in:')
+    );
+
+    const fakeWatcher = ensureWatcher();
+    fakeWatcher.emit('change', join(esDir, 'messages.po'));
+    await flushAsync();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[Polingo] Translation file changed:')
     );
 
     consoleSpy.mockRestore();
@@ -141,10 +272,18 @@ msgstr "Hello"
     });
 
     watcher = new TranslationWatcher(invalidTranslator, testDir, ['es'], 'messages', true);
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     await watcher.start();
 
-    // Watcher is set up with error handling
-    expect(watcher).toBeDefined();
+    const fakeWatcher = ensureWatcher();
+    fakeWatcher.emit('change', join(esDir, 'messages.po'));
+    await flushAsync();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[Polingo] Failed to reload translations for locale "es":'),
+      expect.any(Error)
+    );
+    consoleErrorSpy.mockRestore();
   });
 
   it('should have error handling logic for new file load failures', async () => {
@@ -157,24 +296,32 @@ msgstr "Hello"
     });
 
     watcher = new TranslationWatcher(invalidTranslator, testDir, ['fr'], 'messages', true);
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     await watcher.start();
 
-    // Watcher is set up with error handling
-    expect(watcher).toBeDefined();
+    const fakeWatcher = ensureWatcher();
+    fakeWatcher.emit('add', join(frDir, 'messages.po'));
+    await flushAsync();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[Polingo] Failed to load new translations for locale "fr":'),
+      expect.any(Error)
+    );
+    consoleErrorSpy.mockRestore();
   });
 
   it('should extract locale from file path correctly', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
     await watcher.start();
 
-    // Trigger a file change with a valid path
-    await writeFile(join(esDir, 'messages.po'), esPoContent);
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
 
-    // Wait for processing
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    fakeWatcher.emit('change', join(esDir, 'messages.po'));
+    await flushAsync();
 
-    // No errors should occur
-    expect(watcher).toBeDefined();
+    expect(loadSpy).toHaveBeenCalledWith('es');
+    loadSpy.mockRestore();
   });
 
   it('should handle file paths that cannot extract locale', async () => {
@@ -183,29 +330,38 @@ msgstr "Hello"
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
     await watcher.start();
 
-    // Create a file that doesn't match the expected pattern
-    const invalidPath = join(testDir, 'invalid.po');
-    await writeFile(invalidPath, esPoContent);
+    const fakeWatcher = ensureWatcher();
+    fakeWatcher.emit('change', join(tmpdir(), 'outside', 'messages.po'));
+    await flushAsync();
 
-    // Manually trigger a change on invalid path (simulated)
-    // In real scenario, watcher won't pick this up, but testing the extractLocaleFromPath logic
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[Polingo] Ignoring unsafe translation path:')
+    );
+    consoleWarnSpy.mockClear();
 
-    // Wait for processing
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    fakeWatcher.emit('change', join(testDir, 'invalid.po'));
+    await flushAsync();
 
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Could not extract locale from path')
+    );
     consoleWarnSpy.mockRestore();
   });
 
   it('should work with custom domain name', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'custom-domain');
     await watcher.start();
-    expect(watcher).toBeDefined();
+    const fakeWatcher = ensureWatcher();
+    expect(fakeWatcher.paths).toEqual([
+      join(testDir, 'es', 'custom-domain.{po,mo}'),
+      join(testDir, 'en', 'custom-domain.{po,mo}'),
+    ]);
   });
 
   it('should work without debug mode', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', false);
     await watcher.start();
-    expect(watcher).toBeDefined();
+    expect(chokidarMock.watch).toHaveBeenCalledTimes(1);
   });
 
   it('should log stop message in debug mode', async () => {
@@ -223,7 +379,12 @@ msgstr "Hello"
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en', 'fr'], 'messages');
     await watcher.start();
 
-    expect(watcher).toBeDefined();
+    const fakeWatcher = ensureWatcher();
+    expect(fakeWatcher.paths).toEqual([
+      join(testDir, 'es', 'messages.{po,mo}'),
+      join(testDir, 'en', 'messages.{po,mo}'),
+      join(testDir, 'fr', 'messages.{po,mo}'),
+    ]);
   });
 
   it('should have clearCache logic in change handler', async () => {
@@ -231,17 +392,28 @@ msgstr "Hello"
     watcher = new TranslationWatcher(translator, testDir, ['es'], 'messages', false);
     await watcher.start();
 
-    // The watcher's change handler includes clearCache()
-    expect(watcher).toBeDefined();
+    const clearCacheSpy = vi.spyOn(translator, 'clearCache');
+    const fakeWatcher = ensureWatcher();
+    fakeWatcher.emit('change', join(esDir, 'messages.po'));
+    await flushAsync();
+
+    expect(clearCacheSpy).toHaveBeenCalled();
+    clearCacheSpy.mockRestore();
   });
 
-  it('should handle Windows-style paths in extractLocaleFromPath', async () => {
-    watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages');
+  const win32 = process.platform === 'win32' ? it : it.skip;
 
-    // The extractLocaleFromPath is private, but we can test it indirectly
-    // by ensuring the watcher handles various path formats
+  win32('should handle Windows-style paths in extractLocaleFromPath', async () => {
+    watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages');
     await watcher.start();
 
-    expect(watcher).toBeDefined();
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
+    const windowsPath = `${testDir.replace(/\//g, '\\')}\\es\\messages.po`;
+    fakeWatcher.emit('change', windowsPath);
+    await flushAsync();
+
+    expect(loadSpy).toHaveBeenCalledWith('es');
+    loadSpy.mockRestore();
   });
 });
