@@ -15,13 +15,13 @@
     "@polingo/core": "^0.0.2",
     "@polingo/react": "^0.0.2",
     "@polingo/web": "^0.0.2",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@polingo/cli": "^0.0.2",
-    "@types/react": "^18.3.17",
-    "@types/react-dom": "^18.3.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.9.3",
     "vite": "^6.0.11"
