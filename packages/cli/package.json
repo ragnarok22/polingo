@@ -25,9 +25,9 @@
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
     "pretest": "pnpm run build",
-    "test": "vitest run",
+    "test": "vitest run --reporter=default --reporter=junit --outputFile=test-report.junit.xml",
     "pretest:coverage": "pnpm run build",
-    "test:coverage": "vitest --coverage",
+    "test:coverage": "vitest run --coverage --reporter=default --reporter=junit --outputFile=test-report.junit.xml",
     "test:watch": "vitest",
     "prepublishOnly": "pnpm build"
   },

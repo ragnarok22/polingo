@@ -4,7 +4,7 @@ import { mkdirSync } from 'fs';
 
 const isCI = Boolean(process.env.CI && process.env.CI !== '0');
 const junitOutputFile = isCI
-  ? resolve(process.cwd(), 'test-results/vitest-junit.xml')
+  ? resolve(process.cwd(), 'test-report.junit.xml')
   : undefined;
 
 if (junitOutputFile) {

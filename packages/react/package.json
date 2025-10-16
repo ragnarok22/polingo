@@ -19,9 +19,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "vitest run --reporter=default --reporter=junit --outputFile=test-report.junit.xml",
     "test:watch": "vitest",
-    "test:coverage": "vitest --coverage",
+    "test:coverage": "vitest run --coverage --reporter=default --reporter=junit --outputFile=test-report.junit.xml",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm build"

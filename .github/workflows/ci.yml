@@ -208,11 +208,11 @@ jobs:
         run: make test
 
       - name: Upload Vitest results to Codecov
-        if: runner.os == 'ubuntu-latest' && matrix.node == 20 && hashFiles('packages/**/test-results/vitest-junit.xml') != ''
+        if: runner.os == 'ubuntu-latest' && matrix.node == 20 && hashFiles('packages/**/test-report.junit.xml') != ''
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: packages/**/test-results/vitest-junit.xml
+          files: packages/**/test-report.junit.xml
           flags: vitest
           fail_ci_if_error: true
           verbose: true

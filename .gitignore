@@ -13,6 +13,7 @@ docs/.vitepress/cache/
 coverage/
 .nyc_output/
 test-results/
+*.junit.xml
 
 # IDE
 .vscode/
