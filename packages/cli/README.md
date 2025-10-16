@@ -27,6 +27,8 @@ pnpm dlx @polingo/cli@latest extract ./src --keep-template
   - Detects `<Trans>` component usage in React/JSX files
   - Preserves context and plural forms
   - Syncs locale catalogs under `locales/` by default (configure with `--locales`)
+  - Fuzzy matching enabled by default to detect similar strings (like `msgmerge`)
+  - Marks obsolete entries with `#~` and similar strings with `#, fuzzy`
   - Cleans up the temporary POT unless `--keep-template` is provided
 - **Compile**: Converts `.po` files to runtime-ready formats
   - JSON format for `@polingo/web` (browser usage)
@@ -58,6 +60,9 @@ polingo extract <source> [options]
 - `--locales <dir>` - Locale root directory; updates/creates per-language `.po` files alongside the template (default: `locales`)
 - `--languages <codes>` - Comma-separated locale codes to ensure exist under `--locales`
 - `--default-locale <code>` - Locale whose catalog copies the source strings as translations
+- `--fuzzy` - Enable fuzzy matching for similar strings (default: enabled)
+- `--no-fuzzy` - Disable fuzzy matching
+- `--fuzzy-threshold <n>` - Similarity threshold for fuzzy matching, 0-1 (default: 0.6)
 - `--keep-template` - Retain the generated `.pot` file instead of cleaning it up
 
 **Examples:**
@@ -80,6 +85,12 @@ polingo extract src/components/App.tsx --keep-template
 
 # Extract and sync locale catalogs (create/update locales/en and locales/es)
 polingo extract src --locales locales --languages en,es --default-locale en
+
+# Extract with fuzzy matching disabled
+polingo extract src --no-fuzzy
+
+# Extract with custom fuzzy threshold (higher = stricter matching)
+polingo extract src --fuzzy-threshold 0.8
 ```
 
 **What gets extracted:**
@@ -103,6 +114,20 @@ tnp('cart', '{n} item', '{n} items', count)   // → msgctxt "cart", msgid "{n} 
 ```
 
 When `--locales` is passed, the extractor mirrors Django's workflow: it creates or updates `messages.po` under each locale (either detected from the directory or supplied via `--languages`). The default locale receives the source strings as `msgstr` values, while other locales get empty placeholders ready for translators.
+
+**Fuzzy Matching Behavior:**
+
+By default, fuzzy matching is enabled and works similarly to GNU gettext's `msgmerge`:
+
+1. **Exact matches** - Updates are applied with new source references, and any existing `#, fuzzy` flag is cleared
+2. **Similar strings** - When a string is slightly modified (e.g., "Save changes" → "Save all changes"), the tool finds the most similar existing translation using Levenshtein distance and:
+   - Copies the old translation to the new entry
+   - Marks it with `#, fuzzy` flag for translator review
+   - Uses `--fuzzy-threshold` to control similarity (0.6 = 60% similar, higher = stricter)
+3. **Obsolete entries** - Strings no longer found in source code are marked with `#~` comment for reference
+
+Disable fuzzy matching with `--no-fuzzy` to get the old behavior where modified strings create new empty entries.
+
 The intermediate `messages.pot` is written to the locales directory and removed at the end of the run unless `--keep-template` is provided.
 
 ### Compile

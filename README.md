@@ -217,7 +217,14 @@ Use the CLI to extract, compile, and validate translations:
 pnpm add -D @polingo/cli
 
 # Extract translatable strings from source code (updates ./locales)
+# Fuzzy matching is enabled by default to automatically detect similar strings
 pnpm polingo extract
+
+# Extract with fuzzy matching disabled
+pnpm polingo extract --no-fuzzy
+
+# Extract with custom fuzzy threshold (0-1, default: 0.6)
+pnpm polingo extract --fuzzy-threshold 0.8
 
 # After translating .po files, compile to runtime format
 pnpm polingo compile locales -o public/i18n --format json
@@ -225,6 +232,8 @@ pnpm polingo compile locales -o public/i18n --format json
 # Validate translations before deployment
 pnpm polingo validate locales --strict
 ```
+
+**Fuzzy Matching:** When enabled (default), the extract command automatically detects similar strings between catalog updates and marks them with the `#, fuzzy` flag, similar to `msgmerge` behavior. This helps translators identify strings that may need review when source text changes slightly. Obsolete entries (no longer in source) are marked with `#~` for reference.
 
 See the [@polingo/cli documentation](https://github.com/ragnarok22/polingo/tree/main/packages/cli) for detailed command reference.
 
