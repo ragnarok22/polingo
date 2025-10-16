@@ -48,9 +48,7 @@ export class NodeLoader implements TranslationLoader {
       return this.convertToTranslationCatalog(parsed);
     }
 
-    throw new Error(
-      `Translation file not found for locale "${locale}" and domain "${domain}"`
-    );
+    throw new Error(`Translation file not found for locale "${locale}" and domain "${domain}"`);
   }
 
   /**

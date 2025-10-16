@@ -109,9 +109,10 @@ function assertCatalog(value: unknown): TranslationCatalog {
       );
     }
 
-    const safeContext: Record<string, Translation> = Object.create(
-      null
-    ) as Record<string, Translation>;
+    const safeContext: Record<string, Translation> = Object.create(null) as Record<
+      string,
+      Translation
+    >;
 
     for (const [msgidKey, rawTranslation] of Object.entries(contextValue)) {
       if (!isPlainObject(rawTranslation)) {

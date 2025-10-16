@@ -41,6 +41,18 @@ Polingo is organized as a monorepo with the following packages:
 - **[@polingo/cli](https://github.com/ragnarok22/polingo/tree/main/packages/cli)**: Command-line tools for extraction, compilation, and validation
 - **[create-polingo-app](https://github.com/ragnarok22/polingo/tree/main/packages/create-polingo-app)**: Interactive scaffolding for example applications
 
+## Coverage
+
+Per-package Codecov coverage (updated on every successful `make coverage` run in CI):
+
+| Package | Coverage |
+| --- | --- |
+| @polingo/core | [![Coverage @polingo/core](https://codecov.io/gh/ragnarok22/polingo/branch/main/graph/badge.svg?token=3QVHN9LWNN&flag=core)](https://app.codecov.io/gh/ragnarok22/polingo/tree/main/packages/core?flags=core) |
+| @polingo/node | [![Coverage @polingo/node](https://codecov.io/gh/ragnarok22/polingo/branch/main/graph/badge.svg?token=3QVHN9LWNN&flag=node)](https://app.codecov.io/gh/ragnarok22/polingo/tree/main/packages/node?flags=node) |
+| @polingo/react | [![Coverage @polingo/react](https://codecov.io/gh/ragnarok22/polingo/branch/main/graph/badge.svg?token=3QVHN9LWNN&flag=react)](https://app.codecov.io/gh/ragnarok22/polingo/tree/main/packages/react?flags=react) |
+| @polingo/vue | [![Coverage @polingo/vue](https://codecov.io/gh/ragnarok22/polingo/branch/main/graph/badge.svg?token=3QVHN9LWNN&flag=vue)](https://app.codecov.io/gh/ragnarok22/polingo/tree/main/packages/vue?flags=vue) |
+| @polingo/web | [![Coverage @polingo/web](https://codecov.io/gh/ragnarok22/polingo/branch/main/graph/badge.svg?token=3QVHN9LWNN&flag=web)](https://app.codecov.io/gh/ragnarok22/polingo/tree/main/packages/web?flags=web) |
+
 ## Installation
 
 Choose the package that fits your environment:
