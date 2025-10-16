@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { po, mo } from 'gettext-parser';
 import type { GetTextTranslations } from 'gettext-parser';
+import { distance } from 'fastest-levenshtein';
 import packageJson from '../package.json' with { type: 'json' };
 
 const DEFAULT_EXTRACT_EXTENSIONS = [
@@ -49,6 +50,8 @@ export interface ExtractOptions {
   languages?: string[];
   defaultLocale?: string;
   keepTemplate?: boolean;
+  fuzzy?: boolean;
+  fuzzyThreshold?: number;
 }
 
 export interface ExtractResult {
@@ -64,6 +67,8 @@ interface LocaleSyncOptions {
   potFile: string;
   languages?: string[];
   defaultLocale?: string;
+  fuzzy?: boolean;
+  fuzzyThreshold?: number;
 }
 
 interface LocaleSyncSummary {
@@ -220,6 +225,8 @@ function parseExtractArgs(args: string[]): ParsedExtractArgs {
     languages: undefined,
     defaultLocale: undefined,
     keepTemplate: false,
+    fuzzy: true,
+    fuzzyThreshold: 0.6,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -276,6 +283,21 @@ function parseExtractArgs(args: string[]): ParsedExtractArgs {
       case '--default-locale': {
         const value = readNextValue(args, ++index, arg);
         options.defaultLocale = value.trim();
+        break;
+      }
+      case '--fuzzy':
+        options.fuzzy = true;
+        break;
+      case '--no-fuzzy':
+        options.fuzzy = false;
+        break;
+      case '--fuzzy-threshold': {
+        const value = readNextValue(args, ++index, arg);
+        const threshold = Number.parseFloat(value);
+        if (Number.isNaN(threshold) || threshold < 0 || threshold > 1) {
+          throw new Error(`Invalid fuzzy threshold "${value}". Must be a number between 0 and 1.`);
+        }
+        options.fuzzyThreshold = threshold;
         break;
       }
       default:
@@ -445,6 +467,8 @@ export async function extract(options: ExtractOptions): Promise<ExtractResult> {
         potFile: outFile,
         languages: options.languages,
         defaultLocale: options.defaultLocale,
+        fuzzy: options.fuzzy,
+        fuzzyThreshold: options.fuzzyThreshold,
       });
 
       if (!options.quiet && summary) {
@@ -520,7 +544,19 @@ async function syncLocaleCatalogs(
     }
 
     const headersChanged = ensureCatalogHeaders(catalog, locale);
-    const changed = applyEntriesToCatalog(catalog, entries, locale, options.defaultLocale);
+
+    let changed: boolean;
+    if (options.fuzzy && exists) {
+      changed = applyEntriesToCatalogWithFuzzy(
+        catalog,
+        entries,
+        locale,
+        options.defaultLocale,
+        options.fuzzyThreshold ?? 0.6
+      );
+    } else {
+      changed = applyEntriesToCatalog(catalog, entries, locale, options.defaultLocale);
+    }
 
     if (exists && (changed || headersChanged)) {
       summary.updated.push(relativePath);
@@ -706,6 +742,203 @@ function applyEntriesToCatalog(
   }
 
   return changed;
+}
+
+/**
+ * Apply entries to catalog with fuzzy matching
+ *
+ * This function implements msgmerge-like behavior:
+ * 1. Exact matches are updated with new references
+ * 2. Similar strings (fuzzy matches) are marked with #, fuzzy flag
+ * 3. Obsolete entries (in catalog but not in new entries) are marked with #~
+ */
+function applyEntriesToCatalogWithFuzzy(
+  catalog: GettextParserOutput,
+  entries: ExtractEntry[],
+  locale: string,
+  defaultLocale?: string,
+  threshold = 0.6
+): boolean {
+  let changed = false;
+  catalog.translations ??= { '': {} };
+  const translations = catalog.translations;
+
+  // Build a map of new entries for quick lookup
+  const newEntriesMap = new Map<string, ExtractEntry>();
+  for (const entry of entries) {
+    const key = buildMessageKey(entry.msgctxt, entry.msgid, entry.msgidPlural);
+    newEntriesMap.set(key, entry);
+  }
+
+  // Track which entries from the catalog have been processed
+  const processedKeys = new Set<string>();
+
+  // Process new entries
+  for (const entry of entries) {
+    const contextKey = entry.msgctxt ?? '';
+
+    if (!translations[contextKey]) {
+      translations[contextKey] = {};
+      changed = true;
+    }
+
+    const contextMessages = translations[contextKey];
+    const existingMessage = contextMessages[entry.msgid];
+    const key = buildMessageKey(entry.msgctxt, entry.msgid, entry.msgidPlural);
+    processedKeys.add(key);
+
+    if (existingMessage) {
+      // Exact match found - update references and clear fuzzy flag if present
+      const referenceText = entry.references.join('\n');
+      existingMessage.comments ??= {};
+
+      if (existingMessage.comments.reference !== referenceText) {
+        existingMessage.comments.reference = referenceText;
+        changed = true;
+      }
+
+      // Clear fuzzy flag for exact matches
+      if (existingMessage.comments.flag && existingMessage.comments.flag.includes('fuzzy')) {
+        existingMessage.comments.flag = existingMessage.comments.flag
+          .replace(/,?\s*fuzzy\s*/g, '')
+          .trim();
+        if (!existingMessage.comments.flag) {
+          delete existingMessage.comments.flag;
+        }
+        changed = true;
+      }
+
+      // Update plural form if changed
+      if (entry.msgidPlural && existingMessage.msgid_plural !== entry.msgidPlural) {
+        existingMessage.msgid_plural = entry.msgidPlural;
+        changed = true;
+      }
+    } else {
+      // No exact match - try fuzzy matching across all contexts
+      let bestMatch: { msgid: string; score: number; translation: GettextMessage } | null = null;
+
+      for (const [searchContext, searchMessages] of Object.entries(translations)) {
+        // Only search in the same context (or no context)
+        if (searchContext !== contextKey) continue;
+
+        for (const [oldMsgid, oldMessage] of Object.entries(searchMessages)) {
+          if (oldMsgid === '') continue;
+          if (oldMessage.comments?.flag?.includes('fuzzy')) continue; // Skip already fuzzy entries
+          if (oldMessage.comments?.flag?.includes('obsolete')) continue; // Skip obsolete entries
+
+          const similarity = calculateSimilarity(entry.msgid, oldMsgid);
+
+          if (similarity >= threshold && (!bestMatch || similarity > bestMatch.score)) {
+            bestMatch = { msgid: oldMsgid, score: similarity, translation: oldMessage };
+          }
+        }
+      }
+
+      if (bestMatch) {
+        // Fuzzy match found - copy translation and mark as fuzzy
+        const newMessage: GettextMessage = {
+          msgid: entry.msgid,
+          msgstr: bestMatch.translation.msgstr || [''],
+          comments: {
+            flag: 'fuzzy',
+            reference: entry.references.join('\n'),
+          },
+        };
+
+        if (entry.msgctxt) {
+          newMessage.msgctxt = entry.msgctxt;
+        }
+        if (entry.msgidPlural) {
+          newMessage.msgid_plural = entry.msgidPlural;
+          // Adjust msgstr array for plurals if needed
+          if (!Array.isArray(newMessage.msgstr) || newMessage.msgstr.length < 2) {
+            newMessage.msgstr = bestMatch.translation.msgstr || ['', ''];
+          }
+        }
+
+        contextMessages[entry.msgid] = newMessage;
+        changed = true;
+      } else {
+        // No match - create new empty entry
+        const newMessage: GettextMessage = {
+          msgid: entry.msgid,
+          msgstr: entry.msgidPlural ? ['', ''] : [''],
+          comments: {
+            reference: entry.references.join('\n'),
+          },
+        };
+
+        if (entry.msgctxt) {
+          newMessage.msgctxt = entry.msgctxt;
+        }
+        if (entry.msgidPlural) {
+          newMessage.msgid_plural = entry.msgidPlural;
+        }
+
+        contextMessages[entry.msgid] = newMessage;
+        changed = true;
+
+        // Fill in default locale translations
+        if (defaultLocale && locale === defaultLocale) {
+          if (entry.msgidPlural) {
+            newMessage.msgstr[0] = entry.msgid;
+            newMessage.msgstr[1] = entry.msgidPlural;
+          } else {
+            newMessage.msgstr[0] = entry.msgid;
+          }
+        }
+      }
+    }
+  }
+
+  // Mark obsolete entries (entries in catalog but not in new extractions)
+  for (const [_context, messages] of Object.entries(translations)) {
+    for (const [msgid, message] of Object.entries(messages)) {
+      if (msgid === '') continue; // Skip metadata
+
+      const key = buildMessageKey(message.msgctxt, msgid, message.msgid_plural);
+
+      if (!processedKeys.has(key)) {
+        // This entry is obsolete - mark with #~ (previous msgid)
+        message.comments ??= {};
+        message.comments.flag = message.comments.flag
+          ? `${message.comments.flag}, obsolete`
+          : 'obsolete';
+        changed = true;
+      }
+    }
+  }
+
+  return changed;
+}
+
+/**
+ * Calculate similarity between two strings using Levenshtein distance
+ * Returns a score between 0 (completely different) and 1 (identical)
+ */
+function calculateSimilarity(str1: string, str2: string): number {
+  const maxLength = Math.max(str1.length, str2.length);
+  if (maxLength === 0) return 1.0;
+
+  const dist = distance(str1, str2);
+  return 1 - dist / maxLength;
+}
+
+/**
+ * Type definition for gettext message structure
+ */
+interface GettextMessage {
+  msgid: string;
+  msgstr: string[];
+  msgid_plural?: string;
+  msgctxt?: string;
+  comments?: {
+    reference?: string;
+    flag?: string;
+    translator?: string;
+    extracted?: string;
+    previous?: string;
+  };
 }
 
 function isEnoent(error: unknown): boolean {
@@ -1181,16 +1414,19 @@ function printExtractHelp(): void {
   console.log(`Usage: polingo extract [paths...] [options]
 
 Options:
-  -o, --out <file>        Output POT file (default: locales/messages.pot)
-      --cwd <dir>         Working directory for relative paths
-      --extensions <ext>  Comma-separated list of file extensions to scan
-      --locales <dir>     Locale root; sync per-language PO files alongside POT (default: locales)
-      --languages <list>  Comma-separated locale codes to ensure are present
-      --default-locale    Locale code whose catalog copies source strings
-      --dry-run           Print extracted strings without writing to disk
-      --keep-template     Retain the generated POT file instead of cleaning it up
-      --quiet             Suppress completion message
-  -h, --help              Show this help text`);
+  -o, --out <file>          Output POT file (default: locales/messages.pot)
+      --cwd <dir>           Working directory for relative paths
+      --extensions <ext>    Comma-separated list of file extensions to scan
+      --locales <dir>       Locale root; sync per-language PO files alongside POT (default: locales)
+      --languages <list>    Comma-separated locale codes to ensure are present
+      --default-locale      Locale code whose catalog copies source strings
+      --fuzzy               Enable fuzzy matching for similar strings (default: enabled)
+      --no-fuzzy            Disable fuzzy matching
+      --fuzzy-threshold <n> Similarity threshold for fuzzy matching (0-1, default: 0.6)
+      --dry-run             Print extracted strings without writing to disk
+      --keep-template       Retain the generated POT file instead of cleaning it up
+      --quiet               Suppress completion message
+  -h, --help                Show this help text`);
 }
 
 function printCompileHelp(): void {
