@@ -1,5 +1,5 @@
 import { watch, FSWatcher } from 'chokidar';
-import { join } from 'path';
+import { join, relative, resolve, sep } from 'path';
 import type { Translator } from '@polingo/core';
 
 /**
@@ -14,6 +14,7 @@ export class TranslationWatcher {
   private locales: string[];
   private domain: string;
   private debug: boolean;
+  private readonly localesRoot: string;
 
   constructor(
     translator: Translator,
@@ -27,6 +28,7 @@ export class TranslationWatcher {
     this.locales = locales;
     this.domain = domain;
     this.debug = debug;
+    this.localesRoot = resolve(directory);
   }
 
   /**
@@ -51,6 +53,8 @@ export class TranslationWatcher {
       this.watcher = watch(patterns, {
         persistent: true,
         ignoreInitial: true,
+        followSymlinks: false,
+        depth: 2,
         awaitWriteFinish: {
           stabilityThreshold: 100,
           pollInterval: 100,
@@ -59,6 +63,13 @@ export class TranslationWatcher {
 
       this.watcher.on('change', (path) => {
         void (async () => {
+          if (!this.isSafeCatalogPath(path)) {
+            if (this.debug) {
+              console.warn(`[Polingo] Ignoring unsafe translation path: ${path}`);
+            }
+            return;
+          }
+
           if (this.debug) {
             console.log(`[Polingo] Translation file changed: ${path}`);
           }
@@ -91,6 +102,13 @@ export class TranslationWatcher {
 
       this.watcher.on('add', (path) => {
         void (async () => {
+          if (!this.isSafeCatalogPath(path)) {
+            if (this.debug) {
+              console.warn(`[Polingo] Ignoring unsafe translation path: ${path}`);
+            }
+            return;
+          }
+
           if (this.debug) {
             console.log(`[Polingo] New translation file detected: ${path}`);
           }
@@ -146,5 +164,22 @@ export class TranslationWatcher {
       }
     }
     return null;
+  }
+
+  private isSafeCatalogPath(filePath: string): boolean {
+    const absolutePath = resolve(filePath);
+    if (!this.isPathInsideLocalesRoot(absolutePath)) {
+      return false;
+    }
+    return absolutePath.endsWith('.po') || absolutePath.endsWith('.mo');
+  }
+
+  private isPathInsideLocalesRoot(candidatePath: string): boolean {
+    const relativePath = relative(this.localesRoot, candidatePath);
+    return (
+      relativePath.length > 0 &&
+      !relativePath.startsWith('..') &&
+      !relativePath.includes(`..${sep}`)
+    );
   }
 }

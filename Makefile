@@ -1,4 +1,4 @@
-.PHONY: help install build test coverage lint clean publish
+.PHONY: help install build test coverage lint security clean publish
 
 # Default target
 help:
@@ -8,6 +8,7 @@ help:
 	@echo "  make test      - Run all tests"
 	@echo "  make coverage  - Run tests with coverage"
 	@echo "  make lint      - Run linter"
+	@echo "  make security  - Run dependency and lockfile security checks"
 	@echo "  make clean     - Clean build artifacts"
 	@echo "  make publish   - Publish workspaces to npm (override PUBLISH_TAG/PUBLISH_FILTERS)"
 
@@ -30,6 +31,10 @@ coverage:
 # Run linter
 lint:
 	pnpm lint
+
+# Run security checks
+security:
+	pnpm run security
 
 # Clean build artifacts
 clean:

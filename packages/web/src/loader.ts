@@ -1,4 +1,4 @@
-import type { TranslationCatalog, TranslationLoader } from '@polingo/core';
+import type { TranslationCatalog, TranslationLoader, Translation } from '@polingo/core';
 
 /**
  * Options to configure {@link WebLoader}
@@ -94,8 +94,39 @@ function assertCatalog(value: unknown): TranslationCatalog {
 
   const candidate = value as Partial<TranslationCatalog>;
 
-  if (!candidate.translations || typeof candidate.translations !== 'object') {
+  if (!isPlainObject(candidate.translations)) {
     throw new Error('[Polingo] Invalid translation catalog payload (missing translations map)');
+  }
+
+  const safeTranslations: TranslationCatalog['translations'] = Object.create(
+    null
+  ) as TranslationCatalog['translations'];
+
+  for (const [contextKey, contextValue] of Object.entries(candidate.translations)) {
+    if (!isPlainObject(contextValue)) {
+      throw new Error(
+        `[Polingo] Invalid translation context payload for "${contextKey}" (expected object)`
+      );
+    }
+
+    const safeContext: Record<string, Translation> = Object.create(
+      null
+    ) as Record<string, Translation>;
+
+    for (const [msgidKey, rawTranslation] of Object.entries(contextValue)) {
+      if (!isPlainObject(rawTranslation)) {
+        throw new Error(
+          `[Polingo] Invalid translation entry for "${msgidKey}" in context "${contextKey}"`
+        );
+      }
+
+      safeContext[msgidKey] = normalizeTranslation(
+        msgidKey,
+        rawTranslation as Record<string, unknown>
+      );
+    }
+
+    safeTranslations[contextKey] = safeContext;
   }
 
   const headers =
@@ -106,7 +137,7 @@ function assertCatalog(value: unknown): TranslationCatalog {
   return {
     charset: typeof candidate.charset === 'string' ? candidate.charset : 'utf-8',
     headers,
-    translations: candidate.translations,
+    translations: safeTranslations,
   };
 }
 
@@ -126,4 +157,57 @@ function normalizeHeaders(headers: object): Record<string, string> {
     }
   }
   return normalized;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value) as unknown;
+  return prototype === null || prototype === Object.prototype;
+}
+
+function normalizeTranslation(msgidKey: string, raw: Record<string, unknown>): Translation {
+  const rawMsgid = raw.msgid;
+  const msgid = typeof rawMsgid === 'string' ? rawMsgid : msgidKey;
+  const msgctxt = raw.msgctxt;
+  const msgidPlural = raw.msgid_plural;
+  const msgstrRaw = raw.msgstr;
+
+  let msgstr: string | string[];
+  if (Array.isArray(msgstrRaw)) {
+    if (!msgstrRaw.every((entry): entry is string => typeof entry === 'string')) {
+      throw new Error(`[Polingo] Invalid msgstr array for "${msgidKey}"`);
+    }
+    msgstr = msgstrRaw;
+  } else if (typeof msgstrRaw === 'string') {
+    msgstr = msgstrRaw;
+  } else {
+    throw new Error(`[Polingo] Invalid msgstr for "${msgidKey}"`);
+  }
+
+  const translation: Translation = {
+    msgid,
+    msgstr,
+  };
+
+  if (msgctxt !== undefined) {
+    if (typeof msgctxt !== 'string') {
+      throw new Error(`[Polingo] Invalid msgctxt for "${msgidKey}"`);
+    }
+    translation.msgctxt = msgctxt;
+  }
+
+  if (msgidPlural !== undefined) {
+    if (typeof msgidPlural !== 'string') {
+      throw new Error(`[Polingo] Invalid msgid_plural for "${msgidKey}"`);
+    }
+    translation.msgid_plural = msgidPlural;
+    if (!Array.isArray(translation.msgstr)) {
+      throw new Error(`[Polingo] Plural entry requires msgstr array for "${msgidKey}"`);
+    }
+  }
+
+  return translation;
 }

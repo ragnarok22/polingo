@@ -1,5 +1,5 @@
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { lstat, readFile } from 'fs/promises';
+import { relative, resolve, sep } from 'path';
 import { po, mo } from 'gettext-parser';
 import type { TranslationLoader, TranslationCatalog, Translation } from '@polingo/core';
 
@@ -26,31 +26,31 @@ export class NodeLoader implements TranslationLoader {
    * ```
    */
   async load(locale: string, domain: string): Promise<TranslationCatalog> {
-    // Build path: ./locales/es/messages.po
-    const basePath = join(this.directory, locale, domain);
+    const baseDirectory = resolve(this.directory);
+    const sanitizedLocale = sanitizePathSegment(locale, 'locale');
+    const sanitizedDomain = sanitizePathSegment(domain, 'domain');
+    const catalogBasePath = resolve(baseDirectory, sanitizedLocale, sanitizedDomain);
+    assertWithinDirectory(baseDirectory, catalogBasePath);
 
     // Try .po first, then .mo
-    let buffer: Buffer;
-    let isPo = true;
+    const poPath = `${catalogBasePath}.po`;
+    const moPath = `${catalogBasePath}.mo`;
 
-    try {
-      buffer = await readFile(`${basePath}.po`);
-    } catch {
-      try {
-        buffer = await readFile(`${basePath}.mo`);
-        isPo = false;
-      } catch {
-        throw new Error(
-          `Translation file not found for locale "${locale}" and domain "${domain}" at ${basePath}.po or ${basePath}.mo`
-        );
-      }
+    const poBuffer = await readSafeFile(poPath, baseDirectory);
+    if (poBuffer) {
+      const parsed = po.parse(poBuffer);
+      return this.convertToTranslationCatalog(parsed);
     }
 
-    // Parse with gettext-parser
-    const parsed = isPo ? po.parse(buffer) : mo.parse(buffer);
+    const moBuffer = await readSafeFile(moPath, baseDirectory);
+    if (moBuffer) {
+      const parsed = mo.parse(moBuffer);
+      return this.convertToTranslationCatalog(parsed);
+    }
 
-    // Convert to TranslationCatalog format
-    return this.convertToTranslationCatalog(parsed);
+    throw new Error(
+      `Translation file not found for locale "${locale}" and domain "${domain}"`
+    );
   }
 
   /**
@@ -113,4 +113,52 @@ interface GettextParserOutput {
   charset?: string;
   headers?: Record<string, string>;
   translations?: Record<string, Record<string, GettextMessage>>;
+}
+
+function sanitizePathSegment(value: string, segmentName: string): string {
+  if (!value || typeof value !== 'string') {
+    throw new Error(`Invalid ${segmentName} value.`);
+  }
+
+  const trimmed = value.trim();
+  if (!/^[A-Za-z0-9._-]+$/.test(trimmed)) {
+    throw new Error(
+      `Unsupported characters in ${segmentName} "${value}". Only letters, numbers, ".", "_", and "-" are allowed.`
+    );
+  }
+
+  if (trimmed.includes('..')) {
+    throw new Error(
+      `Invalid ${segmentName} "${value}". Parent directory traversal is not allowed.`
+    );
+  }
+
+  return trimmed;
+}
+
+function assertWithinDirectory(baseDir: string, targetPath: string): void {
+  const relativePath = relative(baseDir, targetPath);
+  if (!relativePath || relativePath.startsWith('..') || relativePath.includes(`..${sep}`)) {
+    throw new Error('Resolved catalog path escapes the configured directory.');
+  }
+}
+
+async function readSafeFile(filePath: string, baseDir: string): Promise<Buffer | null> {
+  const resolvedPath = resolve(filePath);
+  assertWithinDirectory(baseDir, resolvedPath);
+
+  try {
+    const fileStat = await lstat(resolvedPath);
+    // Reject symlinks first, then verify it's a regular file
+    if (fileStat.isSymbolicLink() || !fileStat.isFile()) {
+      return null;
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+
+  return readFile(resolvedPath);
 }
