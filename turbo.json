@@ -1,0 +1,41 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "inputs": ["src/**", "tsconfig.json", "tsup.config.ts", "package.json"]
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**", "test-report.junit.xml"],
+      "inputs": ["src/**", "test/**", "vitest.config.ts", "package.json"],
+      "cache": false
+    },
+    "test:coverage": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**", "test-report.junit.xml"],
+      "inputs": ["src/**", "test/**", "vitest.config.ts", "package.json"]
+    },
+    "lint": {
+      "outputs": [],
+      "inputs": ["src/**", "test/**", "eslint.config.js", "package.json"]
+    },
+    "typecheck": {
+      "dependsOn": ["build"],
+      "outputs": ["**/*.tsbuildinfo"],
+      "inputs": ["src/**", "test/**", "tsconfig.json", "package.json"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  },
+  "globalDependencies": [
+    "tsconfig.json",
+    "eslint.config.js",
+    "vitest.config.ts",
+    "pnpm-lock.yaml"
+  ]
+}
