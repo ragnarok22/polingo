@@ -10,6 +10,7 @@
 [![Downloads @polingo/react](https://img.shields.io/npm/dm/@polingo/react?label=%40polingo%2Freact)](https://www.npmjs.com/package/@polingo/react)
 [![Downloads @polingo/vue](https://img.shields.io/npm/dm/@polingo/vue?label=%40polingo%2Fvue)](https://www.npmjs.com/package/@polingo/vue)
 [![Downloads @polingo/cli](https://img.shields.io/npm/dm/@polingo/cli?label=%40polingo%2Fcli)](https://www.npmjs.com/package/@polingo/cli)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ragnarok22/polingo)
 
 Modern internationalization (i18n) library using industry-standard `.po` and `.mo` files for JavaScript/TypeScript projects.
 

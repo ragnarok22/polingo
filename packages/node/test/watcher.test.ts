@@ -277,7 +277,8 @@ msgstr "Bonjour"
 
     const fakeWatcher = ensureWatcher();
     fakeWatcher.emit('change', join(esDir, 'messages.po'));
-    await flushAsync();
+    // Wait longer for async error handler to complete on slower CI environments
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('[Polingo] Failed to reload translations for locale "es":'),

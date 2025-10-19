@@ -136,7 +136,8 @@ function materializeComponent(
   }
 
   if (isValidElement(component)) {
-    return cloneElement(component, { key }, children.length > 0 ? children : component.props.children);
+    const elementChildren = children.length > 0 ? children : ((component.props as { children?: ReactNode }).children ?? null);
+    return cloneElement(component, { key }, elementChildren);
   }
 
   if (children.length === 0) {

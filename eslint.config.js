@@ -20,7 +20,7 @@ export default tseslint.config(
 
   // TypeScript files configuration
   {
-    files: ['packages/*/src/**/*.ts', 'packages/*/test/**/*.ts'],
+    files: ['packages/*/src/**/*.ts', 'packages/*/test/**/*.ts', 'packages/*/src/**/*.tsx', 'packages/*/test/**/*.tsx'],
     extends: [
       ...tseslint.configs.recommendedTypeChecked,
     ],

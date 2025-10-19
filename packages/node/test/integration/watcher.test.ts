@@ -83,12 +83,35 @@ const ensureWatcher = (): FakeWatcherInstance => {
   return instance;
 };
 
-describe('File Watcher Integration Tests', () => {
-  beforeEach(() => {
-    // Clean up and create fresh test directory
-    if (existsSync(TEST_DIR)) {
-      rmSync(TEST_DIR, { recursive: true, force: true });
+/**
+ * Windows-compatible directory removal with retry logic
+ * Windows may hold file locks briefly after operations, causing ENOTEMPTY errors
+ */
+const removeDirRetry = async (
+  dir: string,
+  maxRetries: number = 5,
+  delayMs: number = 100
+): Promise<void> => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      if (existsSync(dir)) {
+        rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+      }
+      return;
+    } catch (error) {
+      if (i === maxRetries - 1) {
+        throw error;
+      }
+      // Wait before retry
+      await wait(delayMs * (i + 1));
     }
+  }
+};
+
+describe('File Watcher Integration Tests', () => {
+  beforeEach(async () => {
+    // Clean up and create fresh test directory
+    await removeDirRetry(TEST_DIR);
     mkdirSync(TEST_DIR, { recursive: true });
     mkdirSync(join(TEST_DIR, 'en'), { recursive: true });
     mkdirSync(join(TEST_DIR, 'es'), { recursive: true });
@@ -125,11 +148,9 @@ msgstr "Mundo"
     );
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Clean up test directory
-    if (existsSync(TEST_DIR)) {
-      rmSync(TEST_DIR, { recursive: true, force: true });
-    }
+    await removeDirRetry(TEST_DIR);
     chokidarMock.clear();
   });
 
@@ -303,7 +324,8 @@ msgstr "Hola Actualizado"
 `
     );
     fakeWatcher.emit('change', join(TEST_DIR, 'es', 'messages.po'));
-    await flushAsync();
+    // Wait longer for async reload operation to complete (especially on slower CI)
+    await wait(200);
     expect(polingo.t('Hello')).toBe('Hola Actualizado');
 
     // Stop watching
@@ -396,7 +418,9 @@ msgstr "Hola Nuevo"
       writeFileSync(join(TEST_DIR, 'es', 'messages.po'), 'INVALID CONTENT');
 
       const fakeWatcher = ensureWatcher();
+      // Set up spy BEFORE emitting the change event
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       fakeWatcher.emit('change', join(TEST_DIR, 'es', 'messages.po'));
       await flushAsync();
 
