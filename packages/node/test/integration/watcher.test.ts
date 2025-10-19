@@ -324,7 +324,8 @@ msgstr "Hola Actualizado"
 `
     );
     fakeWatcher.emit('change', join(TEST_DIR, 'es', 'messages.po'));
-    await flushAsync();
+    // Wait longer for async reload operation to complete (especially on slower CI)
+    await wait(200);
     expect(polingo.t('Hello')).toBe('Hola Actualizado');
 
     // Stop watching
