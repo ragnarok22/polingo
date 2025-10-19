@@ -88,9 +88,9 @@ export function PolingoProvider(props: PolingoProviderProps): JSX.Element {
     const factory: PolingoFactory =
       typeof createInput === 'function'
         ? createInput
-        : () => createPolingo(createInput as CreatePolingoOptions);
+        : () => createPolingo(createInput);
 
-    (async () => {
+    void (async () => {
       try {
         const instance = await factory();
         if (cancelled) {

@@ -17,6 +17,8 @@
   },
   "include": [
     "packages/*/src/**/*.ts",
-    "packages/*/test/**/*.ts"
+    "packages/*/test/**/*.ts",
+    "packages/*/src/**/*.tsx",
+    "packages/*/test/**/*.tsx"
   ]
 }
