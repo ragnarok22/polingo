@@ -1,6 +1,6 @@
 {
   "name": "create-polingo-app",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Interactive scaffolder for Polingo example applications",
   "type": "module",
   "bin": {

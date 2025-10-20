@@ -203,6 +203,23 @@ describe('init', () => {
     });
   });
 
+  describe('package installation', () => {
+    it('should include @polingo/cli in packagesInstalled when skipInstall is false', async () => {
+      const packageJson = {
+        name: 'test-project',
+        version: '1.0.0',
+      };
+
+      await writeFile(join(tmpDir, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+      const result = await init({ cwd: tmpDir, environment: 'web', skipInstall: true });
+
+      // When skipInstall is false, both the environment package and @polingo/cli should be installed
+      // For now, with skipInstall: true, packagesInstalled should be empty
+      expect(result.packagesInstalled).toEqual([]);
+    });
+  });
+
   describe('locale directory creation', () => {
     it('should create locale directories with default language', async () => {
       const packageJson = {

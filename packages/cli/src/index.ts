@@ -536,6 +536,10 @@ export async function init(options: InitOptions): Promise<InitResult> {
   if (!options.skipInstall) {
     await installPackage(packageToInstall, packageManager, cwd);
     packagesInstalled.push(packageToInstall);
+
+    // Install CLI as dev dependency
+    await installPackage('@polingo/cli', packageManager, cwd, true);
+    packagesInstalled.push('@polingo/cli');
   }
 
   // Update package.json with scripts
@@ -634,7 +638,8 @@ function getPackageForEnvironment(environment: 'react' | 'vue' | 'web' | 'node')
 async function installPackage(
   packageName: string,
   packageManager: 'npm' | 'yarn' | 'pnpm',
-  cwd: string
+  cwd: string,
+  dev = false
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const args: string[] = [];
@@ -642,16 +647,26 @@ async function installPackage(
     switch (packageManager) {
       case 'npm':
         args.push('install', packageName);
+        if (dev) {
+          args.push('--save-dev');
+        }
         break;
       case 'yarn':
         args.push('add', packageName);
+        if (dev) {
+          args.push('--dev');
+        }
         break;
       case 'pnpm':
         args.push('add', packageName);
+        if (dev) {
+          args.push('--save-dev');
+        }
         break;
     }
 
-    console.log(`Installing ${packageName} with ${packageManager}...`);
+    const depType = dev ? 'dev dependency' : 'dependency';
+    console.log(`Installing ${packageName} as ${depType} with ${packageManager}...`);
 
     const child = spawn(packageManager, args, {
       cwd,
@@ -1697,6 +1712,8 @@ function printInitHelp(): void {
   console.log(`Usage: polingo init [options]
 
 Initialize Polingo in your project by installing the appropriate package and setting up scripts.
+This command will install both the environment-specific package (e.g., @polingo/react) and
+@polingo/cli as a dev dependency.
 
 Options:
   -e, --env <type>          Environment type: react, vue, web, or node (auto-detected)

@@ -1,6 +1,6 @@
 {
   "name": "polingo",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "description": "Modern i18n library using .po/.mo files",
   "homepage": "https://github.com/ragnarok22/polingo#readme",
