@@ -624,18 +624,15 @@ async function detectPackageManager(cwd: string): Promise<'npm' | 'yarn' | 'pnpm
   return 'npm';
 }
 
+const environmentPackages: Record<'react' | 'vue' | 'web' | 'node', string[]> = {
+  react: ['@polingo/react', '@polingo/web', '@polingo/core'],
+  vue: ['@polingo/vue', '@polingo/web', '@polingo/core'],
+  web: ['@polingo/web', '@polingo/core'],
+  node: ['@polingo/node', '@polingo/core'],
+};
+
 function getPackagesForEnvironment(environment: 'react' | 'vue' | 'web' | 'node'): string[] {
-  switch (environment) {
-    case 'react':
-      return ['@polingo/react', '@polingo/web', '@polingo/core'];
-    case 'vue':
-      return ['@polingo/vue', '@polingo/web', '@polingo/core'];
-    case 'web':
-      return ['@polingo/web', '@polingo/core'];
-    case 'node':
-      return ['@polingo/node', '@polingo/core'];
-  }
-  throw new Error(`Unsupported environment: ${environment}`);
+  return environmentPackages[environment];
 }
 
 async function installPackage(
