@@ -39,7 +39,7 @@ app.get('/', (req: Request, res: Response) => {
   res
     .type('text/plain')
     .send(
-      `${headline}\n\n${instructions}\n${translator.t('Using locale: {locale}', { locale: translator.locale })}\n`
+      `${headline}\n\n${instructions}\n${translator.t('Using locale: {locale}', { locale: translator.getLocale() })}\n`
     );
 });
 
@@ -50,7 +50,7 @@ app.get('/greeting/:name', (req: Request, res: Response) => {
 
   res.json({
     greeting,
-    locale: translator.locale,
+    locale: translator.getLocale(),
   });
 });
 
@@ -67,7 +67,7 @@ app.get('/notifications', (req: Request, res: Response) => {
   res.json({
     message,
     count,
-    locale: translator.locale,
+    locale: translator.getLocale(),
   });
 });
 
