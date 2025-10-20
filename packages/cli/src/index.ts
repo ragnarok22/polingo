@@ -1663,6 +1663,18 @@ function resolveOutputDirectory(
 ): string {
   if (outDir) {
     const full = path.isAbsolute(outDir) ? outDir : path.resolve(cwd, outDir);
+
+    // Preserve locale directory structure when outDir is specified
+    // For example: locales/en/messages.po -> outDir/en/
+    const inputDir = path.dirname(inputFile);
+    const inputBasename = path.basename(inputDir);
+
+    // Check if the immediate parent directory looks like a locale code (2-5 chars)
+    // This handles common locale patterns: en, es, en-US, pt-BR, etc.
+    if (inputBasename && /^[a-z]{2}(-[A-Z]{2})?$/i.test(inputBasename)) {
+      return path.join(full, inputBasename);
+    }
+
     return full;
   }
 

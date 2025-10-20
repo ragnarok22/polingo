@@ -248,4 +248,160 @@ msgstr "Hello"
     expect(result.skipped).toContain('non-existent-path');
     expect(result.artifacts).toHaveLength(0);
   });
+
+  it('should preserve locale directory structure when using custom outDir', async () => {
+    // Setup: locales/en/messages.po and locales/es/messages.po
+    const localesDir = join(tmpDir, 'locales');
+    const enDir = join(localesDir, 'en');
+    const esDir = join(localesDir, 'es');
+    const outDir = join(tmpDir, 'public', 'i18n');
+
+    await mkdir(enDir, { recursive: true });
+    await mkdir(esDir, { recursive: true });
+
+    await writeFile(
+      join(enDir, 'messages.po'),
+      `
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Language: en\\n"
+
+msgid "hello"
+msgstr "hello"
+
+msgid "change locale"
+msgstr "change locale"
+`
+    );
+
+    await writeFile(
+      join(esDir, 'messages.po'),
+      `
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Language: es\\n"
+
+msgid "hello"
+msgstr "hola"
+
+msgid "change locale"
+msgstr "cambiar idioma"
+`
+    );
+
+    const result = await compileCatalogs({
+      inputs: [localesDir],
+      cwd: tmpDir,
+      outDir,
+      format: 'json',
+    });
+
+    expect(result.artifacts).toHaveLength(2);
+
+    // Check that files are in the correct locale subdirectories
+    const enOutput = result.artifacts.find((a) => a.outputFile.includes('/en/'));
+    const esOutput = result.artifacts.find((a) => a.outputFile.includes('/es/'));
+
+    expect(enOutput).toBeDefined();
+    expect(esOutput).toBeDefined();
+    expect(enOutput!.outputFile).toBe(join(outDir, 'en', 'messages.json'));
+    expect(esOutput!.outputFile).toBe(join(outDir, 'es', 'messages.json'));
+
+    // Verify the files actually exist with correct content
+    const enContent = await readFile(enOutput!.outputFile, 'utf8');
+    const esContent = await readFile(esOutput!.outputFile, 'utf8');
+
+    const enCatalog = JSON.parse(enContent) as {
+      translations: Record<string, Record<string, { msgstr: string }>>;
+    };
+    const esCatalog = JSON.parse(esContent) as {
+      translations: Record<string, Record<string, { msgstr: string }>>;
+    };
+
+    expect(enCatalog.translations['']['hello'].msgstr).toBe('hello');
+    expect(esCatalog.translations['']['hello'].msgstr).toBe('hola');
+    expect(enCatalog.translations['']['change locale'].msgstr).toBe('change locale');
+    expect(esCatalog.translations['']['change locale'].msgstr).toBe('cambiar idioma');
+  });
+
+  it('should handle locale codes with region variants (e.g., en-US, pt-BR)', async () => {
+    const localesDir = join(tmpDir, 'locales');
+    const enUSDir = join(localesDir, 'en-US');
+    const ptBRDir = join(localesDir, 'pt-BR');
+    const outDir = join(tmpDir, 'dist');
+
+    await mkdir(enUSDir, { recursive: true });
+    await mkdir(ptBRDir, { recursive: true });
+
+    await writeFile(
+      join(enUSDir, 'messages.po'),
+      `
+msgid ""
+msgstr ""
+"Language: en-US\\n"
+
+msgid "color"
+msgstr "color"
+`
+    );
+
+    await writeFile(
+      join(ptBRDir, 'messages.po'),
+      `
+msgid ""
+msgstr ""
+"Language: pt-BR\\n"
+
+msgid "color"
+msgstr "cor"
+`
+    );
+
+    const result = await compileCatalogs({
+      inputs: [localesDir],
+      cwd: tmpDir,
+      outDir,
+      format: 'json',
+    });
+
+    expect(result.artifacts).toHaveLength(2);
+
+    const enUSOutput = result.artifacts.find((a) => a.outputFile.includes('/en-US/'));
+    const ptBROutput = result.artifacts.find((a) => a.outputFile.includes('/pt-BR/'));
+
+    expect(enUSOutput).toBeDefined();
+    expect(ptBROutput).toBeDefined();
+    expect(enUSOutput!.outputFile).toBe(join(outDir, 'en-US', 'messages.json'));
+    expect(ptBROutput!.outputFile).toBe(join(outDir, 'pt-BR', 'messages.json'));
+  });
+
+  it('should not create locale subdirectory when input file is not in a locale directory', async () => {
+    // File directly in root, not in a locale subdirectory
+    const poFile = join(tmpDir, 'messages.po');
+    const outDir = join(tmpDir, 'output');
+
+    await writeFile(
+      poFile,
+      `
+msgid ""
+msgstr ""
+
+msgid "test"
+msgstr "prueba"
+`
+    );
+
+    const result = await compileCatalogs({
+      inputs: [poFile],
+      cwd: tmpDir,
+      outDir,
+      format: 'json',
+    });
+
+    expect(result.artifacts).toHaveLength(1);
+    // Should be directly in outDir, not in a subdirectory
+    expect(result.artifacts[0].outputFile).toBe(join(outDir, 'messages.json'));
+  });
 });
