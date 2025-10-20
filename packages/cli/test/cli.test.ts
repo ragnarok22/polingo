@@ -311,6 +311,41 @@ msgstr "Hola"
     });
   });
 
+  describe('init command', () => {
+    it('should run init command successfully with skipInstall', async () => {
+      const packageJson = {
+        name: 'test-project',
+        version: '1.0.0',
+      };
+
+      await writeFile(join(tmpDir, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const exitCode = await runCli([
+        'init',
+        '--env',
+        'web',
+        '--cwd',
+        tmpDir,
+        '--languages',
+        'en,es',
+        '--skip-install',
+      ]);
+
+      expect(exitCode).toBe(0);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Polingo initialized'));
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should show init help with --help', async () => {
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const exitCode = await runCli(['init', '--help']);
+      expect(exitCode).toBe(0);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('init'));
+      consoleLogSpy.mockRestore();
+    });
+  });
+
   describe('error handling', () => {
     it('should show error for unknown command', async () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

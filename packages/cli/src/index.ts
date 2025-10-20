@@ -1,6 +1,7 @@
 import { readdir, readFile, stat, writeFile, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { spawn } from 'node:child_process';
 import { po, mo } from 'gettext-parser';
 import type { GetTextTranslations } from 'gettext-parser';
 import { distance } from 'fastest-levenshtein';
@@ -112,6 +113,22 @@ export interface ValidateResult {
   issues: ValidationIssue[];
 }
 
+export interface InitOptions {
+  environment?: 'react' | 'vue' | 'web' | 'node';
+  cwd?: string;
+  packageManager?: 'npm' | 'yarn' | 'pnpm';
+  localesDir?: string;
+  languages?: string[];
+  skipInstall?: boolean;
+}
+
+export interface InitResult {
+  environment: string;
+  packagesInstalled: string[];
+  scriptsAdded: string[];
+  localesCreated: string[];
+}
+
 /**
  * Main entry point wired by the executable shim
  */
@@ -131,6 +148,29 @@ export async function runCli(argv = process.argv.slice(2)): Promise<number> {
 
   try {
     switch (command) {
+      case 'init': {
+        const options = parseInitArgs(rest);
+        if (options.showHelp) {
+          printInitHelp();
+          return 0;
+        }
+        const result = await init(options);
+        console.log(`\nPolingo initialized for ${result.environment}!`);
+        if (result.packagesInstalled.length > 0) {
+          console.log(`Installed packages: ${result.packagesInstalled.join(', ')}`);
+        }
+        if (result.scriptsAdded.length > 0) {
+          console.log(`Added scripts: ${result.scriptsAdded.join(', ')}`);
+        }
+        if (result.localesCreated.length > 0) {
+          console.log(`Created locale directories: ${result.localesCreated.join(', ')}`);
+        }
+        console.log('\nYou can now run:');
+        console.log('  npm run i18n:extract  - Extract translation strings');
+        console.log('  npm run i18n:compile  - Compile .po files');
+        console.log('  npm run i18n:validate - Validate translation catalogs');
+        return 0;
+      }
       case 'extract': {
         const options = parseExtractArgs(rest);
         if (options.showHelp) {
@@ -201,6 +241,10 @@ export async function runCli(argv = process.argv.slice(2)): Promise<number> {
   }
 }
 
+interface ParsedInitArgs extends InitOptions {
+  showHelp?: boolean;
+}
+
 interface ParsedExtractArgs extends ExtractOptions {
   showHelp?: boolean;
 }
@@ -211,6 +255,71 @@ interface ParsedCompileArgs extends CompileOptions {
 
 interface ParsedValidateArgs extends ValidateOptions {
   showHelp?: boolean;
+}
+
+function parseInitArgs(args: string[]): ParsedInitArgs {
+  const options: ParsedInitArgs = {
+    cwd: process.cwd(),
+    packageManager: undefined,
+    localesDir: 'locales',
+    languages: ['en'],
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === undefined) {
+      continue;
+    }
+    switch (arg) {
+      case '--help':
+      case '-h':
+        return { ...options, showHelp: true };
+      case '--env':
+      case '--environment':
+      case '-e': {
+        const value = readNextValue(args, ++index, arg);
+        if (value !== 'react' && value !== 'vue' && value !== 'web' && value !== 'node') {
+          throw new Error(`Invalid environment "${value}". Use "react", "vue", "web", or "node".`);
+        }
+        options.environment = value;
+        break;
+      }
+      case '--cwd':
+        options.cwd = path.resolve(readNextValue(args, ++index, arg));
+        break;
+      case '--pm':
+      case '--package-manager': {
+        const value = readNextValue(args, ++index, arg);
+        if (value !== 'npm' && value !== 'yarn' && value !== 'pnpm') {
+          throw new Error(`Invalid package manager "${value}". Use "npm", "yarn", or "pnpm".`);
+        }
+        options.packageManager = value;
+        break;
+      }
+      case '--locales':
+      case '--locales-dir': {
+        const value = readNextValue(args, ++index, arg);
+        options.localesDir = value;
+        break;
+      }
+      case '--languages':
+      case '--langs': {
+        const value = readNextValue(args, ++index, arg);
+        options.languages = value
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean);
+        break;
+      }
+      case '--skip-install':
+        options.skipInstall = true;
+        break;
+      default:
+        throw new Error(`Unknown option: ${arg}`);
+    }
+  }
+
+  return options;
 }
 
 function parseExtractArgs(args: string[]): ParsedExtractArgs {
@@ -401,6 +510,167 @@ function readNextValue(args: string[], index: number, flag: string): string {
     throw new Error(`Missing value for ${flag}`);
   }
   return value;
+}
+
+export async function init(options: InitOptions): Promise<InitResult> {
+  const cwd = options.cwd ?? process.cwd();
+
+  // Detect environment if not specified
+  let environment = options.environment;
+  if (!environment) {
+    environment = await detectEnvironment(cwd);
+  }
+
+  // Detect package manager if not specified
+  let packageManager = options.packageManager;
+  if (!packageManager) {
+    packageManager = await detectPackageManager(cwd);
+  }
+
+  const packagesInstalled: string[] = [];
+  const scriptsAdded: string[] = [];
+  const localesCreated: string[] = [];
+
+  // Install packages
+  const packageToInstall = getPackageForEnvironment(environment);
+  if (!options.skipInstall) {
+    await installPackage(packageToInstall, packageManager, cwd);
+    packagesInstalled.push(packageToInstall);
+  }
+
+  // Update package.json with scripts
+  const packageJsonPath = path.join(cwd, 'package.json');
+  if (await fileExists(packageJsonPath)) {
+    const packageJsonContent = await readFile(packageJsonPath, 'utf8');
+    const packageJsonData = JSON.parse(packageJsonContent) as Record<string, unknown>;
+
+    packageJsonData.scripts = packageJsonData.scripts ?? {};
+    const scripts = packageJsonData.scripts as Record<string, string>;
+
+    const scriptsToAdd = {
+      'i18n:extract': 'polingo extract src --locales locales',
+      'i18n:compile': 'polingo compile locales --format json',
+      'i18n:validate': 'polingo validate locales',
+    };
+
+    for (const [key, value] of Object.entries(scriptsToAdd)) {
+      if (!scripts[key]) {
+        scripts[key] = value;
+        scriptsAdded.push(key);
+      }
+    }
+
+    await writeFile(packageJsonPath, JSON.stringify(packageJsonData, null, 2) + '\n', 'utf8');
+  }
+
+  // Create locales directory structure
+  const localesDir = path.resolve(cwd, options.localesDir ?? 'locales');
+  await mkdir(localesDir, { recursive: true });
+
+  const languages = options.languages ?? ['en'];
+  for (const lang of languages) {
+    const langDir = path.join(localesDir, lang);
+    await mkdir(langDir, { recursive: true });
+    localesCreated.push(lang);
+  }
+
+  return {
+    environment,
+    packagesInstalled,
+    scriptsAdded,
+    localesCreated,
+  };
+}
+
+async function detectEnvironment(cwd: string): Promise<'react' | 'vue' | 'web' | 'node'> {
+  const packageJsonPath = path.join(cwd, 'package.json');
+
+  if (await fileExists(packageJsonPath)) {
+    const packageJsonContent = await readFile(packageJsonPath, 'utf8');
+    const packageJsonData = JSON.parse(packageJsonContent) as Record<string, unknown>;
+    const dependencies = {
+      ...((packageJsonData.dependencies as Record<string, string>) ?? {}),
+      ...((packageJsonData.devDependencies as Record<string, string>) ?? {}),
+    };
+
+    if (dependencies['react'] || dependencies['react-dom']) {
+      return 'react';
+    }
+    if (dependencies['vue']) {
+      return 'vue';
+    }
+    if (dependencies['express'] || dependencies['fastify']) {
+      return 'node';
+    }
+  }
+
+  // Default to web if can't detect
+  return 'web';
+}
+
+async function detectPackageManager(cwd: string): Promise<'npm' | 'yarn' | 'pnpm'> {
+  if (await fileExists(path.join(cwd, 'pnpm-lock.yaml'))) {
+    return 'pnpm';
+  }
+  if (await fileExists(path.join(cwd, 'yarn.lock'))) {
+    return 'yarn';
+  }
+  return 'npm';
+}
+
+function getPackageForEnvironment(environment: 'react' | 'vue' | 'web' | 'node'): string {
+  switch (environment) {
+    case 'react':
+      return '@polingo/react';
+    case 'vue':
+      return '@polingo/vue';
+    case 'web':
+      return '@polingo/web';
+    case 'node':
+      return '@polingo/node';
+  }
+}
+
+async function installPackage(
+  packageName: string,
+  packageManager: 'npm' | 'yarn' | 'pnpm',
+  cwd: string
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const args: string[] = [];
+
+    switch (packageManager) {
+      case 'npm':
+        args.push('install', packageName);
+        break;
+      case 'yarn':
+        args.push('add', packageName);
+        break;
+      case 'pnpm':
+        args.push('add', packageName);
+        break;
+    }
+
+    console.log(`Installing ${packageName} with ${packageManager}...`);
+
+    const child = spawn(packageManager, args, {
+      cwd,
+      stdio: 'inherit',
+      shell: true,
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Package installation failed with code ${code}`));
+      }
+    });
+
+    child.on('error', (error) => {
+      reject(error);
+    });
+  });
 }
 
 export async function extract(options: ExtractOptions): Promise<ExtractResult> {
@@ -1403,11 +1673,32 @@ function printGlobalHelp(): void {
   console.log(`Usage: polingo <command> [options]
 
 Commands:
+  init      Initialize Polingo in your project (install packages and setup scripts)
   extract   Scan source files and extract message IDs into a POT catalog
   compile   Compile .po files into runtime artifacts
   validate  Lint .po files for missing translations
 
 Run 'polingo <command> --help' for detailed usage of a command.`);
+}
+
+function printInitHelp(): void {
+  console.log(`Usage: polingo init [options]
+
+Initialize Polingo in your project by installing the appropriate package and setting up scripts.
+
+Options:
+  -e, --env <type>          Environment type: react, vue, web, or node (auto-detected)
+      --pm <manager>        Package manager: npm, yarn, or pnpm (auto-detected)
+      --cwd <dir>           Working directory for initialization
+      --locales <dir>       Locale root directory (default: locales)
+      --languages <list>    Comma-separated locale codes to create (default: en)
+      --skip-install        Skip package installation (for testing)
+  -h, --help                Show this help text
+
+Examples:
+  polingo init --env react --languages en,es,fr
+  polingo init --env node --pm pnpm
+  polingo init --env web --locales public/locales`);
 }
 
 function printExtractHelp(): void {
