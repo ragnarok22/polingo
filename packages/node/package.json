@@ -1,6 +1,6 @@
 {
   "name": "@polingo/node",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Node.js loader for Polingo translation system",
   "type": "module",
   "main": "./dist/index.cjs",
