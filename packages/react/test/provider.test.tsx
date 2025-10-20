@@ -481,6 +481,125 @@ describe('PolingoProvider', () => {
     });
     container.remove();
   });
+
+  it('uses default baseUrl /i18n when loader not specified', async () => {
+    let fetchedUrls: string[] = [];
+
+    // Mock fetch to capture the URL being requested
+    const mockFetch = (url: string | URL) => {
+      fetchedUrls.push(url.toString());
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: () => Promise.resolve(EN_CATALOG),
+      } as Response);
+    };
+
+    // Mock globalThis.fetch before rendering
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mockFetch as typeof fetch;
+
+    try {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = createRoot(container);
+
+      function TestComponent() {
+        const { t, loading } = useTranslation();
+        return <div data-loading={loading}>{t('Hello {name}', { name: 'Test' })}</div>;
+      }
+
+      await act(async () => {
+        root.render(
+          <PolingoProvider
+            create={{
+              locale: 'en',
+              locales: ['en'],
+            }}
+          >
+            <TestComponent />
+          </PolingoProvider>
+        );
+      });
+
+      // Wait for loader to initialize
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      });
+
+      // Verify the URL uses default /i18n baseUrl
+      expect(fetchedUrls).toContain('/i18n/en/messages.json');
+
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    } finally {
+      // Restore original fetch
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('allows overriding baseUrl with loader configuration', async () => {
+    let fetchedUrls: string[] = [];
+
+    // Mock fetch to capture the URL being requested
+    const mockFetch = (url: string | URL) => {
+      fetchedUrls.push(url.toString());
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: () => Promise.resolve(EN_CATALOG),
+      } as Response);
+    };
+
+    // Mock globalThis.fetch before rendering
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mockFetch as typeof fetch;
+
+    try {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = createRoot(container);
+
+      function TestComponent() {
+        const { t, loading } = useTranslation();
+        return <div data-loading={loading}>{t('Hello {name}', { name: 'Test' })}</div>;
+      }
+
+      await act(async () => {
+        root.render(
+          <PolingoProvider
+            create={{
+              locale: 'en',
+              locales: ['en'],
+              loader: { baseUrl: '/custom/path/translations' },
+            }}
+          >
+            <TestComponent />
+          </PolingoProvider>
+        );
+      });
+
+      // Wait for loader to initialize
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      });
+
+      // Verify the URL uses custom baseUrl
+      expect(fetchedUrls).toContain('/custom/path/translations/en/messages.json');
+
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    } finally {
+      // Restore original fetch
+      globalThis.fetch = originalFetch;
+    }
+  });
 });
 
 describe('<Trans />', () => {

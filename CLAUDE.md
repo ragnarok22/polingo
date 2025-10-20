@@ -143,7 +143,7 @@ All loaders convert to this common format (defined in `packages/core/src/types.t
 - `create.ts` - Factory function `createPolingo()` that wires up loader + cache + translator
 
 **@polingo/web** (`packages/web/src/`):
-- `loader.ts` - WebLoader that fetches catalogs via HTTP (default: from `/assets/i18n`)
+- `loader.ts` - WebLoader that fetches catalogs via HTTP (default: from `/i18n`)
 - `cache.ts` - LocalStorageCache that persists parsed catalogs across page reloads
   - Supports `cacheKey` option for cache invalidation when translations change
   - Recommended to disable cache in development: `cache: import.meta.env.PROD`

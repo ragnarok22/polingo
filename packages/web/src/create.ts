@@ -44,7 +44,7 @@ export type WebPolingoInstance = Translator;
  * const polingo = await createPolingo({
  *   locale: 'es',
  *   locales: ['es', 'en'],
- *   loader: { baseUrl: '/assets/i18n' },
+ *   // loader.baseUrl defaults to '/i18n' if not specified
  * });
  *
  * polingo.t('Hello'); // => "Hola"

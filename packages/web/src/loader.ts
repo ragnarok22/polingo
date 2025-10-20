@@ -5,7 +5,7 @@ import type { TranslationCatalog, TranslationLoader, Translation } from '@poling
  */
 export interface WebLoaderOptions {
   /**
-   * Base URL where locale folders live. Defaults to `/locales`.
+   * Base URL where locale folders live. Defaults to `/i18n`.
    * The loader will request `${baseUrl}/${locale}/${domain}.json`.
    */
   baseUrl?: string;
@@ -40,7 +40,7 @@ export class WebLoader implements TranslationLoader {
 
   constructor(options: WebLoaderOptions = {}) {
     const {
-      baseUrl = '/locales',
+      baseUrl = '/i18n',
       buildUrl,
       fetch: fetchImpl,
       requestInit,

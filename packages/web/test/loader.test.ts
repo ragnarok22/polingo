@@ -25,7 +25,7 @@ const sampleCatalog: TranslationCatalog = {
 describe('WebLoader', () => {
   it('fetches catalogs using the default baseUrl', async () => {
     const fetchMock = vi.fn((url: RequestInfo) => {
-      expect(url).toBe('/locales/es/messages.json');
+      expect(url).toBe('/i18n/es/messages.json');
       return Promise.resolve({
         ok: true,
         status: 200,
