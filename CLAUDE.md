@@ -145,6 +145,8 @@ All loaders convert to this common format (defined in `packages/core/src/types.t
 **@polingo/web** (`packages/web/src/`):
 - `loader.ts` - WebLoader that fetches catalogs via HTTP (default: from `/assets/i18n`)
 - `cache.ts` - LocalStorageCache that persists parsed catalogs across page reloads
+  - Supports `cacheKey` option for cache invalidation when translations change
+  - Recommended to disable cache in development: `cache: import.meta.env.PROD`
 - `create.ts` - Factory function `createPolingo()` for browser environments
 
 **@polingo/cli** (`packages/cli/src/`):
@@ -225,6 +227,55 @@ The CLI provides validation:
 pnpm --filter @polingo/cli build
 node packages/cli/dist/cli.js validate locales
 node packages/cli/dist/cli.js validate locales --strict  # fails on fuzzy flags
+```
+
+### Managing cache in browser applications
+
+The `@polingo/web` package uses `LocalStorageCache` by default to persist translations across page reloads. This improves performance but can cause issues during development when translations are updated frequently.
+
+**Best practice for development:**
+```tsx
+// In your React/Vue app entry point (e.g., main.tsx)
+<PolingoProvider create={{
+  locale: 'en',
+  locales: ['en', 'es'],
+  loader: { baseUrl: '/i18n' },
+  // Disable cache in dev, enable in production
+  cache: import.meta.env.PROD,
+}}>
+  <App />
+</PolingoProvider>
+```
+
+**Alternative: Cache versioning/invalidation**
+If you need caching in development but want to invalidate it when translations change:
+```tsx
+<PolingoProvider create={{
+  locale: 'en',
+  locales: ['en', 'es'],
+  loader: { baseUrl: '/i18n' },
+  cacheOptions: {
+    // Change this value whenever you update translations
+    cacheKey: '2024-10-20-v1',
+    // Or use your app version from environment variables:
+    // cacheKey: import.meta.env.VITE_APP_VERSION,
+  },
+}}>
+  <App />
+</PolingoProvider>
+```
+
+**Manual cache clearing during development:**
+If cache is enabled and translations aren't updating, clear localStorage:
+```javascript
+// In browser console:
+localStorage.clear();
+// Or clear only Polingo cache:
+Object.keys(localStorage).forEach(key => {
+  if (key.startsWith('polingo:')) {
+    localStorage.removeItem(key);
+  }
+});
 ```
 
 ## Build System

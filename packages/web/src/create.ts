@@ -21,7 +21,17 @@ export interface CreatePolingoOptions {
   debug?: boolean;
   /** Enable caching in localStorage (default: true) */
   cache?: boolean;
-  /** Extra cache configuration */
+  /**
+   * Extra cache configuration.
+   * Use `cacheOptions.cacheKey` to invalidate the cache when translations change.
+   *
+   * @example
+   * // During development, use a version string or timestamp
+   * cacheOptions: { cacheKey: '2024-10-20' }
+   *
+   * // In production, use your app version or build number
+   * cacheOptions: { cacheKey: process.env.VITE_APP_VERSION }
+   */
   cacheOptions?: LocalStorageCacheOptions;
 }
 

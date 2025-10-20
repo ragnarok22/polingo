@@ -18,12 +18,22 @@ export interface LocalStorageCacheOptions {
    * Disabled by default (entries persist until explicitly cleared).
    */
   ttlMs?: number;
+  /**
+   * Cache key/version string. When changed, all previous cache entries are invalidated.
+   * Useful for cache busting during development or after translation updates.
+   *
+   * @example
+   * // During development, use a timestamp or version number:
+   * cacheKey: '2024-10-20' // or process.env.TRANSLATIONS_VERSION
+   */
+  cacheKey?: string;
 }
 
 interface LocalStorageEntry {
   version: number;
   timestamp: number;
   expiresAt?: number;
+  cacheKey?: string;
   catalog: TranslationCatalog;
 }
 
@@ -36,12 +46,14 @@ export class LocalStorageCache implements TranslationCache {
   private readonly storage: Storage | null;
   private readonly prefix: string;
   private readonly ttlMs?: number;
+  private readonly cacheKey?: string;
   private readonly fallback = new MemoryCache();
 
   constructor(options: LocalStorageCacheOptions = {}) {
     this.storage = options.storage ?? detectLocalStorage();
     this.prefix = options.prefix ?? 'polingo';
     this.ttlMs = options.ttlMs;
+    this.cacheKey = options.cacheKey;
   }
 
   get(key: string): TranslationCatalog | undefined {
@@ -59,6 +71,7 @@ export class LocalStorageCache implements TranslationCache {
       version: CACHE_VERSION,
       timestamp: Date.now(),
       expiresAt: this.ttlMs ? Date.now() + this.ttlMs : undefined,
+      cacheKey: this.cacheKey,
       catalog,
     };
 
@@ -119,6 +132,12 @@ export class LocalStorageCache implements TranslationCache {
     try {
       const entry = JSON.parse(raw) as LocalStorageEntry;
       if (entry.version !== CACHE_VERSION) {
+        this.storage.removeItem(this.namespacedKey(key));
+        return undefined;
+      }
+
+      // Invalidate cache if cacheKey doesn't match
+      if (this.cacheKey !== undefined && entry.cacheKey !== this.cacheKey) {
         this.storage.removeItem(this.namespacedKey(key));
         return undefined;
       }
