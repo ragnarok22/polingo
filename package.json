@@ -11,6 +11,12 @@
   "bugs": {
     "url": "https://github.com/ragnarok22/polingo/issues"
   },
+  "bin": {
+    "polingo": "./packages/cli/dist/cli.js"
+  },
+  "files": [
+    "packages/cli/dist"
+  ],
   "scripts": {
     "build": "pnpm turbo run build",
     "dev": "pnpm turbo run dev",
