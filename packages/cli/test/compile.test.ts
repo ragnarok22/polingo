@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { compileCatalogs } from '../src/index.js';
 
+const normalizeForAssertion = (filePath: string): string => filePath.replace(/\\/g, '/');
+
 describe('compileCatalogs', () => {
   let tmpDir: string;
 
@@ -301,8 +303,12 @@ msgstr "cambiar idioma"
     expect(result.artifacts).toHaveLength(2);
 
     // Check that files are in the correct locale subdirectories
-    const enOutput = result.artifacts.find((a) => a.outputFile.includes('/en/'));
-    const esOutput = result.artifacts.find((a) => a.outputFile.includes('/es/'));
+    const enOutput = result.artifacts.find((a) =>
+      normalizeForAssertion(a.outputFile).includes('/en/')
+    );
+    const esOutput = result.artifacts.find((a) =>
+      normalizeForAssertion(a.outputFile).includes('/es/')
+    );
 
     expect(enOutput).toBeDefined();
     expect(esOutput).toBeDefined();
@@ -368,8 +374,12 @@ msgstr "cor"
 
     expect(result.artifacts).toHaveLength(2);
 
-    const enUSOutput = result.artifacts.find((a) => a.outputFile.includes('/en-US/'));
-    const ptBROutput = result.artifacts.find((a) => a.outputFile.includes('/pt-BR/'));
+    const enUSOutput = result.artifacts.find((a) =>
+      normalizeForAssertion(a.outputFile).includes('/en-US/')
+    );
+    const ptBROutput = result.artifacts.find((a) =>
+      normalizeForAssertion(a.outputFile).includes('/pt-BR/')
+    );
 
     expect(enUSOutput).toBeDefined();
     expect(ptBROutput).toBeDefined();
