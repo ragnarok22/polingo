@@ -336,10 +336,12 @@ import { AppContent } from './components/AppContent';
 function App() {
   return (
     <PolingoProvider
-      locale={navigator.language.split('-')[0] ?? 'en'}
-      locales={['en', 'es', 'fr']}
-      loader={{ baseUrl: '/i18n' }}
-      cacheOptions={{ prefix: 'myapp', ttlMs: 10 * 60_000 }}
+      create={{
+        locale: navigator.language.split('-')[0] ?? 'en',
+        locales: ['en', 'es', 'fr'],
+        loader: { baseUrl: '/i18n' },
+        cacheOptions: { prefix: 'myapp', ttlMs: 10 * 60_000 },
+      }}
     >
       <AppContent />
     </PolingoProvider>

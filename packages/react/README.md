@@ -39,7 +39,6 @@ pnpm add -D @polingo/cli
 
 ```tsx
 import { PolingoProvider, Trans, useTranslation } from '@polingo/react';
-import { createPolingo } from '@polingo/web';
 
 function Example(): JSX.Element {
   const { t, tn, setLocale, locale } = useTranslation();
@@ -59,13 +58,11 @@ function Example(): JSX.Element {
 export function App(): JSX.Element {
   return (
     <PolingoProvider
-      create={() =>
-        createPolingo({
-          locale: 'en',
-          locales: ['en', 'es'],
-          loader: { baseUrl: '/i18n' },
-        })
-      }
+      create={{
+        locale: 'en',
+        locales: ['en', 'es'],
+        loader: { baseUrl: '/i18n' },
+      }}
     >
       <Example />
     </PolingoProvider>
@@ -113,25 +110,22 @@ Update your root component (e.g., `src/App.tsx` or `src/main.tsx`):
 
 ```tsx
 import { PolingoProvider } from '@polingo/react';
-import { createPolingo } from '@polingo/web';
 
 export function App() {
   return (
     <PolingoProvider
-      create={() =>
-        createPolingo({
-          locale: 'en', // Default locale
-          locales: ['en', 'es', 'fr'], // All supported locales
-          loader: {
-            baseUrl: '/i18n', // URL where catalogs are served
-          },
-          cache: true, // Enable localStorage caching
-          cacheOptions: {
-            prefix: 'my-app', // Namespace for cache keys
-            ttlMs: 86_400_000, // 24 hours cache lifetime
-          },
-        })
-      }
+      create={{
+        locale: 'en', // Default locale
+        locales: ['en', 'es', 'fr'], // All supported locales
+        loader: {
+          baseUrl: '/i18n', // URL where catalogs are served
+        },
+        cache: true, // Enable localStorage caching
+        cacheOptions: {
+          prefix: 'my-app', // Namespace for cache keys
+          ttlMs: 86_400_000, // 24 hours cache lifetime
+        },
+      }}
     >
       <YourApp />
     </PolingoProvider>
@@ -333,15 +327,48 @@ pnpm validate --strict
 Props:
 
 - `translator?: Translator` – Pre-initialized translator instance (useful for SSR)
-- `create?: () => Promise<Translator>` – Factory function to create translator (for client-side)
+- `create?: CreatePolingoOptions | (() => Promise<WebPolingoInstance>)` – Configuration object or factory function to create translator
 - `children: ReactNode` – Your app components
+- `loadingFallback?: ReactNode` – Optional UI to display while loading
+- `onError?: (error: unknown) => void` – Error callback for loading or locale switching failures
+
+The provider accepts either:
+
+1. A configuration object (recommended for most cases)
+2. A factory function that returns a Polingo instance (for advanced initialization)
 
 The provider exposes loading and error states while catalogs are being fetched.
 
+**Using configuration object (recommended):**
+
 ```tsx
-<PolingoProvider create={createPolingoInstance}>
+<PolingoProvider
+  create={{
+    locale: 'en',
+    locales: ['en', 'es'],
+    loader: { baseUrl: '/i18n' },
+  }}
+>
   <App />
 </PolingoProvider>
+```
+
+**Using factory function (advanced):**
+
+```tsx
+import { createPolingo } from '@polingo/web';
+
+<PolingoProvider
+  create={() =>
+    createPolingo({
+      locale: 'en',
+      locales: ['en', 'es'],
+      loader: { baseUrl: '/i18n' },
+    })
+  }
+>
+  <App />
+</PolingoProvider>;
 ```
 
 ### useTranslation()
@@ -422,11 +449,13 @@ Handle loading and error states gracefully:
 function App() {
   return (
     <PolingoProvider
-      create={() =>
-        createPolingo({
-          /* ... */
-        })
-      }
+      create={{
+        locale: 'en',
+        locales: ['en', 'es'],
+        loader: { baseUrl: '/i18n' },
+      }}
+      loadingFallback={<div>Loading translations...</div>}
+      onError={(error) => console.error('Translation error:', error)}
     >
       <AppContent />
     </PolingoProvider>
@@ -485,17 +514,21 @@ function App({ translator }) {
 Customize where catalogs are loaded from:
 
 ```tsx
-createPolingo({
-  locale: 'en',
-  locales: ['en', 'es'],
-  loader: {
-    buildUrl: (locale, domain) => `https://cdn.example.com/translations/${locale}/${domain}.json`,
-    requestInit: {
-      credentials: 'include',
-      cache: 'force-cache',
+<PolingoProvider
+  create={{
+    locale: 'en',
+    locales: ['en', 'es'],
+    loader: {
+      buildUrl: (locale, domain) => `https://cdn.example.com/translations/${locale}/${domain}.json`,
+      requestInit: {
+        credentials: 'include',
+        cache: 'force-cache',
+      },
     },
-  },
-});
+  }}
+>
+  <App />
+</PolingoProvider>
 ```
 
 ### Multiple domains
@@ -503,12 +536,16 @@ createPolingo({
 Use different translation domains (e.g., `messages`, `errors`, `admin`):
 
 ```tsx
-const translator = await createPolingo({
-  locale: 'en',
-  locales: ['en', 'es'],
-  domain: 'admin', // Default domain
-  loader: { baseUrl: '/i18n' },
-});
+<PolingoProvider
+  create={{
+    locale: 'en',
+    locales: ['en', 'es'],
+    domain: 'admin', // Default domain
+    loader: { baseUrl: '/i18n' },
+  }}
+>
+  <App />
+</PolingoProvider>
 
 // This will load /i18n/en/admin.json
 ```
@@ -538,13 +575,11 @@ const getUserLocale = (): string => {
 
 const App = () => (
   <PolingoProvider
-    create={() =>
-      createPolingo({
-        locale: getUserLocale(),
-        locales: ['en', 'es', 'fr'],
-        loader: { baseUrl: '/i18n' },
-      })
-    }
+    create={{
+      locale: getUserLocale(),
+      locales: ['en', 'es', 'fr'],
+      loader: { baseUrl: '/i18n' },
+    }}
   >
     <YourApp />
   </PolingoProvider>

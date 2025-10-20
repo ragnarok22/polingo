@@ -18,6 +18,13 @@ Bring your own loader configuration via the web adapter—React components focus
 
 Context provider that exposes the translator and helpers to the component tree. You can pass an existing translator (for SSR hydration) or let the provider create one asynchronously.
 
+The `create` prop accepts two forms:
+
+1. **Configuration object (recommended)** - Pass `CreatePolingoOptions` directly, and the provider calls `createPolingo()` internally
+2. **Factory function (advanced)** - Pass a function that returns a `Promise<WebPolingoInstance>` for custom initialization logic
+
+### Basic usage with configuration object
+
 ```tsx
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -40,14 +47,34 @@ createRoot(document.getElementById('root')!).render(
 );
 ```
 
+### Advanced usage with factory function
+
+```tsx
+import { createPolingo } from '@polingo/web';
+
+<PolingoProvider
+  create={() =>
+    createPolingo({
+      locale: 'en',
+      locales: ['en', 'es'],
+      loader: { baseUrl: '/locales' },
+    })
+  }
+  loadingFallback={<p>Loading translations…</p>}
+>
+  <App />
+</PolingoProvider>;
+```
+
 ### Props
 
-| Prop              | Type                                                        | Description                                                       |
-| ----------------- | ----------------------------------------------------------- | ----------------------------------------------------------------- |
-| `create`          | `CreatePolingoOptions \| () => Promise<WebPolingoInstance>` | Optional factory to initialize a translator using `@polingo/web`. |
-| `translator`      | `Translator`                                                | Use an existing translator (skip async creation).                 |
-| `loadingFallback` | `ReactNode`                                                 | UI rendered while the translator is loading.                      |
-| `onError`         | `(error: unknown) => void`                                  | Error callback triggered when creation or locale switching fails. |
+| Prop              | Type                                                        | Description                                                                      |
+| ----------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `create`          | `CreatePolingoOptions \| () => Promise<WebPolingoInstance>` | Configuration object or factory to initialize a translator using `@polingo/web`. |
+| `translator`      | `Translator`                                                | Use an existing translator (skip async creation).                                |
+| `loadingFallback` | `ReactNode`                                                 | UI rendered while the translator is loading.                                     |
+| `onError`         | `(error: unknown) => void`                                  | Error callback triggered when creation or locale switching fails.                |
+| `children`        | `ReactNode`                                                 | Your app components.                                                             |
 
 > Passing both `translator` and `create` is invalid—the provider enforces exactly one mode.
 
