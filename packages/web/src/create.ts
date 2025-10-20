@@ -74,7 +74,13 @@ export async function createPolingo(options: CreatePolingoOptions): Promise<WebP
     transformResponse: loaderOptions.transformResponse,
   });
 
-  const cacheInstance = cache ? new LocalStorageCache(cacheOptions) : new NoCache();
+  const derivedCacheKey = cacheOptions?.cacheKey ?? inferCacheKey(loaderOptions);
+  const cacheInstance = cache
+    ? new LocalStorageCache({
+        ...cacheOptions,
+        ...(derivedCacheKey !== undefined ? { cacheKey: derivedCacheKey } : {}),
+      })
+    : new NoCache();
 
   const translator = new Translator(loader, cacheInstance, {
     locale,
@@ -92,4 +98,31 @@ export async function createPolingo(options: CreatePolingoOptions): Promise<WebP
   await translator.load(uniqueLocales);
 
   return translator;
+}
+
+function inferCacheKey(options?: WebLoaderOptions): string | undefined {
+  if (!options) {
+    return '/i18n';
+  }
+
+  if (typeof options.buildUrl === 'function') {
+    if (typeof options.baseUrl === 'string' && options.baseUrl.trim() !== '') {
+      return normalizeBaseUrl(options.baseUrl);
+    }
+    return `build:${options.buildUrl.toString()}`;
+  }
+
+  if (typeof options.baseUrl === 'string' && options.baseUrl.trim() !== '') {
+    return normalizeBaseUrl(options.baseUrl);
+  }
+
+  return '/i18n';
+}
+
+function normalizeBaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.trim();
+  if (!trimmed) {
+    return '/i18n';
+  }
+  return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
 }
