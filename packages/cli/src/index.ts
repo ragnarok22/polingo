@@ -532,10 +532,12 @@ export async function init(options: InitOptions): Promise<InitResult> {
   const localesCreated: string[] = [];
 
   // Install packages
-  const packageToInstall = getPackageForEnvironment(environment);
+  const packagesToInstall = getPackagesForEnvironment(environment);
   if (!options.skipInstall) {
-    await installPackage(packageToInstall, packageManager, cwd);
-    packagesInstalled.push(packageToInstall);
+    for (const packageName of packagesToInstall) {
+      await installPackage(packageName, packageManager, cwd);
+      packagesInstalled.push(packageName);
+    }
 
     // Install CLI as dev dependency
     await installPackage('@polingo/cli', packageManager, cwd, true);
@@ -622,17 +624,18 @@ async function detectPackageManager(cwd: string): Promise<'npm' | 'yarn' | 'pnpm
   return 'npm';
 }
 
-function getPackageForEnvironment(environment: 'react' | 'vue' | 'web' | 'node'): string {
+function getPackagesForEnvironment(environment: 'react' | 'vue' | 'web' | 'node'): string[] {
   switch (environment) {
     case 'react':
-      return '@polingo/react';
+      return ['@polingo/react', '@polingo/web', '@polingo/core'];
     case 'vue':
-      return '@polingo/vue';
+      return ['@polingo/vue', '@polingo/web', '@polingo/core'];
     case 'web':
-      return '@polingo/web';
+      return ['@polingo/web', '@polingo/core'];
     case 'node':
-      return '@polingo/node';
+      return ['@polingo/node', '@polingo/core'];
   }
+  throw new Error(`Unsupported environment: ${environment}`);
 }
 
 async function installPackage(

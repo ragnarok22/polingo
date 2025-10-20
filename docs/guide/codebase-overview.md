@@ -33,6 +33,16 @@ Each runtime package adapts the core translator to a specific environment:
 
 Each package mirrors the same structure—`src/` for implementation, `test/` for Vitest suites, and a package-level README describing usage.
 
+### Internal Package Dependencies
+
+- `@polingo/core` is the foundation and has no in-repo dependencies.
+- `@polingo/node` depends on `@polingo/core` for the translation engine.
+- `@polingo/web` depends on `@polingo/core` to reuse the same translator in browser contexts.
+- `@polingo/react` builds on `@polingo/web` (and transitively `@polingo/core`) to provide hooks and components.
+- `@polingo/vue` also builds on `@polingo/web` (and `@polingo/core`) for Vue 3 integrations.
+- `@polingo/cli` is standalone; it only ships external tooling dependencies.
+- `create-polingo-app` bundles templates and does not import other workspace packages.
+
 ## CLI Toolkit (`packages/cli`)
 
 The CLI package exposes three developer-focused commands:
@@ -42,6 +52,8 @@ The CLI package exposes three developer-focused commands:
 - `validate` runs consistency checks (missing plurals, invalid contexts, etc.) across your translation files.
 
 All commands share the same argument parser and emit actionable console output to integrate with CI. Add the package as a dev dependency to keep extraction and validation scripts local (`pnpm add -D @polingo/cli`).
+
+Running `polingo init` installs the environment adapter you select along with its in-repo dependencies (e.g., `@polingo/react`, `@polingo/web`, and `@polingo/core`) so projects start with every required package in `package.json`.
 
 ## App Scaffolding (`packages/create-polingo-app`)
 
