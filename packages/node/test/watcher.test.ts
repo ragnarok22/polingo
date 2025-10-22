@@ -83,6 +83,9 @@ describe('TranslationWatcher', () => {
   const esDir = join(testDir, 'es');
   const enDir = join(testDir, 'en');
   const frDir = join(testDir, 'fr');
+  const esLcDir = join(esDir, 'LC_MESSAGES');
+  const enLcDir = join(enDir, 'LC_MESSAGES');
+  const frLcDir = join(frDir, 'LC_MESSAGES');
 
   let translator: Translator;
   let watcher: TranslationWatcher | undefined;
@@ -132,11 +135,16 @@ msgstr "Bonjour"
     await mkdir(esDir, { recursive: true });
     await mkdir(enDir, { recursive: true });
     await mkdir(frDir, { recursive: true });
+    await mkdir(esLcDir, { recursive: true });
+    await mkdir(enLcDir, { recursive: true });
+    await mkdir(frLcDir, { recursive: true });
 
     // Create initial .po files
     await writeFile(join(esDir, 'messages.po'), esPoContent);
     await writeFile(join(enDir, 'messages.po'), enPoContent);
-    await writeFile(join(frDir, 'messages.po'), frPoContent);
+    await writeFile(join(esLcDir, 'messages.po'), esPoContent);
+    await writeFile(join(enLcDir, 'messages.po'), enPoContent);
+    await writeFile(join(frLcDir, 'messages.po'), frPoContent);
 
     // Initialize translator
     const loader = new NodeLoader(testDir);
@@ -170,7 +178,9 @@ msgstr "Bonjour"
     const fakeWatcher = ensureWatcher();
     expect(fakeWatcher.paths).toEqual([
       join(testDir, 'es', 'messages.{po,mo}'),
+      join(testDir, 'es', 'LC_MESSAGES', 'messages.{po,mo}'),
       join(testDir, 'en', 'messages.{po,mo}'),
+      join(testDir, 'en', 'LC_MESSAGES', 'messages.{po,mo}'),
     ]);
     expect(fakeWatcher.options).toMatchObject({
       persistent: true,
@@ -227,6 +237,20 @@ msgstr "Bonjour"
     loadSpy.mockRestore();
   });
 
+  it('should handle changes inside LC_MESSAGES directories', async () => {
+    watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
+    await watcher.start();
+
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
+
+    fakeWatcher.emit('change', join(esLcDir, 'messages.po'));
+    await flushAsync();
+
+    expect(loadSpy).toHaveBeenCalledWith('es');
+    loadSpy.mockRestore();
+  });
+
   it('should watch multiple locales for file additions', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en', 'fr'], 'messages', true);
     await watcher.start();
@@ -234,7 +258,7 @@ msgstr "Bonjour"
     const loadSpy = vi.spyOn(translator, 'load');
     const fakeWatcher = ensureWatcher();
 
-    fakeWatcher.emit('add', join(frDir, 'messages.po'));
+    fakeWatcher.emit('add', join(frLcDir, 'messages.po'));
     await flushAsync();
 
     expect(loadSpy).toHaveBeenCalledWith('fr');
@@ -301,7 +325,7 @@ msgstr "Bonjour"
     await watcher.start();
 
     const fakeWatcher = ensureWatcher();
-    fakeWatcher.emit('add', join(frDir, 'messages.po'));
+    fakeWatcher.emit('add', join(frLcDir, 'messages.po'));
     await flushAsync();
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -355,7 +379,9 @@ msgstr "Bonjour"
     const fakeWatcher = ensureWatcher();
     expect(fakeWatcher.paths).toEqual([
       join(testDir, 'es', 'custom-domain.{po,mo}'),
+      join(testDir, 'es', 'LC_MESSAGES', 'custom-domain.{po,mo}'),
       join(testDir, 'en', 'custom-domain.{po,mo}'),
+      join(testDir, 'en', 'LC_MESSAGES', 'custom-domain.{po,mo}'),
     ]);
   });
 
@@ -383,8 +409,11 @@ msgstr "Bonjour"
     const fakeWatcher = ensureWatcher();
     expect(fakeWatcher.paths).toEqual([
       join(testDir, 'es', 'messages.{po,mo}'),
+      join(testDir, 'es', 'LC_MESSAGES', 'messages.{po,mo}'),
       join(testDir, 'en', 'messages.{po,mo}'),
+      join(testDir, 'en', 'LC_MESSAGES', 'messages.{po,mo}'),
       join(testDir, 'fr', 'messages.{po,mo}'),
+      join(testDir, 'fr', 'LC_MESSAGES', 'messages.{po,mo}'),
     ]);
   });
 
