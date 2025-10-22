@@ -277,12 +277,12 @@ msgstr "Bonjour"
 
     const fakeWatcher = ensureWatcher();
     fakeWatcher.emit('change', join(esDir, 'messages.po'));
-    // Wait longer for async error handler to complete on slower CI environments
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[Polingo] Failed to reload translations for locale "es":'),
-      expect.any(Error)
+    await vi.waitFor(() =>
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Polingo] Failed to reload translations for locale "es":'),
+        expect.any(Error)
+      )
     );
     consoleErrorSpy.mockRestore();
   });
@@ -302,11 +302,12 @@ msgstr "Bonjour"
 
     const fakeWatcher = ensureWatcher();
     fakeWatcher.emit('add', join(frDir, 'messages.po'));
-    await flushAsync();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[Polingo] Failed to load new translations for locale "fr":'),
-      expect.any(Error)
+    await vi.waitFor(() =>
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Polingo] Failed to load new translations for locale "fr":'),
+        expect.any(Error)
+      )
     );
     consoleErrorSpy.mockRestore();
   });
