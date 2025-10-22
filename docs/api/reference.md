@@ -84,7 +84,7 @@ type PolingoConfig = {
 | -------------- | -------------------------- | ------------------------- | --------------------------------------------------------------- |
 | `locale`       | `string`                   | —                         | Locale that becomes active after initialization.                |
 | `locales`      | `string[]`                 | —                         | Locales that should be preloaded via HTTP.                      |
-| `loader`       | `WebLoaderOptions`         | `{ baseUrl: '/locales' }` | Configure catalog URLs, fetch options, and transformers.        |
+| `loader`       | `WebLoaderOptions`         | `{ baseUrl: '/i18n' }`    | Configure catalog URLs, fetch options, and transformers.        |
 | `fallback`     | `string`                   | `'en'`                    | Locale used when a translation misses.                          |
 | `domain`       | `string`                   | `'messages'`              | Catalog namespace.                                              |
 | `cache`        | `boolean`                  | `true`                    | Disable to skip persistence and use an in-memory cache instead. |

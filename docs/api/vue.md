@@ -30,7 +30,8 @@ createApp({
         create={{
           locale: 'en',
           locales: ['en', 'es'],
-          loader: { baseUrl: '/locales' },
+          // Override baseUrl if your compiled catalogs live outside /i18n.
+          loader: { baseUrl: '/i18n' },
         }}
         loadingFallback="Loading translations…"
         onError={(error) => console.error('Translator failed', error)}

@@ -33,7 +33,7 @@ Translations are cached in `localStorage` by default. During development you can
 const polingo = await createPolingo({
   locale: 'en',
   locales: ['en', 'es'],
-  loader: { baseUrl: '/locales' },
+  loader: { baseUrl: '/i18n' },
   cache: false,
   debug: true,
 });

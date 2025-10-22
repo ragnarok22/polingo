@@ -35,7 +35,7 @@ createApp(PolingoProvider, {
   create: {
     locale: 'en',
     locales: ['en', 'es', 'fr'],
-    loader: { baseUrl: '/locales' },
+    loader: { baseUrl: '/i18n' },
   },
   loadingFallback: 'Loading translations…',
 })
@@ -96,7 +96,7 @@ Add scripts to `package.json`:
 {
   "scripts": {
     "extract": "polingo extract src --locales locales --languages en,es,fr --default-locale en",
-    "compile": "polingo compile locales --out public/locales --format json --pretty"
+    "compile": "polingo compile locales --out public/i18n --format json --pretty"
   }
 }
 ```
@@ -136,7 +136,7 @@ Translate the same keys into French and compile JSON catalogs:
 pnpm compile
 ```
 
-Ensure the output directory matches the `loader.baseUrl` setting.
+Ensure the output directory matches the `loader.baseUrl` setting—adjust it if you host catalogs somewhere other than `/i18n`.
 
 ## Preview
 

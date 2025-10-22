@@ -67,7 +67,7 @@ Use `--no-fuzzy` to disable this behavior and get empty entries for all new/chan
 Convert `.po` catalogs into runtime artifacts.
 
 ```bash
-pnpm exec polingo compile locales --out public/locales --format json --pretty
+pnpm exec polingo compile locales --out public/i18n --format json --pretty
 ```
 
 ### Options

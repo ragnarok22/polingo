@@ -126,7 +126,8 @@ import { createPolingo } from '@polingo/web';
 const polingo = await createPolingo({
   locale: 'es',
   locales: ['es', 'en'],
-  loader: { baseUrl: '/locales' },
+  // Catalogs are served from /i18n by default; point baseUrl elsewhere if needed.
+  loader: { baseUrl: '/i18n' },
 });
 
 document.querySelector('#greeting')!.textContent = polingo.t('Hello');
