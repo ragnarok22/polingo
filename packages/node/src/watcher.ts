@@ -174,11 +174,17 @@ export class TranslationWatcher {
     }
 
     const locale = segments[0];
+    if (!locale) {
+      return null;
+    }
     if (!this.locales.includes(locale)) {
       return null;
     }
 
     const filename = segments[segments.length - 1];
+    if (!filename) {
+      return null;
+    }
     if (!filename.startsWith(`${this.domain}.`)) {
       return null;
     }
