@@ -7,7 +7,8 @@ type PluralRule = (n: number) => number;
 
 /**
  * Rule for languages with two forms: singular and plural.
- * Used by: English, Spanish, French, German, Italian, Portuguese.
+ * Used by: English, Spanish, German, Italian, Portuguese, Dutch, Swedish,
+ * Danish, Norwegian, Finnish, Greek, Hebrew, Hungarian, Turkish.
  * Rule: n != 1
  */
 const twoForms: PluralRule = (n: number): number => {
@@ -48,6 +49,7 @@ const noPlural: PluralRule = (): number => {
 /**
  * Rule for French.
  * Two forms: n > 1.
+ * French treats 0 and 1 the same, hence the dedicated rule.
  */
 const frenchRule: PluralRule = (n: number): number => {
   return n > 1 ? 1 : 0;
