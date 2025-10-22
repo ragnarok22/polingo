@@ -48,8 +48,12 @@ export default defineConfig({
           text: 'Examples',
           items: [
             { text: 'Interactive Playground', link: '/examples/interactive' },
-            { text: 'Express & Fastify', link: '/examples/express-and-fastify' },
+            { text: 'React', link: '/examples/react' },
+            { text: 'Vue', link: '/examples/vue' },
             { text: 'Browser Integration', link: '/examples/browser' },
+            { text: 'Node.js', link: '/examples/node' },
+            { text: 'Express', link: '/examples/express' },
+            { text: 'Fastify', link: '/examples/fastify' },
           ],
         },
       ],

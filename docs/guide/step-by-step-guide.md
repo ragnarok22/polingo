@@ -151,6 +151,6 @@ Compile with `pnpm exec tsc` before shipping to production so the translator can
 
 ## Next steps
 
-- Use `polingoMiddleware` to attach translators per request (see [Express & Fastify](/examples/express-and-fastify)).
+- Use `polingoMiddleware` to attach translators per request (see [Express](/examples/express) and [Fastify](/examples/fastify)).
 - Export catalogs as JSON for client-side apps (see [Browser Integration](/examples/browser)).
 - Share caches and loaders across packages with the [Runtime Translators](/guide/runtime) deep dive.

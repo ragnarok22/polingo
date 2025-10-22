@@ -12,9 +12,45 @@ Polingo brings industry-standard gettext catalogs to modern JavaScript runtimes.
 - A package manager (`pnpm`, `npm`, or `yarn`)
 - Translation catalogs stored as `.po` or `.mo` files (you can add them later)
 
+## Pick Your Setup Path
+
+Polingo offers two onboarding flows depending on whether you are starting fresh or integrating into an existing codebase.
+
+### 1. Scaffold a New Project
+
+Use the project generator to bootstrap an application with working translations, scripts, and examples:
+
+```bash
+pnpm create polingo-app
+```
+
+Other package managers are supported too:
+
+- npm: `npm create polingo-app@latest`
+- yarn: `yarn create polingo-app`
+- bun: `bun create polingo-app`
+
+The wizard asks for your target runtime (React, Vue, Node, Express, etc.), sets up TypeScript, installs the right Polingo adapters, and seeds sample catalogs so you can start translating immediately.
+
+### 2. Add Polingo to an Existing Project
+
+Inject the CLI into your project and let the initializer wire catalog folders, scripts, and configuration:
+
+```bash
+npx polingo init
+```
+
+Prefer a specific package manager?
+
+- pnpm: `pnpm dlx polingo init`
+- yarn: `yarn dlx polingo init`
+- bun: `bunx polingo init`
+
+The initializer leaves your package manager intact, detects frameworks automatically, and only prompts when configuration changes are required.
+
 ## Installation
 
-Pick the packages that match your runtime. You can mix and match them in the same project.
+Pick the packages that match your runtime. You can mix and match them in the same project. If you ran `pnpm create polingo-app` or `polingo init`, most of these dependencies are already installed—you can skip straight to verification.
 
 ### Node.js backends
 

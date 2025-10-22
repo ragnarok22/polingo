@@ -16,6 +16,8 @@ hero:
 features:
   - title: Standard gettext catalogs
     details: Work with existing .po/.mo files and keep translators in their established tooling.
+  - title: One-command onboarding
+    details: Scaffold a new app with `pnpm create polingo-app` or upgrade an existing codebase via `npx polingo init`.
   - title: Runtime agnostic core
     details: Share the same translator across Node.js backends, web apps, edge functions, and tests.
   - title: Batteries-included loaders
