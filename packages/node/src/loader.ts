@@ -22,30 +22,34 @@ export class NodeLoader implements TranslationLoader {
    * ```typescript
    * const loader = new NodeLoader('./locales');
    * const catalog = await loader.load('es', 'messages');
-   * // Loads from: ./locales/es/messages.po (or .mo)
+   * // Loads from: ./locales/es/messages.po (or .mo, falling back to LC_MESSAGES/messages.*)
    * ```
    */
   async load(locale: string, domain: string): Promise<TranslationCatalog> {
     const baseDirectory = resolve(this.directory);
     const sanitizedLocale = sanitizePathSegment(locale, 'locale');
     const sanitizedDomain = sanitizePathSegment(domain, 'domain');
-    const catalogBasePath = resolve(baseDirectory, sanitizedLocale, sanitizedDomain);
-    assertWithinDirectory(baseDirectory, catalogBasePath);
 
-    // Try .po first, then .mo
-    const poPath = `${catalogBasePath}.po`;
-    const moPath = `${catalogBasePath}.mo`;
+    const localeDirectory = resolve(baseDirectory, sanitizedLocale);
+    assertWithinDirectory(baseDirectory, localeDirectory);
 
-    const poBuffer = await readSafeFile(poPath, baseDirectory);
-    if (poBuffer) {
-      const parsed = po.parse(poBuffer);
-      return this.convertToTranslationCatalog(parsed);
-    }
+    const candidateBasePaths = [
+      resolve(localeDirectory, sanitizedDomain),
+      resolve(localeDirectory, 'LC_MESSAGES', sanitizedDomain),
+    ];
 
-    const moBuffer = await readSafeFile(moPath, baseDirectory);
-    if (moBuffer) {
-      const parsed = mo.parse(moBuffer);
-      return this.convertToTranslationCatalog(parsed);
+    for (const basePath of candidateBasePaths) {
+      const poBuffer = await readSafeFile(`${basePath}.po`, baseDirectory);
+      if (poBuffer) {
+        const parsed = po.parse(poBuffer);
+        return this.convertToTranslationCatalog(parsed);
+      }
+
+      const moBuffer = await readSafeFile(`${basePath}.mo`, baseDirectory);
+      if (moBuffer) {
+        const parsed = mo.parse(moBuffer);
+        return this.convertToTranslationCatalog(parsed);
+      }
     }
 
     throw new Error(`Translation file not found for locale "${locale}" and domain "${domain}"`);
