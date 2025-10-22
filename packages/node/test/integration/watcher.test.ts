@@ -75,6 +75,22 @@ const TEST_DIR = join(__dirname, 'fixtures', 'watcher-test');
 const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 10));
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const expectEventually = async (assertion: () => void, timeoutMs: number = 1000) => {
+  const start = Date.now();
+
+  while (true) {
+    try {
+      assertion();
+      return;
+    } catch (error) {
+      if (Date.now() - start >= timeoutMs) {
+        throw error;
+      }
+      await flushAsync();
+    }
+  }
+};
+
 const ensureWatcher = (): FakeWatcherInstance => {
   const instance = chokidarMock.getLastWatcher();
   if (!instance) {
@@ -154,7 +170,7 @@ msgstr "Mundo"
     chokidarMock.clear();
   });
 
-  it.skip('should reload translations when file changes', async () => {
+  it('should reload translations when file changes', async () => {
     let polingo: PolingoInstance | undefined;
 
     try {
@@ -165,6 +181,8 @@ msgstr "Mundo"
         watch: true,
         debug: false,
       });
+
+      const fakeWatcher = ensureWatcher();
 
       // Initial translation
       expect(polingo.t('Hello')).toBe('Hola');
@@ -183,15 +201,15 @@ msgstr "Hola Modificado"
 
 msgid "World"
 msgstr "Mundo Modificado"
-`
+        `
       );
 
-      // Wait for file watcher to detect change and reload
-      await wait(1500);
+      fakeWatcher.emit('change', join(TEST_DIR, 'es', 'messages.po'));
 
-      // Translations should be updated
-      expect(polingo.t('Hello')).toBe('Hola Modificado');
-      expect(polingo.t('World')).toBe('Mundo Modificado');
+      await expectEventually(() => {
+        expect(polingo!.t('Hello')).toBe('Hola Modificado');
+        expect(polingo!.t('World')).toBe('Mundo Modificado');
+      });
     } finally {
       if (polingo?.stopWatching) {
         await polingo.stopWatching();
@@ -199,7 +217,7 @@ msgstr "Mundo Modificado"
     }
   }, 10000);
 
-  it.skip('should reload specific locale when changed', async () => {
+  it('should reload specific locale when changed', async () => {
     let polingo: PolingoInstance | undefined;
 
     try {
@@ -211,6 +229,8 @@ msgstr "Mundo Modificado"
       });
 
       expect(polingo.t('Hello')).toBe('Hello');
+
+      const fakeWatcher = ensureWatcher();
 
       // Change English translations
       writeFileSync(
@@ -225,13 +245,15 @@ msgstr "Hello Updated"
 
 msgid "World"
 msgstr "World Updated"
-`
+        `
       );
 
-      await wait(1500);
+      fakeWatcher.emit('change', join(TEST_DIR, 'en', 'messages.po'));
 
-      expect(polingo.t('Hello')).toBe('Hello Updated');
-      expect(polingo.t('World')).toBe('World Updated');
+      await expectEventually(() => {
+        expect(polingo!.t('Hello')).toBe('Hello Updated');
+        expect(polingo!.t('World')).toBe('World Updated');
+      });
 
       // Spanish should still work
       await polingo.setLocale('es');
@@ -243,7 +265,7 @@ msgstr "World Updated"
     }
   }, 10000);
 
-  it.skip('should handle watching multiple locales', async () => {
+  it('should handle watching multiple locales', async () => {
     // Add French locale
     mkdirSync(join(TEST_DIR, 'fr'), { recursive: true });
     writeFileSync(
@@ -273,13 +295,15 @@ msgstr "Monde"
 
       expect(polingo.t('Hello')).toBe('Bonjour');
 
+      const fakeWatcher = ensureWatcher();
+
       // Update French
       writeFileSync(
         join(TEST_DIR, 'fr', 'messages.po'),
         `msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\\n"
-"Language: fr\\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
 
 msgid "Hello"
 msgstr "Salut"
@@ -289,10 +313,12 @@ msgstr "Terre"
 `
       );
 
-      await wait(1500);
+      fakeWatcher.emit('change', join(TEST_DIR, 'fr', 'messages.po'));
 
-      expect(polingo.t('Hello')).toBe('Salut');
-      expect(polingo.t('World')).toBe('Terre');
+      await expectEventually(() => {
+        expect(polingo!.t('Hello')).toBe('Salut');
+        expect(polingo!.t('World')).toBe('Terre');
+      });
     } finally {
       if (polingo?.stopWatching) {
         await polingo.stopWatching();
@@ -362,7 +388,7 @@ msgstr "Should Not Update"
     expect(chokidarMock.watch).not.toHaveBeenCalled();
   });
 
-  it.skip('should handle file changes with cache enabled', async () => {
+  it('should handle file changes with cache enabled', async () => {
     let polingo: PolingoInstance | undefined;
 
     try {
@@ -376,23 +402,27 @@ msgstr "Should Not Update"
 
       expect(polingo.t('Hello')).toBe('Hola');
 
+      const fakeWatcher = ensureWatcher();
+
       // Update translation
       writeFileSync(
         join(TEST_DIR, 'es', 'messages.po'),
         `msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\\n"
-"Language: es\\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es\n"
 
 msgid "Hello"
 msgstr "Hola Nuevo"
 `
       );
 
-      await wait(1500);
+      fakeWatcher.emit('change', join(TEST_DIR, 'es', 'messages.po'));
 
       // Cache should be cleared and new translation loaded
-      expect(polingo.t('Hello')).toBe('Hola Nuevo');
+      await expectEventually(() => {
+        expect(polingo!.t('Hello')).toBe('Hola Nuevo');
+      });
     } finally {
       if (polingo?.stopWatching) {
         await polingo.stopWatching();
@@ -440,7 +470,7 @@ msgstr "Hola Nuevo"
     }
   }, 10000);
 
-  it.skip('should handle rapid consecutive file changes', async () => {
+  it('should handle rapid consecutive file changes', async () => {
     let polingo: PolingoInstance | undefined;
 
     try {
@@ -453,27 +483,28 @@ msgstr "Hola Nuevo"
 
       expect(polingo.t('Hello')).toBe('Hola');
 
+      const fakeWatcher = ensureWatcher();
+
       // Make rapid consecutive changes
       for (let i = 1; i <= 3; i++) {
         writeFileSync(
           join(TEST_DIR, 'es', 'messages.po'),
           `msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\\n"
-"Language: es\\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es\n"
 
 msgid "Hello"
 msgstr "Hola ${i}"
 `
         );
-        await wait(300);
+        fakeWatcher.emit('change', join(TEST_DIR, 'es', 'messages.po'));
+        await flushAsync();
       }
 
-      // Wait for final update
-      await wait(1500);
-
-      // Should have the last update
-      expect(polingo.t('Hello')).toBe('Hola 3');
+      await expectEventually(() => {
+        expect(polingo!.t('Hello')).toBe('Hola 3');
+      });
     } finally {
       if (polingo?.stopWatching) {
         await polingo.stopWatching();
