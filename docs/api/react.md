@@ -36,7 +36,8 @@ createRoot(document.getElementById('root')!).render(
       create={{
         locale: 'en',
         locales: ['en', 'es'],
-        loader: { baseUrl: '/locales' },
+        // Catalogs load from /i18n by default; override the baseUrl when hosting elsewhere.
+        loader: { baseUrl: '/i18n' },
       }}
       loadingFallback={<p>Loading translations…</p>}
       onError={(error) => console.error('Translator failed', error)}
@@ -57,7 +58,8 @@ import { createPolingo } from '@polingo/web';
     createPolingo({
       locale: 'en',
       locales: ['en', 'es'],
-      loader: { baseUrl: '/locales' },
+      // Change baseUrl when hosting catalogs under a different path or CDN.
+      loader: { baseUrl: '/i18n' },
     })
   }
   loadingFallback={<p>Loading translations…</p>}

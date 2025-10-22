@@ -225,7 +225,7 @@ The `compile` command converts `.po` files to runtime formats:
 polingo compile locales --out public/i18n --format json --pretty
 
 # Compile to MO for Node.js (smaller, faster)
-polingo compile locales --out dist/locales --format mo
+polingo compile locales --out dist/i18n --format mo
 
 # Compile specific locale
 polingo compile locales/es --out public/i18n/es --format json

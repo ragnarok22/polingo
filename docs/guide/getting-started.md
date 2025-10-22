@@ -157,13 +157,13 @@ import { createPolingo } from '@polingo/web';
 const polingo = await createPolingo({
   locale: 'es',
   locales: ['es', 'en'],
-  loader: { baseUrl: '/locales' },
+  loader: { baseUrl: '/i18n' },
 });
 
 document.querySelector('#headline')!.textContent = polingo.t('Welcome');
 ```
 
-Ship JSON exports of your catalogs at `<baseUrl>/<locale>/<domain>.json`. Use the same domain naming convention as the Node.js package. To generate these files, run `pnpm exec polingo compile locales --out public/locales --format json --pretty`.
+Ship JSON exports of your catalogs at `<baseUrl>/<locale>/<domain>.json`. The default base URL is `/i18n`, but you can point the loader at another path or CDN by changing `loader.baseUrl` (or providing a custom `loader.buildUrl`). To generate the files for the default path, run `pnpm exec polingo compile locales --out public/i18n --format json --pretty`.
 
 ## Next steps
 

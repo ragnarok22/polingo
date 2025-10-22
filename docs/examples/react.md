@@ -30,7 +30,7 @@ Add helpful commands to `package.json`:
 {
   "scripts": {
     "extract": "polingo extract src --locales locales --languages en,es,fr --default-locale en",
-    "compile": "polingo compile locales --out public/locales --format json --pretty"
+    "compile": "polingo compile locales --out public/i18n --format json --pretty"
   }
 }
 ```
@@ -57,7 +57,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       create={{
         locale: 'en',
         locales: ['en', 'es', 'fr'],
-        loader: { baseUrl: '/locales' },
+        loader: { baseUrl: '/i18n' },
       }}
       loadingFallback={<p>Loading translations…</p>}
       onError={(error) => console.error('Translator failed', error)}
@@ -149,7 +149,8 @@ Translate `locales/fr/messages.po` similarly, and compile JSON for the browser:
 pnpm compile
 ```
 
-Place the output under `public/locales`.
+Place the output under `public/i18n`. If you serve the JSON catalogs from a different path, update the provider's `loader.baseUrl`
+to match.
 
 ## Run the App
 
