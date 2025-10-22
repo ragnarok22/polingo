@@ -237,6 +237,24 @@ msgstr "Bonjour"
     loadSpy.mockRestore();
   });
 
+  it('should handle .mo change events the same as .po', async () => {
+    watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
+    await watcher.start();
+
+    const clearCacheSpy = vi.spyOn(translator, 'clearCache');
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
+
+    fakeWatcher.emit('change', join(esDir, 'messages.mo'));
+    await flushAsync();
+
+    expect(clearCacheSpy).toHaveBeenCalled();
+    expect(loadSpy).toHaveBeenCalledWith('es');
+
+    clearCacheSpy.mockRestore();
+    loadSpy.mockRestore();
+  });
+
   it('should handle changes inside LC_MESSAGES directories', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
     await watcher.start();
@@ -259,6 +277,20 @@ msgstr "Bonjour"
     const fakeWatcher = ensureWatcher();
 
     fakeWatcher.emit('add', join(frLcDir, 'messages.po'));
+    await flushAsync();
+
+    expect(loadSpy).toHaveBeenCalledWith('fr');
+    loadSpy.mockRestore();
+  });
+
+  it('should load locales on .mo add events', async () => {
+    watcher = new TranslationWatcher(translator, testDir, ['es', 'en', 'fr'], 'messages', true);
+    await watcher.start();
+
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
+
+    fakeWatcher.emit('add', join(frDir, 'messages.mo'));
     await flushAsync();
 
     expect(loadSpy).toHaveBeenCalledWith('fr');
@@ -301,12 +333,12 @@ msgstr "Bonjour"
 
     const fakeWatcher = ensureWatcher();
     fakeWatcher.emit('change', join(esDir, 'messages.po'));
-    // Wait longer for async error handler to complete on slower CI environments
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[Polingo] Failed to reload translations for locale "es":'),
-      expect.any(Error)
+    await vi.waitFor(() =>
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Polingo] Failed to reload translations for locale "es":'),
+        expect.any(Error)
+      )
     );
     consoleErrorSpy.mockRestore();
   });
@@ -328,9 +360,11 @@ msgstr "Bonjour"
     fakeWatcher.emit('add', join(frLcDir, 'messages.po'));
     await flushAsync();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[Polingo] Failed to load new translations for locale "fr":'),
-      expect.any(Error)
+    await vi.waitFor(() =>
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Polingo] Failed to load new translations for locale "fr":'),
+        expect.any(Error)
+      )
     );
     consoleErrorSpy.mockRestore();
   });
