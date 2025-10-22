@@ -54,7 +54,7 @@ Add helpful scripts to `package.json`:
     "build": "tsc",
     "start": "node dist/server.js",
     "extract": "polingo extract src --locales locales --languages en,es,fr --default-locale en",
-    "compile": "polingo compile locales --out locales --format po",
+    "compile": "polingo compile locales --out locales --format mo",
     "validate": "polingo validate locales"
   }
 }
