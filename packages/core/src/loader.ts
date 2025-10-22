@@ -1,20 +1,16 @@
 import type { TranslationLoader, TranslationCatalog } from './types';
 
 /**
- * Re-exporta la interfaz TranslationLoader para que otros paquetes
- * puedan implementarla sin necesidad de importar desde types
- *
- * Los loaders específicos (NodeLoader, WebLoader, etc.) se implementan
- * en paquetes separados ya que tienen dependencias específicas del entorno
+ * Re-export the translation loader types so other packages can implement
+ * environment-specific loaders without depending on internal modules.
  *
  * @example
- * ```typescript
- * // En @polingo/node
+ * ```ts
  * import type { TranslationLoader } from '@polingo/core';
  *
  * export class NodeLoader implements TranslationLoader {
  *   async load(locale: string, domain: string): Promise<TranslationCatalog> {
- *     // Implementación específica de Node.js
+ *     // Node.js-specific translation retrieval
  *   }
  * }
  * ```
