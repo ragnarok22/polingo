@@ -227,6 +227,24 @@ msgstr "Bonjour"
     loadSpy.mockRestore();
   });
 
+  it('should handle .mo change events the same as .po', async () => {
+    watcher = new TranslationWatcher(translator, testDir, ['es', 'en'], 'messages', true);
+    await watcher.start();
+
+    const clearCacheSpy = vi.spyOn(translator, 'clearCache');
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
+
+    fakeWatcher.emit('change', join(esDir, 'messages.mo'));
+    await flushAsync();
+
+    expect(clearCacheSpy).toHaveBeenCalled();
+    expect(loadSpy).toHaveBeenCalledWith('es');
+
+    clearCacheSpy.mockRestore();
+    loadSpy.mockRestore();
+  });
+
   it('should watch multiple locales for file additions', async () => {
     watcher = new TranslationWatcher(translator, testDir, ['es', 'en', 'fr'], 'messages', true);
     await watcher.start();
@@ -235,6 +253,20 @@ msgstr "Bonjour"
     const fakeWatcher = ensureWatcher();
 
     fakeWatcher.emit('add', join(frDir, 'messages.po'));
+    await flushAsync();
+
+    expect(loadSpy).toHaveBeenCalledWith('fr');
+    loadSpy.mockRestore();
+  });
+
+  it('should load locales on .mo add events', async () => {
+    watcher = new TranslationWatcher(translator, testDir, ['es', 'en', 'fr'], 'messages', true);
+    await watcher.start();
+
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
+
+    fakeWatcher.emit('add', join(frDir, 'messages.mo'));
     await flushAsync();
 
     expect(loadSpy).toHaveBeenCalledWith('fr');
