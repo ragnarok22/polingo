@@ -73,7 +73,7 @@ locales/
         └── errors.mo
 ```
 
-Internally the loader first tries `<locale>/<domain>.po` and falls back to `<locale>/<domain>.mo`.
+Internally the loader searches `<locale>/<domain>.po`, `<locale>/<domain>.mo`, then `<locale>/LC_MESSAGES/<domain>.po` and `.mo`.
 
 ## API overview
 

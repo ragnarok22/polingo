@@ -8,11 +8,14 @@ describe('NodeLoader', () => {
   const testDir = join(tmpdir(), 'polingo-test-' + Date.now());
   const esDir = join(testDir, 'es');
   const enDir = join(testDir, 'en');
+  const frDir = join(testDir, 'fr');
+  const frLCDir = join(frDir, 'LC_MESSAGES');
 
   beforeAll(async () => {
     // Create test directories
     await mkdir(esDir, { recursive: true });
     await mkdir(enDir, { recursive: true });
+    await mkdir(frLCDir, { recursive: true });
 
     // Create a simple .po file for Spanish
     const esPoContent = `
@@ -25,7 +28,7 @@ msgid "Hello"
 msgstr "Hola"
 
 msgid "Goodbye"
-msgstr "Adi�s"
+msgstr "Adiós"
 
 msgctxt "menu"
 msgid "File"
@@ -33,8 +36,8 @@ msgstr "Archivo"
 
 msgid "one item"
 msgid_plural "{n} items"
-msgstr[0] "un art�culo"
-msgstr[1] "{n} art�culos"
+msgstr[0] "un artículo"
+msgstr[1] "{n} artículos"
 `;
 
     // Create a simple .po file for English
@@ -53,6 +56,18 @@ msgstr "Goodbye"
 
     await writeFile(join(esDir, 'messages.po'), esPoContent);
     await writeFile(join(enDir, 'messages.po'), enPoContent);
+    await writeFile(
+      join(frLCDir, 'messages.po'),
+      `
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Language: fr\\n"
+
+msgid "Hello"
+msgstr "Bonjour"
+`
+    );
   });
 
   it('should load a .po file successfully', async () => {
@@ -74,7 +89,7 @@ msgstr "Goodbye"
 
     // Check another translation
     expect(catalog.translations['']['Goodbye']).toBeDefined();
-    expect(catalog.translations['']['Goodbye'].msgstr).toBe('Adi�s');
+    expect(catalog.translations['']['Goodbye'].msgstr).toBe('Adiós');
   });
 
   it('should parse context translations correctly', async () => {
@@ -95,11 +110,14 @@ msgstr "Goodbye"
     expect(pluralTranslation.msgid_plural).toBe('{n} items');
     expect(Array.isArray(pluralTranslation.msgstr)).toBe(true);
     expect((pluralTranslation.msgstr as string[]).length).toBeGreaterThan(0);
+
+    const pluralForms = pluralTranslation.msgstr as string[];
+    expect(pluralForms[0]).toBe('un artículo');
   });
 
-  it('should throw error for non-existent file', async () => {
+  it('should throw error for non-existent domain', async () => {
     const loader = new NodeLoader(testDir);
-    await expect(loader.load('fr', 'messages')).rejects.toThrow(/Translation file not found/);
+    await expect(loader.load('es', 'missing-domain')).rejects.toThrow(/Translation file not found/);
   });
 
   it('should throw error for non-existent locale', async () => {
@@ -115,5 +133,12 @@ msgstr "Goodbye"
 
     expect(esCatalog.translations['']['Hello'].msgstr).toBe('Hola');
     expect(enCatalog.translations['']['Hello'].msgstr).toBe('Hello');
+  });
+
+  it('should fall back to LC_MESSAGES layout when direct files are missing', async () => {
+    const loader = new NodeLoader(testDir);
+    const catalog = await loader.load('fr', 'messages');
+
+    expect(catalog.translations['']['Hello'].msgstr).toBe('Bonjour');
   });
 });
