@@ -307,6 +307,20 @@ msgstr "Bonjour"
     loadSpy.mockRestore();
   });
 
+  it('should load locales on .mo add events', async () => {
+    watcher = new TranslationWatcher(translator, testDir, ['es', 'en', 'fr'], 'messages', true);
+    await watcher.start();
+
+    const loadSpy = vi.spyOn(translator, 'load');
+    const fakeWatcher = ensureWatcher();
+
+    fakeWatcher.emit('add', join(frDir, 'messages.mo'));
+    await flushAsync();
+
+    expect(loadSpy).toHaveBeenCalledWith('fr');
+    loadSpy.mockRestore();
+  });
+
   it('should handle file changes with debug mode', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
