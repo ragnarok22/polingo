@@ -276,10 +276,15 @@ msgstr "Bonjour"
     const loadSpy = vi.spyOn(translator, 'load');
     const fakeWatcher = ensureWatcher();
 
+    fakeWatcher.emit('add', join(frDir, 'messages.po'));
+    await flushAsync();
+
     fakeWatcher.emit('add', join(frLcDir, 'messages.po'));
     await flushAsync();
 
-    expect(loadSpy).toHaveBeenCalledWith('fr');
+    expect(loadSpy).toHaveBeenCalledTimes(2);
+    expect(loadSpy).toHaveBeenNthCalledWith(1, 'fr');
+    expect(loadSpy).toHaveBeenNthCalledWith(2, 'fr');
     loadSpy.mockRestore();
   });
 
@@ -293,7 +298,12 @@ msgstr "Bonjour"
     fakeWatcher.emit('add', join(frDir, 'messages.mo'));
     await flushAsync();
 
-    expect(loadSpy).toHaveBeenCalledWith('fr');
+    fakeWatcher.emit('add', join(frLcDir, 'messages.mo'));
+    await flushAsync();
+
+    expect(loadSpy).toHaveBeenCalledTimes(2);
+    expect(loadSpy).toHaveBeenNthCalledWith(1, 'fr');
+    expect(loadSpy).toHaveBeenNthCalledWith(2, 'fr');
     loadSpy.mockRestore();
   });
 
@@ -357,8 +367,19 @@ msgstr "Bonjour"
     await watcher.start();
 
     const fakeWatcher = ensureWatcher();
+
+    fakeWatcher.emit('add', join(frDir, 'messages.po'));
+
+    await vi.waitFor(() =>
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Polingo] Failed to load new translations for locale "fr":'),
+        expect.any(Error)
+      )
+    );
+
+    consoleErrorSpy.mockClear();
+
     fakeWatcher.emit('add', join(frLcDir, 'messages.po'));
-    await flushAsync();
 
     await vi.waitFor(() =>
       expect(consoleErrorSpy).toHaveBeenCalledWith(
