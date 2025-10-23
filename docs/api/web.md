@@ -23,16 +23,16 @@ const polingo = await createPolingo({
 
 ### Options
 
-| Option         | Type                                                    | Default                   | Description                                           |
-| -------------- | ------------------------------------------------------- | ------------------------- | ----------------------------------------------------- |
-| `locale`       | `string`                                                | —                         | Locale used right after initialization.               |
-| `locales`      | `string[]`                                              | —                         | Locales to preload via HTTP.                          |
-| `loader`       | [`WebLoaderOptions`](#webloaderoptions)                 | `{ baseUrl: '/i18n' }`    | Controls how catalogs are fetched.                    |
-| `fallback`     | `string`                                                | `'en'`                    | Fallback locale when lookups miss.                    |
-| `domain`       | `string`                                                | `'messages'`              | Catalog namespace.                                    |
-| `debug`        | `boolean`                                               | `false`                   | Emit console output for loads, misses, and fallbacks. |
-| `cache`        | `boolean`                                               | `true`                    | Enable the persistent `LocalStorageCache`.            |
-| `cacheOptions` | [`LocalStorageCacheOptions`](#localstoragecacheoptions) | `{}`                      | Configure cache namespace or TTL.                     |
+| Option         | Type                                                    | Default                | Description                                           |
+| -------------- | ------------------------------------------------------- | ---------------------- | ----------------------------------------------------- |
+| `locale`       | `string`                                                | —                      | Locale used right after initialization.               |
+| `locales`      | `string[]`                                              | —                      | Locales to preload via HTTP.                          |
+| `loader`       | [`WebLoaderOptions`](#webloaderoptions)                 | `{ baseUrl: '/i18n' }` | Controls how catalogs are fetched.                    |
+| `fallback`     | `string`                                                | `'en'`                 | Fallback locale when lookups miss.                    |
+| `domain`       | `string`                                                | `'messages'`           | Catalog namespace.                                    |
+| `debug`        | `boolean`                                               | `false`                | Emit console output for loads, misses, and fallbacks. |
+| `cache`        | `boolean`                                               | `true`                 | Enable the persistent `LocalStorageCache`.            |
+| `cacheOptions` | [`LocalStorageCacheOptions`](#localstoragecacheoptions) | `{}`                   | Configure cache namespace or TTL.                     |
 
 `locales` must contain at least one entry; an error is thrown otherwise so you catch misconfiguration early.
 

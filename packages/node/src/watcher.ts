@@ -46,9 +46,13 @@ export class TranslationWatcher {
       }
 
       // Watch all .po and .mo files in locale directories
-      const patterns = this.locales.map((locale) =>
-        join(this.directory, locale, `${this.domain}.{po,mo}`)
-      );
+      const patterns = this.locales.flatMap((locale) => {
+        const localeDirectory = join(this.directory, locale);
+        return [
+          join(localeDirectory, `${this.domain}.{po,mo}`),
+          join(localeDirectory, 'LC_MESSAGES', `${this.domain}.{po,mo}`),
+        ];
+      });
 
       this.watcher = watch(patterns, {
         persistent: true,
@@ -157,13 +161,35 @@ export class TranslationWatcher {
    * Example: ./locales/es/messages.po -> 'es'
    */
   private extractLocaleFromPath(path: string): string | null {
-    const normalized = path.replace(/\\/g, '/');
-    for (const locale of this.locales) {
-      if (normalized.includes(`/${locale}/${this.domain}.`)) {
-        return locale;
-      }
+    const absolutePath = resolve(path);
+    const relativePath = relative(this.localesRoot, absolutePath).replace(/\\/g, '/');
+
+    if (!relativePath || relativePath.startsWith('..')) {
+      return null;
     }
-    return null;
+
+    const segments = relativePath.split('/');
+    if (segments.length < 2) {
+      return null;
+    }
+
+    const locale = segments[0];
+    if (!locale) {
+      return null;
+    }
+    if (!this.locales.includes(locale)) {
+      return null;
+    }
+
+    const filename = segments[segments.length - 1];
+    if (!filename) {
+      return null;
+    }
+    if (!filename.startsWith(`${this.domain}.`)) {
+      return null;
+    }
+
+    return locale;
   }
 
   private isSafeCatalogPath(filePath: string): boolean {
