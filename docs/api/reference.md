@@ -80,16 +80,16 @@ type PolingoConfig = {
 
 ### `createPolingo` options
 
-| Option         | Type                       | Default                   | Notes                                                           |
-| -------------- | -------------------------- | ------------------------- | --------------------------------------------------------------- |
-| `locale`       | `string`                   | —                         | Locale that becomes active after initialization.                |
-| `locales`      | `string[]`                 | —                         | Locales that should be preloaded via HTTP.                      |
-| `loader`       | `WebLoaderOptions`         | `{ baseUrl: '/i18n' }`    | Configure catalog URLs, fetch options, and transformers.        |
-| `fallback`     | `string`                   | `'en'`                    | Locale used when a translation misses.                          |
-| `domain`       | `string`                   | `'messages'`              | Catalog namespace.                                              |
-| `cache`        | `boolean`                  | `true`                    | Disable to skip persistence and use an in-memory cache instead. |
-| `cacheOptions` | `LocalStorageCacheOptions` | `{}`                      | Control the storage prefix and TTL.                             |
-| `debug`        | `boolean`                  | `false`                   | Log loads, misses, and fallbacks to the console.                |
+| Option         | Type                       | Default                | Notes                                                           |
+| -------------- | -------------------------- | ---------------------- | --------------------------------------------------------------- |
+| `locale`       | `string`                   | —                      | Locale that becomes active after initialization.                |
+| `locales`      | `string[]`                 | —                      | Locales that should be preloaded via HTTP.                      |
+| `loader`       | `WebLoaderOptions`         | `{ baseUrl: '/i18n' }` | Configure catalog URLs, fetch options, and transformers.        |
+| `fallback`     | `string`                   | `'en'`                 | Locale used when a translation misses.                          |
+| `domain`       | `string`                   | `'messages'`           | Catalog namespace.                                              |
+| `cache`        | `boolean`                  | `true`                 | Disable to skip persistence and use an in-memory cache instead. |
+| `cacheOptions` | `LocalStorageCacheOptions` | `{}`                   | Control the storage prefix and TTL.                             |
+| `debug`        | `boolean`                  | `false`                | Log loads, misses, and fallbacks to the console.                |
 
 `WebLoaderOptions` include `baseUrl`, `buildUrl`, `fetch`, `requestInit`, and `transformResponse`. `LocalStorageCacheOptions` include `storage`, `prefix`, and `ttlMs`.
 
