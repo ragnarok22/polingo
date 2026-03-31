@@ -57,7 +57,7 @@ Running `polingo init` installs the environment adapter you select along with it
 
 ## App Scaffolding (`packages/create-polingo-app`)
 
-The `create-polingo-app` package powers `pnpm create polingo-app`, an interactive generator that copies curated examples (React + Vite, Express, etc.) into a fresh directory with namespaced dependencies. Use it to bootstrap demos or reproduction repositories quickly.
+The `create-polingo-app` package powers `pnpm create polingo-app`, an interactive generator that copies curated templates (React + Vite, Express, etc.) into a fresh directory with namespaced dependencies. The bundled templates are the source of truth, while the repository `examples/` directory is kept as a mirrored consumer view for docs and smoke validation.
 
 ## Documentation & Examples
 
