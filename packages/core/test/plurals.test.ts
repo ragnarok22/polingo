@@ -178,5 +178,12 @@ describe('getPluralIndex', () => {
       expect(getPluralIndex(1, '__proto__-CA')).toBe(0);
       expect(getPluralIndex(2, 'constructor')).toBe(1);
     });
+
+    it('should not invoke Object.prototype methods for user-controlled locale names', () => {
+      expect(getPluralIndex(1, 'valueOf')).toBe(0);
+      expect(getPluralIndex(2, 'hasOwnProperty')).toBe(1);
+      expect(getPluralIndex(2, '__defineSetter__')).toBe(1);
+      expect(getPluralIndex(1, 'toString')).toBe(0);
+    });
   });
 });

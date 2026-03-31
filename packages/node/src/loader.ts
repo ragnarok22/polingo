@@ -1,5 +1,5 @@
 import { lstat, readFile, realpath } from 'fs/promises';
-import { relative, resolve, sep } from 'path';
+import { resolve, sep } from 'path';
 import { po, mo } from 'gettext-parser';
 import type { TranslationLoader, TranslationCatalog, Translation } from '@polingo/core';
 
@@ -30,18 +30,21 @@ export class NodeLoader implements TranslationLoader {
     const sanitizedLocale = sanitizePathSegment(locale, 'locale');
     const sanitizedDomain = sanitizePathSegment(domain, 'domain');
 
-    const localeDirectory = resolve(baseDirectory, sanitizedLocale);
-    assertWithinDirectory(baseDirectory, localeDirectory);
-    const hasSafeLocaleDirectory = await isSafeDirectory(localeDirectory, baseDirectory);
-
-    if (!hasSafeLocaleDirectory) {
+    const localeDirectory = await resolveSafeDirectory(
+      resolve(baseDirectory, sanitizedLocale),
+      baseDirectory
+    );
+    if (!localeDirectory) {
       throw new Error(`Translation file not found for locale "${locale}" and domain "${domain}"`);
     }
 
     const candidateBasePaths = [resolve(localeDirectory, sanitizedDomain)];
-    const lcMessagesDirectory = resolve(localeDirectory, 'LC_MESSAGES');
+    const lcMessagesDirectory = await resolveSafeDirectory(
+      resolve(localeDirectory, 'LC_MESSAGES'),
+      baseDirectory
+    );
 
-    if (await isSafeDirectory(lcMessagesDirectory, baseDirectory)) {
+    if (lcMessagesDirectory) {
       candidateBasePaths.push(resolve(lcMessagesDirectory, sanitizedDomain));
     }
 
@@ -146,23 +149,25 @@ function sanitizePathSegment(value: string, segmentName: string): string {
 }
 
 function assertWithinDirectory(baseDir: string, targetPath: string): void {
-  const relativePath = relative(baseDir, targetPath);
-  if (!relativePath || relativePath.startsWith('..') || relativePath.includes(`..${sep}`)) {
+  const normalizedBaseDir = baseDir.endsWith(sep) ? baseDir : `${baseDir}${sep}`;
+  if (targetPath !== baseDir && !targetPath.startsWith(normalizedBaseDir)) {
     throw new Error('Resolved catalog path escapes the configured directory.');
   }
 }
 
 async function readSafeFile(filePath: string, baseDir: string): Promise<Buffer | null> {
   const resolvedPath = resolve(filePath);
-  assertWithinDirectory(baseDir, resolvedPath);
 
   try {
     const fileStat = await lstat(resolvedPath);
-    // Reject symlinks first, then verify it's a regular file
     if (fileStat.isSymbolicLink() || !fileStat.isFile()) {
       return null;
     }
-    return readFile(resolvedPath);
+
+    const canonicalPath = await realpath(resolvedPath);
+    assertWithinDirectory(baseDir, canonicalPath);
+
+    return readFile(canonicalPath);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return null;
@@ -171,20 +176,22 @@ async function readSafeFile(filePath: string, baseDir: string): Promise<Buffer |
   }
 }
 
-async function isSafeDirectory(targetPath: string, baseDir: string): Promise<boolean> {
+async function resolveSafeDirectory(targetPath: string, baseDir: string): Promise<string | null> {
   const resolvedPath = resolve(targetPath);
-  assertWithinDirectory(baseDir, resolvedPath);
 
   try {
     const stat = await lstat(resolvedPath);
-    if (stat.isSymbolicLink()) {
-      throw new Error('Resolved catalog path escapes the configured directory.');
+    if (stat.isSymbolicLink() || !stat.isDirectory()) {
+      return null;
     }
 
-    return stat.isDirectory();
+    const canonicalPath = await realpath(resolvedPath);
+    assertWithinDirectory(baseDir, canonicalPath);
+
+    return canonicalPath;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return false;
+      return null;
     }
     throw error;
   }

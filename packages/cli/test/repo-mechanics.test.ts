@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { rewritePolingoDependenciesForLocalSmoke } from '../../../scripts/examples-smoke.mjs';
 
 interface PackageManifest {
   name?: string;
@@ -10,6 +11,7 @@ interface PackageManifest {
   bin?: unknown;
   files?: string[];
   engines?: Record<string, string>;
+  scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
@@ -260,6 +262,61 @@ describe('repo mechanics', () => {
           }
         }
       }
+    }
+  });
+
+  it('stages mirrored examples against local workspace packages for smoke builds', () => {
+    const expressManifest = readJsonFile<PackageManifest>(
+      path.join(examplesRoot, 'express', 'package.json')
+    );
+    const reactManifest = readJsonFile<PackageManifest>(
+      path.join(examplesRoot, 'react-vite', 'package.json')
+    );
+
+    expect(rewritePolingoDependenciesForLocalSmoke(expressManifest, repoRoot)).toMatchObject({
+      dependencies: {
+        '@polingo/core': `file:${path.join(repoRoot, 'packages/core')}`,
+        '@polingo/node': `file:${path.join(repoRoot, 'packages/node')}`,
+        express: expressManifest.dependencies?.express,
+      },
+    });
+
+    expect(rewritePolingoDependenciesForLocalSmoke(reactManifest, repoRoot)).toMatchObject({
+      dependencies: {
+        '@polingo/core': `file:${path.join(repoRoot, 'packages/core')}`,
+        '@polingo/react': `file:${path.join(repoRoot, 'packages/react')}`,
+        '@polingo/web': `file:${path.join(repoRoot, 'packages/web')}`,
+        react: reactManifest.dependencies?.react,
+        'react-dom': reactManifest.dependencies?.['react-dom'],
+      },
+      devDependencies: {
+        '@polingo/cli': `file:${path.join(repoRoot, 'packages/cli')}`,
+      },
+    });
+  });
+
+  it('runs example smoke checks through the dedicated local-package runner', () => {
+    const rootManifest = readJsonFile<PackageManifest>(path.join(repoRoot, 'package.json'));
+    const smokeScript = rootManifest.scripts?.['examples:smoke'];
+
+    expect(smokeScript).toContain('node ./scripts/examples-smoke.mjs');
+    expect(smokeScript).not.toContain('pnpm --dir examples/express install');
+    expect(smokeScript).not.toContain('pnpm --dir examples/react-vite install');
+  });
+
+  it('keeps the Express example on the public Translator locale API', () => {
+    for (const rootDirectory of [templatesRoot, examplesRoot]) {
+      const serverPath = path.join(rootDirectory, 'express', 'src', 'server.ts');
+      const serverContents = readTextFile(serverPath);
+
+      expect(
+        serverContents,
+        `${path.relative(repoRoot, serverPath)} must use Translator#getLocale() so the example keeps compiling against the public API.`
+      ).not.toContain('translator.locale');
+      expect(
+        serverContents,
+        `${path.relative(repoRoot, serverPath)} must read the active locale through Translator#getLocale().`
+      ).toContain('translator.getLocale()');
     }
   });
 

@@ -28,7 +28,7 @@
     "typecheck": "pnpm turbo run typecheck",
     "examples:sync": "node ./scripts/sync-examples.mjs sync",
     "examples:check": "node ./scripts/sync-examples.mjs check",
-    "examples:smoke": "pnpm examples:check && pnpm --dir examples/express install --lockfile=false --prefer-offline && pnpm --dir examples/express build && pnpm --dir examples/react-vite install --lockfile=false --prefer-offline && pnpm --dir examples/react-vite build",
+    "examples:smoke": "pnpm examples:check && node ./scripts/examples-smoke.mjs",
     "security": "pnpm audit --prod --audit-level=moderate && pnpm exec lockfile-lint --type pnpm --path pnpm-lock.yaml --validate-https",
     "clean": "pnpm -r exec rm -rf dist node_modules .turbo",
     "changeset": "changeset",

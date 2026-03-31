@@ -80,52 +80,52 @@ const czechRule: PluralRule = (n: number): number => {
 /**
  * Map of language codes to pluralization rules.
  */
-const pluralRules: Record<string, PluralRule> = {
+const pluralRules = new Map<string, PluralRule>([
   // Languages with two forms (n != 1)
-  en: twoForms,
-  es: twoForms,
-  de: twoForms,
-  it: twoForms,
-  pt: twoForms,
-  nl: twoForms,
-  sv: twoForms,
-  da: twoForms,
-  no: twoForms,
-  fi: twoForms,
-  el: twoForms,
-  he: twoForms,
-  hu: twoForms,
-  tr: twoForms,
+  ['en', twoForms],
+  ['es', twoForms],
+  ['de', twoForms],
+  ['it', twoForms],
+  ['pt', twoForms],
+  ['nl', twoForms],
+  ['sv', twoForms],
+  ['da', twoForms],
+  ['no', twoForms],
+  ['fi', twoForms],
+  ['el', twoForms],
+  ['he', twoForms],
+  ['hu', twoForms],
+  ['tr', twoForms],
 
   // French (n > 1)
-  fr: frenchRule,
+  ['fr', frenchRule],
 
   // Polish
-  pl: polishRule,
+  ['pl', polishRule],
 
   // Russian, Ukrainian, Serbian, Croatian, Belarusian
-  ru: russianRule,
-  uk: russianRule,
-  sr: russianRule,
-  hr: russianRule,
-  be: russianRule,
+  ['ru', russianRule],
+  ['uk', russianRule],
+  ['sr', russianRule],
+  ['hr', russianRule],
+  ['be', russianRule],
 
   // Czech, Slovak
-  cs: czechRule,
-  sk: czechRule,
+  ['cs', czechRule],
+  ['sk', czechRule],
 
   // Romanian
-  ro: romanianRule,
+  ['ro', romanianRule],
 
   // Languages without plural forms
-  zh: noPlural,
-  ja: noPlural,
-  ko: noPlural,
-  th: noPlural,
-  vi: noPlural,
-  id: noPlural,
-  ms: noPlural,
-};
+  ['zh', noPlural],
+  ['ja', noPlural],
+  ['ko', noPlural],
+  ['th', noPlural],
+  ['vi', noPlural],
+  ['id', noPlural],
+  ['ms', noPlural],
+]);
 
 /**
  * Determine the plural form index based on locale and count.
@@ -148,12 +148,7 @@ export function getPluralIndex(count: number, locale: string): number {
   // Extract base language code (e.g., 'es-MX' -> 'es')
   const lang = (locale.split('-')[0] ?? locale).toLowerCase();
 
-  // Only use explicitly defined rules; ignore inherited prototype properties.
-  if (!Object.prototype.hasOwnProperty.call(pluralRules, lang)) {
-    return twoForms(count);
-  }
-
-  const rule = pluralRules[lang];
+  const rule = pluralRules.get(lang);
 
   // Defensive guard in case the rules table is extended with non-functions later.
   if (typeof rule !== 'function') {
