@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+
 # Cancel outdated runs for the same workflow and ref
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

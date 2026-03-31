@@ -36,6 +36,13 @@ function readTextFile(filePath: string): string {
   return readFileSync(filePath, 'utf8');
 }
 
+function listFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.join(directory, entry.name))
+    .sort((left, right) => left.localeCompare(right));
+}
+
 function listCanonicalFiles(directory: string, currentDirectory = directory): string[] {
   const entries = readdirSync(currentDirectory, { withFileTypes: true });
   const files: string[] = [];
@@ -95,6 +102,40 @@ function readWorkspacePackageVersions(): Map<string, string> {
   }
 
   return versions;
+}
+
+function readTopLevelPermissionsBlock(workflowContents: string): string | null {
+  const lines = workflowContents.split(/\r?\n/u);
+  const permissionsIndex = lines.findIndex((line) => /^permissions:\s*(.*)$/u.test(line));
+
+  if (permissionsIndex === -1) {
+    return null;
+  }
+
+  const [, inlineValue = ''] = lines[permissionsIndex].match(/^permissions:\s*(.*)$/u) ?? [];
+  const blockLines = [inlineValue].filter(Boolean);
+
+  for (let index = permissionsIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index];
+
+    if (line.length > 0 && !line.startsWith(' ')) {
+      break;
+    }
+
+    blockLines.push(line);
+  }
+
+  return blockLines.join('\n').trim();
+}
+
+function hasContentsPermission(workflowContents: string): boolean {
+  const permissionsBlock = readTopLevelPermissionsBlock(workflowContents);
+
+  if (!permissionsBlock) {
+    return false;
+  }
+
+  return /(?:^|\s|[{,])contents:\s*(?:read|write)\b/u.test(permissionsBlock);
 }
 
 describe('repo mechanics', () => {
@@ -202,6 +243,24 @@ describe('repo mechanics', () => {
           }
         }
       }
+    }
+  });
+
+  it('requires top-level GitHub workflow permissions with a contents scope', () => {
+    const workflowsDirectory = path.join(repoRoot, '.github', 'workflows');
+    const workflowFiles = listFiles(workflowsDirectory).filter((workflowPath) =>
+      ['.yaml', '.yml'].includes(path.extname(workflowPath))
+    );
+
+    expect(workflowFiles.length).toBeGreaterThan(0);
+
+    for (const workflowPath of workflowFiles) {
+      const workflowContents = readTextFile(workflowPath);
+
+      expect(
+        hasContentsPermission(workflowContents),
+        `${path.relative(repoRoot, workflowPath)} must declare an explicit top-level permissions block that includes a contents scope.`
+      ).toBe(true);
     }
   });
 });
