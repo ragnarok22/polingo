@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, symlink, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { NodeLoader } from '../src/loader';
@@ -10,6 +10,8 @@ describe('NodeLoader', () => {
   const enDir = join(testDir, 'en');
   const frDir = join(testDir, 'fr');
   const frLCDir = join(frDir, 'LC_MESSAGES');
+  const externalDir = join(tmpdir(), 'polingo-test-external-' + Date.now());
+  const linkedDir = join(testDir, 'linked');
 
   beforeAll(async () => {
     // Create test directories
@@ -68,6 +70,21 @@ msgid "Hello"
 msgstr "Bonjour"
 `
     );
+
+    await mkdir(externalDir, { recursive: true });
+    await writeFile(
+      join(externalDir, 'messages.po'),
+      `
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Language: linked\\n"
+
+msgid "Hello"
+msgstr "Leaked"
+`
+    );
+    await symlink(externalDir, linkedDir, process.platform === 'win32' ? 'junction' : 'dir');
   });
 
   it('should load a .po file successfully', async () => {
@@ -140,5 +157,11 @@ msgstr "Bonjour"
     const catalog = await loader.load('fr', 'messages');
 
     expect(catalog.translations['']['Hello'].msgstr).toBe('Bonjour');
+  });
+
+  it('should reject symlinked locale directories that escape the configured root', async () => {
+    const loader = new NodeLoader(testDir);
+
+    await expect(loader.load('linked', 'messages')).rejects.toThrow();
   });
 });

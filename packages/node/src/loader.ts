@@ -1,4 +1,4 @@
-import { lstat, readFile } from 'fs/promises';
+import { lstat, readFile, realpath } from 'fs/promises';
 import { relative, resolve, sep } from 'path';
 import { po, mo } from 'gettext-parser';
 import type { TranslationLoader, TranslationCatalog, Translation } from '@polingo/core';
@@ -26,7 +26,7 @@ export class NodeLoader implements TranslationLoader {
    * ```
    */
   async load(locale: string, domain: string): Promise<TranslationCatalog> {
-    const baseDirectory = resolve(this.directory);
+    const baseDirectory = await realpath(resolve(this.directory));
     const sanitizedLocale = sanitizePathSegment(locale, 'locale');
     const sanitizedDomain = sanitizePathSegment(domain, 'domain');
 
@@ -155,12 +155,15 @@ async function readSafeFile(filePath: string, baseDir: string): Promise<Buffer |
     if (fileStat.isSymbolicLink() || !fileStat.isFile()) {
       return null;
     }
+
+    const canonicalPath = await realpath(resolvedPath);
+    assertWithinDirectory(baseDir, canonicalPath);
+
+    return readFile(canonicalPath);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return null;
     }
     throw error;
   }
-
-  return readFile(resolvedPath);
 }
