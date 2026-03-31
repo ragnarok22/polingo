@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { interpolate } from '@polingo/core';
 import { createPolingo, type CreatePolingoOptions, type WebPolingoInstance } from '@polingo/web';
@@ -42,7 +42,7 @@ function fallbackPlural(msgid: string, msgidPlural: string, count: number): stri
   return Math.abs(count) === 1 ? msgid : msgidPlural;
 }
 
-export function PolingoProvider(props: PolingoProviderProps): JSX.Element {
+export function PolingoProvider(props: PolingoProviderProps): ReactElement {
   const { children, loadingFallback, onError } = props;
   const providedTranslator = 'translator' in props ? props.translator : undefined;
   const createInput = 'create' in props ? props.create : undefined;

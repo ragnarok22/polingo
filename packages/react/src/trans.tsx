@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Fragment, cloneElement, isValidElement, useMemo } from 'react';
 import type { InterpolationValues } from './context';
 import { useTranslation } from './hooks';
@@ -184,7 +184,7 @@ export function Trans({
   count,
   components,
   fallback,
-}: TransProps): JSX.Element {
+}: TransProps): ReactElement {
   const { t, tp, tn, tnp } = useTranslation();
 
   const translated = useMemo(() => {
