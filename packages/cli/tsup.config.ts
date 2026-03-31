@@ -8,7 +8,7 @@ export default defineConfig(
         index: 'src/index.ts',
       },
       sourcemap: false,
-      target: 'node18',
+      target: 'node22',
       shims: false,
       outDir: 'dist',
     },
@@ -20,7 +20,7 @@ export default defineConfig(
       dts: false,
       sourcemap: false,
       clean: false,
-      target: 'node18',
+      target: 'node22',
       shims: false,
       outDir: 'dist',
       banner: {

@@ -23,6 +23,7 @@ export default defineConfig({
             { text: 'Catalog Management', link: '/guide/catalog-management' },
             { text: 'Runtime Translators', link: '/guide/runtime' },
             { text: 'Development Workflow', link: '/guide/development-workflow' },
+            { text: 'Repository Workflow', link: '/guide/repository-workflow' },
             { text: 'Polingo vs i18next & react-intl', link: '/guide/comparison' },
             { text: 'FAQ', link: '/guide/faq' },
             { text: 'Troubleshooting', link: '/guide/troubleshooting' },

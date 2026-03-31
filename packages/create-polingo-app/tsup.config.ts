@@ -9,7 +9,7 @@ export default defineConfig(
     format: ['esm'],
     dts: false,
     sourcemap: false,
-    target: 'node18',
+    target: 'node22',
     shims: false,
     splitting: false,
     clean: true,

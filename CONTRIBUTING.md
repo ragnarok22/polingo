@@ -35,6 +35,8 @@ Thanks for taking the time to contribute! We want Polingo to be a friendly and p
 7. **Rebase if needed:** Keep your branch current with `main` (`git fetch upstream && git rebase upstream/main`).
 8. **Open a PR:** Fill out the template completely. Explain the problem, the solution, and any trade-offs.
 
+For the detailed repository command guide, including example/template sync, changesets, docs commands, and publishing flow, see [`docs/guide/repository-workflow.md`](./docs/guide/repository-workflow.md).
+
 ### Pull Request Checklist
 - Tests cover new behavior or regressions.
 - `pnpm lint` and `pnpm typecheck` pass.

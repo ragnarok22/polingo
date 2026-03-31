@@ -239,6 +239,8 @@ make test
 make coverage
 ```
 
+For the maintainer-facing workflow around package tools, example/template sync, changesets, and publishing, see [`docs/guide/repository-workflow.md`](./docs/guide/repository-workflow.md).
+
 Requirements:
 
 - Node.js `>= 22.0.0`

@@ -2,49 +2,50 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { copyFileSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'fs';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const TEST_DIR = join(__dirname, 'fixtures', 'cli-test');
 const CLI_PATH = join(__dirname, '..', '..', 'dist', 'cli.js');
+const ORIGINAL_CWD = process.cwd();
 
 // Helper to run CLI commands
-const runCLI = (args: string, cwd: string = TEST_DIR): string => {
-  try {
-    return execSync(`node ${CLI_PATH} ${args}`, {
-      cwd,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-  } catch (error) {
-    if (error instanceof Error && 'stdout' in error && 'stderr' in error) {
-      const err = error as { stdout: string; stderr: string };
-      // Return both stdout and stderr combined
-      return err.stdout + err.stderr;
-    }
-    throw error;
+const readExecOutput = (value: string | Buffer | null | undefined): string => {
+  if (typeof value === 'string') {
+    return value;
   }
+  if (Buffer.isBuffer(value)) {
+    return value.toString('utf-8');
+  }
+  return '';
 };
 
 const runCLIAtPath = (cliPath: string, args: string[], cwd: string = TEST_DIR): string => {
+  process.chdir(ORIGINAL_CWD);
+
   try {
-    return execSync(`node ${cliPath} ${args.join(' ')}`, {
+    return execFileSync(process.execPath, [cliPath, ...args], {
       cwd,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   } catch (error) {
     if (error instanceof Error && 'stdout' in error && 'stderr' in error) {
-      const err = error as { stdout: string; stderr: string };
-      return err.stdout + err.stderr;
+      const err = error as { stdout?: string | Buffer | null; stderr?: string | Buffer | null };
+      return readExecOutput(err.stdout) + readExecOutput(err.stderr);
     }
     throw error;
   }
 };
 
+const runCLI = (args: string[], cwd: string = TEST_DIR): string =>
+  runCLIAtPath(CLI_PATH, args, cwd);
+
 describe('CLI End-to-End Workflow Integration Tests', () => {
   beforeEach(() => {
+    process.chdir(ORIGINAL_CWD);
+
     // Clean up and create fresh test directory
     if (existsSync(TEST_DIR)) {
       rmSync(TEST_DIR, { recursive: true, force: true });
@@ -55,6 +56,8 @@ describe('CLI End-to-End Workflow Integration Tests', () => {
   });
 
   afterEach(() => {
+    process.chdir(ORIGINAL_CWD);
+
     // Clean up test directory
     if (existsSync(TEST_DIR)) {
       rmSync(TEST_DIR, { recursive: true, force: true });
@@ -89,7 +92,13 @@ export const Component = () => {
       );
 
       // Run extract command
-      const output = runCLI('extract src --output locales/messages.pot --keep-template');
+      const output = runCLI([
+        'extract',
+        'src',
+        '--output',
+        'locales/messages.pot',
+        '--keep-template',
+      ]);
 
       expect(output).toContain('Extracted');
 
@@ -129,7 +138,13 @@ const messages = {
 `
       );
 
-      const output = runCLI('extract src --output locales/messages.pot --keep-template');
+      const output = runCLI([
+        'extract',
+        'src',
+        '--output',
+        'locales/messages.pot',
+        '--keep-template',
+      ]);
       expect(output).toContain('Extracted');
 
       const potContent = readFileSync(join(TEST_DIR, 'locales', 'messages.pot'), 'utf-8');
@@ -154,7 +169,7 @@ console.log(t('Hello'));
 `
       );
 
-      runCLI('extract src --output locales/messages.pot --keep-template');
+      runCLI(['extract', 'src', '--output', 'locales/messages.pot', '--keep-template']);
 
       const potContent = readFileSync(join(TEST_DIR, 'locales', 'messages.pot'), 'utf-8');
 
@@ -173,7 +188,7 @@ console.log(t('Clean me'));
 `
       );
 
-      const output = runCLI('extract src --output locales/messages.pot');
+      const output = runCLI(['extract', 'src', '--output', 'locales/messages.pot']);
       expect(output).toContain('template removed');
 
       expect(existsSync(join(TEST_DIR, 'locales', 'messages.pot'))).toBe(false);
@@ -226,7 +241,7 @@ msgstr "Au revoir"
     });
 
     it('should compile .po files to .json format', () => {
-      const output = runCLI('compile locales --format json');
+      const output = runCLI(['compile', 'locales', '--format', 'json']);
       expect(output).toContain('Compiled');
 
       // Check JSON files were created
@@ -244,7 +259,7 @@ msgstr "Au revoir"
     });
 
     it('should compile .po files to .mo format', () => {
-      const output = runCLI('compile locales --format mo');
+      const output = runCLI(['compile', 'locales', '--format', 'mo']);
       expect(output).toContain('Compiled');
 
       // Check .mo files were created
@@ -261,7 +276,7 @@ msgstr "Au revoir"
       writeFileSync(join(TEST_DIR, 'locales', 'es', 'invalid.po'), 'INVALID CONTENT');
 
       // Should not throw but report error
-      const output = runCLI('compile locales --format json');
+      const output = runCLI(['compile', 'locales', '--format', 'json']);
       // CLI should complete but may report errors
       expect(typeof output).toBe('string');
     });
@@ -288,7 +303,7 @@ msgstr "Adiós"
 `
       );
 
-      const output = runCLI('validate locales');
+      const output = runCLI(['validate', 'locales']);
       expect(
         output.includes('valid') ||
           output.includes('Valid') ||
@@ -312,7 +327,7 @@ msgstr ""
 `
       );
 
-      const output = runCLI('validate locales');
+      const output = runCLI(['validate', 'locales']);
       // Should report missing translation
       const lowerOutput = output.toLowerCase();
       expect(
@@ -335,7 +350,7 @@ msgstr "Hola"
 `
       );
 
-      const output = runCLI('validate locales --strict');
+      const output = runCLI(['validate', 'locales', '--strict']);
       // Should report fuzzy translations in strict mode
       expect(output.toLowerCase()).toContain('fuzzy');
     });
@@ -357,7 +372,7 @@ msgstr ""
       );
 
       try {
-        const output = runCLI('validate locales --strict');
+        const output = runCLI(['validate', 'locales', '--strict']);
         const lowerOutput = output.toLowerCase();
         expect(
           lowerOutput.includes('error') ||
@@ -384,7 +399,7 @@ console.log(t('Goodbye'));
       );
 
       // Step 2: Extract translations
-      runCLI('extract src --output locales/messages.pot --keep-template');
+      runCLI(['extract', 'src', '--output', 'locales/messages.pot', '--keep-template']);
       expect(existsSync(join(TEST_DIR, 'locales', 'messages.pot'))).toBe(true);
 
       // Step 3: Create translated .po files (simulating manual translation)
@@ -408,11 +423,11 @@ msgstr "Adiós"
       );
 
       // Step 4: Validate translations
-      const validateOutput = runCLI('validate locales');
+      const validateOutput = runCLI(['validate', 'locales']);
       expect(validateOutput).toBeDefined();
 
       // Step 5: Compile to JSON
-      runCLI('compile locales --format json');
+      runCLI(['compile', 'locales', '--format', 'json']);
       expect(existsSync(join(TEST_DIR, 'locales', 'es', 'messages.json'))).toBe(true);
 
       // Verify compiled JSON is valid
@@ -433,7 +448,7 @@ console.log(t('Settings'));
 `
       );
 
-      runCLI('extract src --output locales/messages.pot');
+      runCLI(['extract', 'src', '--output', 'locales/messages.pot']);
 
       // Create multiple locale translations
       for (const locale of ['es', 'fr', 'de']) {
@@ -454,11 +469,11 @@ msgstr "Configuración-${locale}"
       }
 
       // Validate all
-      const validateOutput = runCLI('validate locales');
+      const validateOutput = runCLI(['validate', 'locales']);
       expect(validateOutput).toBeDefined();
 
       // Compile all
-      runCLI('compile locales --format json');
+      runCLI(['compile', 'locales', '--format', 'json']);
 
       // Verify all locales were compiled
       expect(existsSync(join(TEST_DIR, 'locales', 'es', 'messages.json'))).toBe(true);
@@ -480,7 +495,13 @@ msgstr "Configuración-${locale}"
     });
 
     it('should handle empty source directory', () => {
-      const output = runCLI('extract src --output locales/messages.pot --keep-template');
+      const output = runCLI([
+        'extract',
+        'src',
+        '--output',
+        'locales/messages.pot',
+        '--keep-template',
+      ]);
       expect(output).toBeDefined();
       // Should create empty or minimal .pot file
     });
@@ -489,7 +510,7 @@ msgstr "Configuración-${locale}"
       rmSync(join(TEST_DIR, 'locales'), { recursive: true, force: true });
 
       try {
-        runCLI('validate locales');
+        runCLI(['validate', 'locales']);
       } catch (error) {
         // Should handle gracefully
         expect(error).toBeDefined();
@@ -506,7 +527,13 @@ console.log(t('Newline:\\nTest'));
 `
       );
 
-      const output = runCLI('extract src --output locales/messages.pot --keep-template');
+      const output = runCLI([
+        'extract',
+        'src',
+        '--output',
+        'locales/messages.pot',
+        '--keep-template',
+      ]);
       expect(output).toBeDefined();
 
       const potContent = readFileSync(join(TEST_DIR, 'locales', 'messages.pot'), 'utf-8');

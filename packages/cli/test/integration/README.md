@@ -118,7 +118,7 @@ node dist/cli.js validate locales --strict
 
 - Tests require the CLI to be built (`pnpm build`) before running
 - Each test creates and cleans up its own temporary directory
-- Tests use `execSync` to run the actual CLI commands
+- Tests use `execFileSync` with explicit argv arrays to run the actual CLI commands
 - All tests are isolated and can run in any order
 - Tests verify both command output and generated file contents
 - Integration tests complement unit tests by verifying real CLI execution

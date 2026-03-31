@@ -283,6 +283,10 @@ describe('repo mechanics', () => {
 
   it('keeps supported Node.js versions aligned across engines and workflows', () => {
     const supportedNodeVersions = [22, 24, 25];
+    const nodeRuntimeTargetFiles = [
+      'packages/cli/tsup.config.ts',
+      'packages/create-polingo-app/tsup.config.ts',
+    ];
     const rootManifest = readJsonFile<PackageManifest>(path.join(repoRoot, 'package.json'));
     const ciWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'ci.yml');
     const workflowsDirectory = path.join(repoRoot, '.github', 'workflows');
@@ -309,6 +313,13 @@ describe('repo mechanics', () => {
           `${path.relative(repoRoot, workflowPath)} pins unsupported Node.js ${nodeVersion}.`
         ).toContain(nodeVersion);
       }
+    }
+
+    for (const relativePath of nodeRuntimeTargetFiles) {
+      expect(
+        readTextFile(path.join(repoRoot, relativePath)),
+        `${relativePath} must target Node.js 22 to match the supported runtime floor.`
+      ).toMatch(/target:\s*['"]node22['"]/u);
     }
   });
 });
