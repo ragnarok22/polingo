@@ -1,14 +1,23 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { copyFileSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { execFileSync } from 'child_process';
+import { tmpdir } from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const TEST_DIR = join(__dirname, 'fixtures', 'cli-test');
 const CLI_PATH = join(__dirname, '..', '..', 'dist', 'cli.js');
 const ORIGINAL_CWD = process.cwd();
+let testDir = '';
 
 // Helper to run CLI commands
 const readExecOutput = (value: string | Buffer | null | undefined): string => {
@@ -21,7 +30,7 @@ const readExecOutput = (value: string | Buffer | null | undefined): string => {
   return '';
 };
 
-const runCLIAtPath = (cliPath: string, args: string[], cwd: string = TEST_DIR): string => {
+const runCLIAtPath = (cliPath: string, args: string[], cwd: string = testDir): string => {
   process.chdir(ORIGINAL_CWD);
 
   try {
@@ -39,29 +48,26 @@ const runCLIAtPath = (cliPath: string, args: string[], cwd: string = TEST_DIR): 
   }
 };
 
-const runCLI = (args: string[], cwd: string = TEST_DIR): string =>
-  runCLIAtPath(CLI_PATH, args, cwd);
+const runCLI = (args: string[], cwd: string = testDir): string => runCLIAtPath(CLI_PATH, args, cwd);
 
 describe('CLI End-to-End Workflow Integration Tests', () => {
   beforeEach(() => {
     process.chdir(ORIGINAL_CWD);
+    testDir = mkdtempSync(join(tmpdir(), 'polingo-cli-workflow-'));
 
     // Clean up and create fresh test directory
-    if (existsSync(TEST_DIR)) {
-      rmSync(TEST_DIR, { recursive: true, force: true });
-    }
-    mkdirSync(TEST_DIR, { recursive: true });
-    mkdirSync(join(TEST_DIR, 'src'), { recursive: true });
-    mkdirSync(join(TEST_DIR, 'locales'), { recursive: true });
+    mkdirSync(join(testDir, 'src'), { recursive: true });
+    mkdirSync(join(testDir, 'locales'), { recursive: true });
   });
 
   afterEach(() => {
     process.chdir(ORIGINAL_CWD);
 
     // Clean up test directory
-    if (existsSync(TEST_DIR)) {
-      rmSync(TEST_DIR, { recursive: true, force: true });
+    if (testDir && existsSync(testDir)) {
+      rmSync(testDir, { recursive: true, force: true });
     }
+    testDir = '';
   });
 
   describe('Extract Command', () => {
