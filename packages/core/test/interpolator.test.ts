@@ -1,5 +1,21 @@
+import { performance } from 'node:perf_hooks';
 import { describe, it, expect } from 'vitest';
 import { interpolate } from '../src/interpolator';
+
+function measureInterpolationDuration(text: string, runs = 5): number {
+  const vars = { name: 'Juan' };
+  const samples: number[] = [];
+
+  for (let i = 0; i < runs; i += 1) {
+    const start = performance.now();
+    interpolate(text, vars);
+    samples.push(performance.now() - start);
+  }
+
+  samples.sort((left, right) => left - right);
+
+  return samples[Math.floor(samples.length / 2)];
+}
 
 describe('interpolate', () => {
   it('should interpolate single variable', () => {
@@ -68,5 +84,16 @@ describe('interpolate', () => {
   it('should not interpolate malformed placeholders', () => {
     const result = interpolate('Hello, {name!', { name: 'Juan' });
     expect(result).toBe('Hello, {name!');
+  });
+
+  it('should not spend excessive time on repeated unmatched opening braces', () => {
+    const pathologicalInput = '{'.repeat(15_000) + 'name';
+
+    // Warm up once to reduce one-off JIT noise before measuring.
+    interpolate(pathologicalInput, { name: 'Juan' });
+
+    const durationMs = measureInterpolationDuration(pathologicalInput);
+
+    expect(durationMs).toBeLessThan(50);
   });
 });

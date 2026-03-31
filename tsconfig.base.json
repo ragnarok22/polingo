@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    // Target moderno
     "target": "ES2020",
     "lib": ["ES2020"],
     "module": "ESNext",
@@ -8,28 +7,30 @@
     "baseUrl": ".",
     "paths": {
       "@polingo/core": ["packages/core/src/index.ts"],
+      "@polingo/core/*": ["packages/core/src/*"],
+      "@polingo/node": ["packages/node/src/index.ts"],
+      "@polingo/node/*": ["packages/node/src/*"],
       "@polingo/web": ["packages/web/src/index.ts"],
+      "@polingo/web/*": ["packages/web/src/*"],
       "@polingo/react": ["packages/react/src/index.ts"],
-      "@polingo/vue": ["packages/vue/src/index.ts"]
+      "@polingo/react/*": ["packages/react/src/*"],
+      "@polingo/vue": ["packages/vue/src/index.ts"],
+      "@polingo/vue/*": ["packages/vue/src/*"],
+      "@polingo/cli": ["packages/cli/src/index.ts"],
+      "@polingo/cli/*": ["packages/cli/src/*"]
     },
-    
-    // Interop
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    
-    // Output
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },

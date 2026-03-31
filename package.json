@@ -1,5 +1,6 @@
 {
   "name": "polingo",
+  "private": true,
   "version": "0.0.4",
   "type": "module",
   "description": "Modern i18n library using .po/.mo files",
@@ -11,12 +12,6 @@
   "bugs": {
     "url": "https://github.com/ragnarok22/polingo/issues"
   },
-  "bin": {
-    "polingo": "./packages/cli/dist/cli.js"
-  },
-  "files": [
-    "packages/cli/dist"
-  ],
   "scripts": {
     "build": "pnpm turbo run build",
     "dev": "pnpm turbo run dev",
@@ -31,6 +26,9 @@
     "format": "prettier --write \"packages/**/*.{ts,json,md}\" \"docs/**/*.md\"",
     "format:check": "prettier --check \"packages/**/*.{ts,json,md}\" \"docs/**/*.md\"",
     "typecheck": "pnpm turbo run typecheck",
+    "examples:sync": "node ./scripts/sync-examples.mjs sync",
+    "examples:check": "node ./scripts/sync-examples.mjs check",
+    "examples:smoke": "pnpm examples:check && pnpm --dir examples/express install --no-frozen-lockfile --prefer-offline && pnpm --dir examples/express build && pnpm --dir examples/react-vite install --no-frozen-lockfile --prefer-offline && pnpm --dir examples/react-vite build",
     "security": "pnpm audit --prod --audit-level=moderate && pnpm exec lockfile-lint --type pnpm --path pnpm-lock.yaml --validate-https",
     "clean": "pnpm -r exec rm -rf dist node_modules .turbo",
     "changeset": "changeset",
