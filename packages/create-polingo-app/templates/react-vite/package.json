@@ -12,18 +12,18 @@
     "validate": "pnpm exec polingo validate locales"
   },
   "dependencies": {
-    "@polingo/core": "^0.0.2",
-    "@polingo/react": "^0.0.2",
-    "@polingo/web": "^0.0.2",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@polingo/core": "^0.0.3",
+    "@polingo/react": "^0.0.3",
+    "@polingo/web": "^0.0.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@polingo/cli": "^0.0.2",
-    "@types/react": "^18.3.17",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.9.3",
-    "vite": "^6.0.11"
+    "@polingo/cli": "^0.0.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.3"
   }
 }

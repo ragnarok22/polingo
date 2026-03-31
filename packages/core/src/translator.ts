@@ -77,7 +77,8 @@ export class Translator {
           console.warn(`[Polingo] Failed to load catalog: ${key}`, error);
         }
         throw new Error(
-          `Failed to load catalog for locale "${locale}" and domain "${this.domain}": ${error instanceof Error ? error.message : String(error)}`
+          `Failed to load catalog for locale "${locale}" and domain "${this.domain}": ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error }
         );
       }
     }

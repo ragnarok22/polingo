@@ -24,7 +24,7 @@
     },
     "typecheck": {
       "dependsOn": ["build"],
-      "outputs": ["**/*.tsbuildinfo"],
+      "outputs": [],
       "inputs": ["src/**", "test/**", "tsconfig.json", "package.json"]
     },
     "dev": {
