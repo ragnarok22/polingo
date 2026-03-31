@@ -75,7 +75,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Cache .npmrc and pnpm store
@@ -117,7 +117,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Cache .npmrc and pnpm store
@@ -169,7 +169,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Cache .npmrc and pnpm store
@@ -225,17 +225,17 @@ jobs:
       matrix:
         include:
           # Minimum supported version
-          - node: 18
+          - node: 22
             os: ubuntu-latest
           # Primary version - test across all platforms
-          - node: 20
+          - node: 24
             os: ubuntu-latest
-          - node: 20
+          - node: 24
             os: windows-latest
-          - node: 20
+          - node: 24
             os: macos-latest
           # Latest version
-          - node: 22
+          - node: 25
             os: ubuntu-latest
 
     steps:
@@ -285,7 +285,7 @@ jobs:
         run: make test
 
       - name: Upload Vitest results to Codecov
-        if: runner.os == 'ubuntu-latest' && matrix.node == 20 && hashFiles('packages/**/test-report.junit.xml') != ''
+        if: runner.os == 'ubuntu-latest' && matrix.node == 24 && hashFiles('packages/**/test-report.junit.xml') != ''
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -310,7 +310,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Cache .npmrc and pnpm store
@@ -346,7 +346,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Cache .npmrc and pnpm store

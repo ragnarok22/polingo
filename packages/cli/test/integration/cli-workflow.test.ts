@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'fs';
+import { copyFileSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'fs';
 import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,6 +21,22 @@ const runCLI = (args: string, cwd: string = TEST_DIR): string => {
     if (error instanceof Error && 'stdout' in error && 'stderr' in error) {
       const err = error as { stdout: string; stderr: string };
       // Return both stdout and stderr combined
+      return err.stdout + err.stderr;
+    }
+    throw error;
+  }
+};
+
+const runCLIAtPath = (cliPath: string, args: string[], cwd: string = TEST_DIR): string => {
+  try {
+    return execSync(`node ${cliPath} ${args.join(' ')}`, {
+      cwd,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  } catch (error) {
+    if (error instanceof Error && 'stdout' in error && 'stderr' in error) {
+      const err = error as { stdout: string; stderr: string };
       return err.stdout + err.stderr;
     }
     throw error;
@@ -452,6 +468,17 @@ msgstr "Configuración-${locale}"
   });
 
   describe('Edge Cases', () => {
+    it('should execute the CLI when the script path contains spaces', () => {
+      const cliDirWithSpaces = join(TEST_DIR, 'cli path with spaces');
+      const cliPathWithSpaces = join(cliDirWithSpaces, 'cli.js');
+
+      mkdirSync(cliDirWithSpaces, { recursive: true });
+      copyFileSync(CLI_PATH, cliPathWithSpaces);
+
+      const output = runCLIAtPath(cliPathWithSpaces, ['--help']);
+      expect(output).toContain('Usage');
+    });
+
     it('should handle empty source directory', () => {
       const output = runCLI('extract src --output locales/messages.pot --keep-template');
       expect(output).toBeDefined();

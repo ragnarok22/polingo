@@ -6,7 +6,7 @@ outline: deep
 
 ## What Node.js and browser versions are supported?
 
-Polingo targets Node.js 18+ and modern browsers with ES2020 features. The web package relies on the Fetch API and `localStorage`; provide polyfills if you support legacy environments.
+Polingo targets Node.js 22+ and modern browsers with ES2020 features. The web package relies on the Fetch API and `localStorage`; provide polyfills if you support legacy environments.
 
 ## Where should translation catalogs live?
 

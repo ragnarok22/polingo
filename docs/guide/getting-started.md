@@ -8,7 +8,7 @@ Polingo brings industry-standard gettext catalogs to modern JavaScript runtimes.
 
 ## Prerequisites
 
-- Node.js 18 or newer
+- Node.js 22 or newer
 - A package manager (`pnpm`, `npm`, or `yarn`)
 - Translation catalogs stored as `.po` or `.mo` files (you can add them later)
 

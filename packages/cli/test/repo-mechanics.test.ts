@@ -9,6 +9,7 @@ interface PackageManifest {
   private?: boolean;
   bin?: unknown;
   files?: string[];
+  engines?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
@@ -138,6 +139,22 @@ function hasContentsPermission(workflowContents: string): boolean {
   return /(?:^|\s|[{,])contents:\s*(?:read|write)\b/u.test(permissionsBlock);
 }
 
+function readCiMatrixEntries(workflowContents: string): Array<{ node: number; os: string }> {
+  return Array.from(
+    workflowContents.matchAll(/-\s+node:\s+(\d+)\r?\n\s+os:\s+([^\n]+)/gu),
+    ([, node, os]) => ({
+      node: Number(node),
+      os: os.trim(),
+    })
+  );
+}
+
+function readPinnedNodeVersions(workflowContents: string): number[] {
+  return Array.from(workflowContents.matchAll(/node-version:\s+(\d+)/gu), ([, version]) =>
+    Number(version)
+  );
+}
+
 describe('repo mechanics', () => {
   it('keeps the root manifest private and non-publishable', () => {
     const manifest = readJsonFile<PackageManifest>(path.join(repoRoot, 'package.json'));
@@ -261,6 +278,37 @@ describe('repo mechanics', () => {
         hasContentsPermission(workflowContents),
         `${path.relative(repoRoot, workflowPath)} must declare an explicit top-level permissions block that includes a contents scope.`
       ).toBe(true);
+    }
+  });
+
+  it('keeps supported Node.js versions aligned across engines and workflows', () => {
+    const supportedNodeVersions = [22, 24, 25];
+    const rootManifest = readJsonFile<PackageManifest>(path.join(repoRoot, 'package.json'));
+    const ciWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'ci.yml');
+    const workflowsDirectory = path.join(repoRoot, '.github', 'workflows');
+    const ciWorkflowContents = readTextFile(ciWorkflowPath);
+    const workflowFiles = listFiles(workflowsDirectory).filter((workflowPath) =>
+      ['.yaml', '.yml'].includes(path.extname(workflowPath))
+    );
+
+    expect(rootManifest.engines?.node).toBe('>=22.0.0');
+    expect(readCiMatrixEntries(ciWorkflowContents)).toEqual([
+      { node: 22, os: 'ubuntu-latest' },
+      { node: 24, os: 'ubuntu-latest' },
+      { node: 24, os: 'windows-latest' },
+      { node: 24, os: 'macos-latest' },
+      { node: 25, os: 'ubuntu-latest' },
+    ]);
+
+    for (const workflowPath of workflowFiles) {
+      const nodeVersions = readPinnedNodeVersions(readTextFile(workflowPath));
+
+      for (const nodeVersion of nodeVersions) {
+        expect(
+          supportedNodeVersions,
+          `${path.relative(repoRoot, workflowPath)} pins unsupported Node.js ${nodeVersion}.`
+        ).toContain(nodeVersion);
+      }
     }
   });
 });

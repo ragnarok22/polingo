@@ -37,14 +37,14 @@ Flow:
 **Impact**: Faster feedback, lower resource usage
 
 Before (5 jobs):
-- Node 18 (Ubuntu)
-- Node 20 (Ubuntu, Windows, macOS)
 - Node 22 (Ubuntu)
+- Node 24 (Ubuntu, Windows, macOS)
+- Node 25 (Ubuntu)
 
 After (5 jobs, but more focused):
-- Node 18 (Ubuntu) - minimum supported version
-- Node 20 (Ubuntu, Windows, macOS) - primary version, all platforms
-- Node 22 (Ubuntu) - latest version
+- Node 22 (Ubuntu) - minimum supported version
+- Node 24 (Ubuntu, Windows, macOS) - primary version, all platforms
+- Node 25 (Ubuntu) - latest version
 
 ### 4. Parallel Job Execution
 

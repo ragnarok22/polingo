@@ -411,7 +411,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 24
       - run: npm install
       - run: npm install -g @polingo/cli
       - run: polingo validate locales --strict
