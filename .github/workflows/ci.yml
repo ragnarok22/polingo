@@ -261,6 +261,36 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: packages
+
+      - name: Cache Vitest output
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.vitest
+            node_modules/.cache/vitest
+            .vitest
+          key: vitest-${{ runner.os }}-${{ matrix.node }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            vitest-${{ runner.os }}-${{ matrix.node }}-
+
+      - name: Run tests
+        run: make test
+
+      - name: Upload Vitest results to Codecov
+        if: runner.os == 'ubuntu-latest' && matrix.node == 20 && hashFiles('packages/**/test-report.junit.xml') != ''
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: packages/**/test-report.junit.xml
+          flags: vitest
+          fail_ci_if_error: true
+          verbose: true
+
   examples:
     name: Examples Smoke
     runs-on: ubuntu-latest
@@ -295,36 +325,6 @@ jobs:
 
       - name: Run examples smoke checks
         run: pnpm examples:smoke
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
-          path: packages
-
-      - name: Cache Vitest output
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules/.vitest
-            node_modules/.cache/vitest
-            .vitest
-          key: vitest-${{ runner.os }}-${{ matrix.node }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            vitest-${{ runner.os }}-${{ matrix.node }}-
-
-      - name: Run tests
-        run: make test
-
-      - name: Upload Vitest results to Codecov
-        if: runner.os == 'ubuntu-latest' && matrix.node == 20 && hashFiles('packages/**/test-report.junit.xml') != ''
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: packages/**/test-report.junit.xml
-          flags: vitest
-          fail_ci_if_error: true
-          verbose: true
 
   # Coverage (only on main platform and Node version)
   coverage:
