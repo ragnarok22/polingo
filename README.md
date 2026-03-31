@@ -12,39 +12,45 @@
 [![Downloads @polingo/cli](https://img.shields.io/npm/dm/@polingo/cli?label=%40polingo%2Fcli)](https://www.npmjs.com/package/@polingo/cli)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ragnarok22/polingo)
 
-Modern internationalization (i18n) library using industry-standard `.po` and `.mo` files for JavaScript/TypeScript projects.
+Modern internationalization (i18n) for JavaScript and TypeScript using standard gettext catalogs. Polingo gives you one translation model across Node.js, browsers, React, Vue, and CLI-based catalog workflows.
 
 > [!CAUTION]
-> **Alpha Notice:** Polingo is currently in an alpha state. Breaking changes are becoming less common, but anything and everything may still change.
+> **Alpha Notice:** Polingo is still alpha software. The public API is settling down, but breaking changes can still happen.
 
-## Features
+## Why Polingo
 
-- **Standard Gettext Support**: Use `.po` and `.mo` files, the industry standard for translations
-- **Automatic Catalog Detection**: Seamlessly load either `.po` or `.mo` catalogs from disk
-- **Environment-Agnostic Core**: Universal translation engine that works anywhere
-- **Node.js Integration**: Filesystem loader with optional hot-reload via chokidar
-- **Browser Ready**: Fetch loader backed by localStorage caching
-- **Pluralization**: Full support for plural forms across different languages
-- **Context Support**: Disambiguate identical strings with different meanings
-- **Variable Interpolation**: Dynamic content with placeholder replacement
-- **Middleware Ready**: Express and Fastify helpers with locale detection hooks
-- **TypeScript First**: Strict types, excellent IntelliSense
-- **Flexible Caching**: Choose in-memory, TTL, or no caching depending on your needs
+- Gettext-native: work with `.po` and `.mo` files instead of inventing a custom catalog format.
+- Shared core runtime: one `Translator` model across server and client environments.
+- Synchronous translation APIs after preload: load catalogs once, then call `t()`, `tp()`, `tn()`, or `tnp()` anywhere.
+- First-class pluralization, context-aware translations, and variable interpolation.
+- Node.js helpers for filesystem loading, middleware, and hot reload during development.
+- Browser helpers for fetch-based loading and localStorage-backed caching.
+- CLI tooling for initialization, extraction, compilation, and validation.
+- TypeScript-first packages with strict typing throughout.
 
-## Packages
+## Package Guide
 
-Polingo is organized as a monorepo with the following packages:
+| Package | Use it for |
+| --- | --- |
+| [`@polingo/core`](https://github.com/ragnarok22/polingo/tree/main/packages/core) | The environment-agnostic translation engine, cache types, interpolation, and plural logic |
+| [`@polingo/node`](https://github.com/ragnarok22/polingo/tree/main/packages/node) | Filesystem loading, middleware, and translation watching for Node.js |
+| [`@polingo/web`](https://github.com/ragnarok22/polingo/tree/main/packages/web) | Fetch-based loading and browser caching |
+| [`@polingo/react`](https://github.com/ragnarok22/polingo/tree/main/packages/react) | React provider, hooks, and `Trans` component |
+| [`@polingo/vue`](https://github.com/ragnarok22/polingo/tree/main/packages/vue) | Vue provider and composables |
+| [`@polingo/cli`](https://github.com/ragnarok22/polingo/tree/main/packages/cli) | `init`, `extract`, `compile`, and `validate` commands |
+| [`create-polingo-app`](https://github.com/ragnarok22/polingo/tree/main/packages/create-polingo-app) | Interactive starter scaffolding |
 
-- **[@polingo/core](https://github.com/ragnarok22/polingo/tree/main/packages/core)**: Environment-agnostic translation engine
-- **[@polingo/node](https://github.com/ragnarok22/polingo/tree/main/packages/node)**: Node.js loader with filesystem support and middleware
-- **[@polingo/web](https://github.com/ragnarok22/polingo/tree/main/packages/web)**: Browser adapter using fetch + localStorage caching
-- **[@polingo/react](https://github.com/ragnarok22/polingo/tree/main/packages/react)**: React bindings with hooks, context provider, and Trans component
-- **[@polingo/cli](https://github.com/ragnarok22/polingo/tree/main/packages/cli)**: Command-line tools for extraction, compilation, and validation
-- **[create-polingo-app](https://github.com/ragnarok22/polingo/tree/main/packages/create-polingo-app)**: Interactive scaffolding for example applications
+## How It Works
+
+1. A loader reads a catalog from disk or over the network.
+2. The catalog is normalized into the shared `TranslationCatalog` structure.
+3. A cache stores parsed catalogs for reuse.
+4. `Translator` handles locale selection, fallback lookup, interpolation, and plural rules.
+5. Platform adapters such as `@polingo/node`, `@polingo/web`, `@polingo/react`, and `@polingo/vue` wrap that core runtime for each environment.
 
 ## Coverage
 
-Per-package Codecov coverage (updated on every successful `make coverage` run in CI):
+Per-package Codecov coverage is published from CI:
 
 | Package | Coverage |
 | --- | --- |
@@ -56,155 +62,90 @@ Per-package Codecov coverage (updated on every successful `make coverage` run in
 
 ## Installation
 
-Choose the package that fits your environment:
+Choose the package set that matches your environment. Examples below use `pnpm`; swap for `npm` or `yarn` if preferred.
 
-**For Node.js applications:**
+### Node.js
+
 ```bash
-npm install @polingo/node
-# or
-pnpm add @polingo/node
-# or
-yarn add @polingo/node
+pnpm add @polingo/core @polingo/node
 ```
 
-**For browser/React applications:**
+### Browser
+
 ```bash
-npm install @polingo/core @polingo/web @polingo/react
-# or
+pnpm add @polingo/core @polingo/web
+```
+
+### React
+
+```bash
 pnpm add @polingo/core @polingo/web @polingo/react
 ```
 
-**For CLI tooling (development dependency):**
+### Vue
+
 ```bash
-npm install -D @polingo/cli
-# or
+pnpm add @polingo/core @polingo/web @polingo/vue
+```
+
+### CLI
+
+```bash
 pnpm add -D @polingo/cli
 ```
 
-**For environment-agnostic usage:**
-```bash
-npm install @polingo/core
-```
+## Starter Templates
 
-## Example Templates
-
-Scaffold a working starter directly from the `examples/` catalog using the interactive creator:
+Scaffold a starter project from the maintained templates:
 
 ```bash
 pnpm create polingo-app
 ```
 
-You'll be prompted to pick one of the maintained examples (React + Vite, Express, etc.) and a destination folder. The generator copies the selected template, refreshes the package name, and leaves you ready to install dependencies and start coding.
+Current examples include React + Vite and Express.
 
 ## Quick Start
 
-### Basic Usage (Node.js)
+### Node.js
 
-```typescript
+```ts
 import { createPolingo } from '@polingo/node';
 
 const polingo = await createPolingo({
   locale: 'es',
-  locales: ['es', 'en', 'fr'],
+  locales: ['es', 'en'],
   directory: './locales',
   fallback: 'en',
 });
 
-console.log(polingo.t('Hello')); // "Hola"
-console.log(polingo.t('Hello, {name}!', { name: 'Juan' })); // "¡Hola, Juan!"
-
-// Pluralization
-console.log(polingo.tn('{n} item', '{n} items', 1, { n: 1 })); // "1 artículo"
-console.log(polingo.tn('{n} item', '{n} items', 5, { n: 5 })); // "5 artículos"
+console.log(polingo.t('Hello'));
+console.log(polingo.t('Hello, {name}!', { name: 'Juan' }));
+console.log(polingo.tn('{n} item', '{n} items', 3, { n: 3 }));
 ```
 
-### Basic Usage (Browser)
+### Browser
 
-```typescript
+```ts
 import { createPolingo } from '@polingo/web';
 
 const polingo = await createPolingo({
   locale: 'es',
   locales: ['es', 'en'],
-  // Catalogs are served from /i18n by default; point baseUrl elsewhere if needed.
   loader: { baseUrl: '/i18n' },
 });
 
 document.querySelector('#greeting')!.textContent = polingo.t('Hello');
 ```
 
-### Express Integration
+If you are actively editing translations in development, prefer `cache: false` or set `cacheOptions.cacheKey` so stale localStorage entries do not hide changes.
 
-```typescript
-import express from 'express';
-import { polingoMiddleware } from '@polingo/node';
+### React
 
-const app = express();
+```tsx
+import { PolingoProvider, Trans, useTranslation } from '@polingo/react';
 
-app.use(
-  polingoMiddleware({
-    directory: './locales',
-    locales: ['es', 'en', 'fr'],
-    fallback: 'en',
-  })
-);
-
-app.get('/', (req, res) => {
-  const greeting = req.polingo.t('Welcome, {name}!', { name: 'User' });
-  res.send(greeting);
-});
-
-app.listen(3000);
-```
-
-### Fastify Integration
-
-```typescript
-import fastify from 'fastify';
-import { polingoMiddleware } from '@polingo/node';
-
-const app = fastify();
-
-app.addHook(
-  'onRequest',
-  polingoMiddleware({
-    directory: './locales',
-    locales: ['es', 'en', 'fr'],
-    fallback: 'en',
-  })
-);
-
-app.get('/', async (request, reply) => {
-  return request.polingo.t('Welcome');
-});
-
-app.listen({ port: 3000 });
-```
-
-### React Integration
-
-```typescript
-import { PolingoProvider, useTranslation, Trans } from '@polingo/react';
-import { createPolingo } from '@polingo/web';
-
-function App() {
-  return (
-    <PolingoProvider
-      create={() =>
-        createPolingo({
-          locale: 'en',
-          locales: ['en', 'es', 'fr'],
-          loader: { baseUrl: '/i18n' },
-        })
-      }
-    >
-      <MyComponent />
-    </PolingoProvider>
-  );
-}
-
-function MyComponent() {
-  const { t, tn, setLocale } = useTranslation();
+function AppContent() {
+  const { t, tn, locale, setLocale } = useTranslation();
 
   return (
     <div>
@@ -214,174 +155,117 @@ function MyComponent() {
         message="Read the <0>documentation</0> to learn more"
         components={[<a href="/docs" />]}
       />
-      <button onClick={() => setLocale('es')}>Español</button>
+      <button type="button" onClick={() => setLocale(locale === 'en' ? 'es' : 'en')}>
+        Switch locale
+      </button>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <PolingoProvider
+      create={{
+        locale: 'en',
+        locales: ['en', 'es'],
+        loader: { baseUrl: '/i18n' },
+      }}
+    >
+      <AppContent />
+    </PolingoProvider>
   );
 }
 ```
 
-For a complete React example, see the [React + Vite example](https://github.com/ragnarok22/polingo/tree/main/examples/react-vite).
+Vue support follows the same runtime model through `@polingo/vue` provider and composables. See the package README for framework-specific usage details.
 
-### CLI Workflow
+## CLI Workflow
 
-Use the CLI to extract, compile, and validate translations:
+Use the CLI to bootstrap a project and manage catalogs:
 
 ```bash
-# Install CLI tools
-pnpm add -D @polingo/cli
+# Initialize scripts, dependencies, and locale folders
+pnpm dlx @polingo/cli@latest init --env react --languages en,es
 
-# Extract translatable strings from source code (updates ./locales)
-# Fuzzy matching is enabled by default to automatically detect similar strings
-pnpm polingo extract
+# Extract messages from source files and sync locale catalogs
+pnpm polingo extract src --locales locales --languages en,es --default-locale en
 
-# Extract with fuzzy matching disabled
-pnpm polingo extract --no-fuzzy
-
-# Extract with custom fuzzy threshold (0-1, default: 0.6)
-pnpm polingo extract --fuzzy-threshold 0.8
-
-# After translating .po files, compile to runtime format
+# Compile catalogs for browser usage
 pnpm polingo compile locales -o public/i18n --format json
 
-# Validate translations before deployment
+# Or compile for Node.js usage
+pnpm polingo compile locales -o dist/locales --format mo
+
+# Validate catalogs in CI
 pnpm polingo validate locales --strict
 ```
 
-**Fuzzy Matching:** When enabled (default), the extract command automatically detects similar strings between catalog updates and marks them with the `#, fuzzy` flag, similar to `msgmerge` behavior. This helps translators identify strings that may need review when source text changes slightly. Obsolete entries (no longer in source) are marked with `#~` for reference.
+The extractor recognizes `t()`, `tp()`, `tn()`, `tnp()`, and React `Trans` usage. Fuzzy matching is enabled by default so near-renamed strings can be carried forward and marked for translator review.
 
-See the [@polingo/cli documentation](https://github.com/ragnarok22/polingo/tree/main/packages/cli) for detailed command reference.
+## Locale Layout
 
-### Hot Reload During Development
+Source catalogs usually live in a locale-first directory structure:
 
-Enable file watching so catalogs reload automatically when your `.po`/`.mo` files change:
-
-```typescript
-const polingo = await createPolingo({
-  locale: 'es',
-  locales: ['es', 'en'],
-  directory: './locales',
-  watch: process.env.NODE_ENV === 'development',
-  debug: true,
-});
-
-// Later, when shutting down:
-await polingo.stopWatching?.();
-```
-
-## Directory Structure
-
-Your translation files should be organized by locale:
-
-```
+```text
 locales/
-├── es/
-│   └── messages.po
 ├── en/
+│   └── messages.po
+├── es/
 │   └── messages.po
 └── fr/
     └── messages.po
 ```
 
-## Translation Methods
+For Node.js, `@polingo/node` also supports gettext-style `LC_MESSAGES` layouts and prefers `.po` files over `.mo` when both exist for the same locale and domain.
 
-- `t(msgid, vars?)` - Translate a message
-- `tp(context, msgid, vars?)` - Translate with context
-- `tn(msgid, msgidPlural, count, vars?)` - Translate with pluralization
-- `tnp(context, msgid, msgidPlural, count, vars?)` - Translate with context and pluralization
+## Translation APIs
 
-## Configuration
+- `t(msgid, vars?)` translates a basic message.
+- `tp(context, msgid, vars?)` translates a message with context.
+- `tn(msgid, msgidPlural, count, vars?)` selects the correct plural form.
+- `tnp(context, msgid, msgidPlural, count, vars?)` combines context and plural handling.
 
-### `createPolingo(options)`
+## Repository Development
 
-```typescript
-interface CreatePolingoOptions {
-  locale: string;        // Initial locale (e.g. 'en')
-  locales: string[];     // Locales to preload during startup
-  directory: string;     // Path to the locales folder
-  fallback?: string;     // Fallback locale when a key is missing (default: 'en')
-  domain?: string;       // Translation domain filename prefix (default: 'messages')
-  cache?: boolean;       // Use in-memory caching (default: true)
-  watch?: boolean;       // Watch .po/.mo files and reload on change (default: false)
-  debug?: boolean;       // Log loading and cache activity (default: false)
-}
-```
-
-`NodeLoader` automatically looks for both `<locale>/<domain>.po` and `<locale>/<domain>.mo`, preferring `.po` when both exist.
-
-### `polingoMiddleware(options)`
-
-The middleware shares the same options (minus `locale`) plus:
-
-- `localeExtractor(req)` – customize how the locale is detected (defaults to `Accept-Language` or `?locale=` query parameter).
-- `perLocale` – set to `true` to create dedicated translator instances per locale instead of reusing one shared translator.
-
-## Development
-
-This project uses `pnpm` workspaces and includes a Makefile for common tasks. Recommended workflow:
+For work inside this monorepo:
 
 ```bash
-# Install dependencies without touching the lockfile
 pnpm install --frozen-lockfile
-
-# Type safety and linting
+pnpm build
 pnpm typecheck
 pnpm lint
 pnpm format:check
-
-# Unit tests
-pnpm test
-```
-
-Or use the Makefile shortcuts:
-
-```bash
-# Install dependencies
-make install
-
-# Build all packages
-make build
-
-# Run tests
 make test
-
-# Run tests with coverage
 make coverage
-
-# Run linter
-make lint
-
-# Clean build artifacts
-make clean
 ```
 
-## Requirements
+Requirements:
 
-- Node.js >= 18.0.0
-- pnpm >= 8.0.0 (developed with pnpm 10.x)
+- Node.js `>= 18.0.0`
+- `pnpm >= 8.0.0`
 
 ## Examples
 
-Check out our working examples to see Polingo in action:
-
-- **[React + Vite Example](https://github.com/ragnarok22/polingo/tree/main/examples/react-vite)**: Full-featured React app demonstrating hooks, Trans component, locale switching, and complete translation workflow
+- [React + Vite example](https://github.com/ragnarok22/polingo/tree/main/examples/react-vite)
+- [Express example](https://github.com/ragnarok22/polingo/tree/main/examples/express)
 
 ## Documentation
 
-For detailed documentation, see the individual package READMEs:
-
-- [@polingo/core documentation](https://github.com/ragnarok22/polingo/tree/main/packages/core)
-- [@polingo/node documentation](https://github.com/ragnarok22/polingo/tree/main/packages/node)
-- [@polingo/web documentation](https://github.com/ragnarok22/polingo/tree/main/packages/web)
-- [@polingo/react documentation](https://github.com/ragnarok22/polingo/tree/main/packages/react)
-- [@polingo/cli documentation](https://github.com/ragnarok22/polingo/tree/main/packages/cli)
+- [@polingo/core](https://github.com/ragnarok22/polingo/tree/main/packages/core)
+- [@polingo/node](https://github.com/ragnarok22/polingo/tree/main/packages/node)
+- [@polingo/web](https://github.com/ragnarok22/polingo/tree/main/packages/web)
+- [@polingo/react](https://github.com/ragnarok22/polingo/tree/main/packages/react)
+- [@polingo/vue](https://github.com/ragnarok22/polingo/tree/main/packages/vue)
+- [@polingo/cli](https://github.com/ragnarok22/polingo/tree/main/packages/cli)
+- [create-polingo-app](https://github.com/ragnarok22/polingo/tree/main/packages/create-polingo-app)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Pull requests are welcome. For repository-specific workflow and development guidance, see [`AGENTS.md`](./AGENTS.md).
 
 ## Security
 
-If you discover a security vulnerability, please follow our [security policy](https://github.com/ragnarok22/polingo/blob/main/.github/SECURITY.md) for responsible disclosure guidelines.
+If you discover a security issue, follow the [security policy](https://github.com/ragnarok22/polingo/blob/main/.github/SECURITY.md).
 
 ## License
 
