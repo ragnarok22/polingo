@@ -54,6 +54,7 @@ Per-package Codecov coverage is published from CI:
 
 | Package | Coverage |
 | --- | --- |
+| @polingo/cli | [![Coverage @polingo/cli](https://codecov.io/gh/ragnarok22/polingo/branch/main/graph/badge.svg?token=3QVHN9LWNN&flag=cli)](https://app.codecov.io/gh/ragnarok22/polingo/tree/main/packages/cli?flags=cli) |
 | @polingo/core | [![Coverage @polingo/core](https://codecov.io/gh/ragnarok22/polingo/branch/main/graph/badge.svg?token=3QVHN9LWNN&flag=core)](https://app.codecov.io/gh/ragnarok22/polingo/tree/main/packages/core?flags=core) |
 | @polingo/node | [![Coverage @polingo/node](https://codecov.io/gh/ragnarok22/polingo/branch/main/graph/badge.svg?token=3QVHN9LWNN&flag=node)](https://app.codecov.io/gh/ragnarok22/polingo/tree/main/packages/node?flags=node) |
 | @polingo/react | [![Coverage @polingo/react](https://codecov.io/gh/ragnarok22/polingo/branch/main/graph/badge.svg?token=3QVHN9LWNN&flag=react)](https://app.codecov.io/gh/ragnarok22/polingo/tree/main/packages/react?flags=react) |

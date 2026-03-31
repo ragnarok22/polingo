@@ -17,6 +17,32 @@ coverage:
         threshold: 1%
         if_ci_failed: error
 
+flags:
+  cli:
+    paths:
+      - packages/cli/src/
+    carryforward: true
+  core:
+    paths:
+      - packages/core/src/
+    carryforward: true
+  node:
+    paths:
+      - packages/node/src/
+    carryforward: true
+  react:
+    paths:
+      - packages/react/src/
+    carryforward: true
+  vue:
+    paths:
+      - packages/vue/src/
+    carryforward: true
+  web:
+    paths:
+      - packages/web/src/
+    carryforward: true
+
 comment:
   layout: "reach,diff,flags,tree"
   behavior: default
