@@ -30,15 +30,15 @@ Modern internationalization (i18n) for JavaScript and TypeScript using standard 
 
 ## Package Guide
 
-| Package | Use it for |
-| --- | --- |
-| [`@polingo/core`](https://github.com/ragnarok22/polingo/tree/main/packages/core) | The environment-agnostic translation engine, cache types, interpolation, and plural logic |
-| [`@polingo/node`](https://github.com/ragnarok22/polingo/tree/main/packages/node) | Filesystem loading, middleware, and translation watching for Node.js |
-| [`@polingo/web`](https://github.com/ragnarok22/polingo/tree/main/packages/web) | Fetch-based loading and browser caching |
-| [`@polingo/react`](https://github.com/ragnarok22/polingo/tree/main/packages/react) | React provider, hooks, and `Trans` component |
-| [`@polingo/vue`](https://github.com/ragnarok22/polingo/tree/main/packages/vue) | Vue provider and composables |
-| [`@polingo/cli`](https://github.com/ragnarok22/polingo/tree/main/packages/cli) | `init`, `extract`, `compile`, and `validate` commands |
-| [`create-polingo-app`](https://github.com/ragnarok22/polingo/tree/main/packages/create-polingo-app) | Interactive starter scaffolding |
+| Package | Version | Use it for |
+| --- | --- | --- |
+| [`@polingo/core`](https://github.com/ragnarok22/polingo/tree/main/packages/core) | ![NPM Version](https://img.shields.io/npm/v/%40polingo%2Fcore) | The environment-agnostic translation engine, cache types, interpolation, and plural logic |
+| [`@polingo/node`](https://github.com/ragnarok22/polingo/tree/main/packages/node) | ![NPM Version](https://img.shields.io/npm/v/%40polingo%2Fnode) | Filesystem loading, middleware, and translation watching for Node.js |
+| [`@polingo/web`](https://github.com/ragnarok22/polingo/tree/main/packages/web) | ![NPM Version](https://img.shields.io/npm/v/%40polingo%2Fweb) | Fetch-based loading and browser caching |
+| [`@polingo/react`](https://github.com/ragnarok22/polingo/tree/main/packages/react) | ![NPM Version](https://img.shields.io/npm/v/%40polingo%2Freact) | React provider, hooks, and `Trans` component |
+| [`@polingo/vue`](https://github.com/ragnarok22/polingo/tree/main/packages/vue) | ![NPM Version](https://img.shields.io/npm/v/%40polingo%2Fvue) | Vue provider and composables |
+| [`@polingo/cli`](https://github.com/ragnarok22/polingo/tree/main/packages/cli) | ![NPM Version](https://img.shields.io/npm/v/%40polingo%2Fcli) | `init`, `extract`, `compile`, and `validate` commands |
+| [`create-polingo-app`](https://github.com/ragnarok22/polingo/tree/main/packages/create-polingo-app) | ![NPM Version](https://img.shields.io/npm/v/create-polingo-app) | Interactive starter scaffolding |
 
 ## How It Works
 
