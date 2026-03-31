@@ -453,16 +453,19 @@ msgstr "Hola Nuevo"
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       fakeWatcher.emit('change', join(TEST_DIR, 'es', 'messages.po'));
-      await flushAsync();
+
+      // The reload is async; under coverage instrumentation it can take
+      // longer than a single flushAsync(), so poll until the error appears.
+      await expectEventually(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          expect.stringContaining('[Polingo] Failed to reload translations for locale "es":'),
+          expect.any(Error)
+        );
+      });
 
       // Should fall back to previous translation or handle error gracefully
-      // The exact behavior depends on implementation, but shouldn't crash
       const result = polingo.t('Hello');
       expect(typeof result).toBe('string');
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Polingo] Failed to reload translations for locale "es":'),
-        expect.any(Error)
-      );
       consoleErrorSpy.mockRestore();
     } finally {
       if (polingo?.stopWatching) {
