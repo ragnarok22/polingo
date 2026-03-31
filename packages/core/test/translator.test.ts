@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { format } from 'node:util';
 import { Translator } from '../src/translator';
 import { NoCache, MemoryCache } from '../src/cache';
 import type { TranslationLoader, TranslationCatalog } from '../src/types';
@@ -298,6 +299,26 @@ describe('Translator', () => {
   });
 
   describe('debug mode', () => {
+    it('should not let user-controlled locale values alter failure log formatting', async () => {
+      let renderedWarning = '';
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
+        renderedWarning = format(...args);
+      });
+
+      const debugTranslator = new Translator(loader, new NoCache(), {
+        locale: '%d',
+        fallback: 'en',
+        debug: true,
+      });
+
+      await expect(debugTranslator.load('%d')).rejects.toThrow('Failed to load catalog');
+
+      expect(renderedWarning).toContain('%d:messages');
+      expect(renderedWarning).not.toContain('NaN:messages');
+
+      consoleSpy.mockRestore();
+    });
+
     it('should log warnings when translation not found', async () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

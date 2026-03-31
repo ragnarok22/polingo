@@ -74,7 +74,7 @@ export class Translator {
         }
       } catch (error) {
         if (this.debug) {
-          console.warn(`[Polingo] Failed to load catalog: ${key}`, error);
+          console.warn('[Polingo] Failed to load catalog: %s', key, error);
         }
         const wrappedError = new Error(
           `Failed to load catalog for locale "${locale}" and domain "${this.domain}": ${error instanceof Error ? error.message : String(error)}`
