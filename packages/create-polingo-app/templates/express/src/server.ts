@@ -45,7 +45,8 @@ app.get('/', (req: Request, res: Response) => {
 
 app.get('/greeting/:name', (req: Request, res: Response) => {
   const translator = getTranslator(req);
-  const name = req.params.name ?? 'friend';
+  const raw = req.params.name;
+  const name = (Array.isArray(raw) ? raw[0] : raw) ?? 'friend';
   const greeting = translator.t('Hello {name}!', { name });
 
   res.json({
