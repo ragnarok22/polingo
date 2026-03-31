@@ -76,10 +76,11 @@ export class Translator {
         if (this.debug) {
           console.warn(`[Polingo] Failed to load catalog: ${key}`, error);
         }
-        throw new Error(
-          `Failed to load catalog for locale "${locale}" and domain "${this.domain}": ${error instanceof Error ? error.message : String(error)}`,
-          { cause: error }
-        );
+        const wrappedError = new Error(
+          `Failed to load catalog for locale "${locale}" and domain "${this.domain}": ${error instanceof Error ? error.message : String(error)}`
+        ) as Error & { cause?: unknown };
+        wrappedError.cause = error;
+        throw wrappedError;
       }
     }
   }
