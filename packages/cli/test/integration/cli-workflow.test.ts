@@ -2,12 +2,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import {
-  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { execFileSync } from 'child_process';
@@ -74,7 +74,7 @@ describe('CLI End-to-End Workflow Integration Tests', () => {
     it('should extract translations from source files', () => {
       // Create source files with translation calls
       writeFileSync(
-        join(TEST_DIR, 'src', 'app.ts'),
+        join(testDir, 'src', 'app.ts'),
         `
 import { t, tp, tn, tnp } from '@polingo/core';
 
@@ -87,7 +87,7 @@ console.log(tnp('email', '{n} message', '{n} messages', count));
       );
 
       writeFileSync(
-        join(TEST_DIR, 'src', 'components.tsx'),
+        join(testDir, 'src', 'components.tsx'),
         `
 export const Component = () => {
   const greeting = t('Good morning');
@@ -109,7 +109,7 @@ export const Component = () => {
       expect(output).toContain('Extracted');
 
       // Check that .pot file was created
-      const potPath = join(TEST_DIR, 'locales', 'messages.pot');
+      const potPath = join(testDir, 'locales', 'messages.pot');
       expect(existsSync(potPath)).toBe(true);
 
       const potContent = readFileSync(potPath, 'utf-8');
@@ -131,10 +131,10 @@ export const Component = () => {
     });
 
     it('should handle nested directories', () => {
-      mkdirSync(join(TEST_DIR, 'src', 'features'), { recursive: true });
+      mkdirSync(join(testDir, 'src', 'features'), { recursive: true });
 
       writeFileSync(
-        join(TEST_DIR, 'src', 'features', 'auth.ts'),
+        join(testDir, 'src', 'features', 'auth.ts'),
         `
 const messages = {
   login: t('Login'),
@@ -153,7 +153,7 @@ const messages = {
       ]);
       expect(output).toContain('Extracted');
 
-      const potContent = readFileSync(join(TEST_DIR, 'locales', 'messages.pot'), 'utf-8');
+      const potContent = readFileSync(join(testDir, 'locales', 'messages.pot'), 'utf-8');
       expect(potContent).toContain('msgid "Login"');
       expect(potContent).toContain('msgid "Logout"');
       expect(potContent).toContain('msgid "Register"');
@@ -161,7 +161,7 @@ const messages = {
 
     it('should deduplicate identical translations', () => {
       writeFileSync(
-        join(TEST_DIR, 'src', 'file1.ts'),
+        join(testDir, 'src', 'file1.ts'),
         `
 console.log(t('Hello'));
 console.log(t('Hello'));
@@ -169,7 +169,7 @@ console.log(t('Hello'));
       );
 
       writeFileSync(
-        join(TEST_DIR, 'src', 'file2.ts'),
+        join(testDir, 'src', 'file2.ts'),
         `
 console.log(t('Hello'));
 `
@@ -177,7 +177,7 @@ console.log(t('Hello'));
 
       runCLI(['extract', 'src', '--output', 'locales/messages.pot', '--keep-template']);
 
-      const potContent = readFileSync(join(TEST_DIR, 'locales', 'messages.pot'), 'utf-8');
+      const potContent = readFileSync(join(testDir, 'locales', 'messages.pot'), 'utf-8');
 
       // Count occurrences of "msgid \"Hello\""
       const matches = potContent.match(/msgid "Hello"/g);
@@ -186,9 +186,9 @@ console.log(t('Hello'));
     });
 
     it('should remove the POT template after syncing catalogs by default', () => {
-      mkdirSync(join(TEST_DIR, 'locales', 'en'), { recursive: true });
+      mkdirSync(join(testDir, 'locales', 'en'), { recursive: true });
       writeFileSync(
-        join(TEST_DIR, 'src', 'cleanup.ts'),
+        join(testDir, 'src', 'cleanup.ts'),
         `
 console.log(t('Clean me'));
 `
@@ -197,19 +197,19 @@ console.log(t('Clean me'));
       const output = runCLI(['extract', 'src', '--output', 'locales/messages.pot']);
       expect(output).toContain('template removed');
 
-      expect(existsSync(join(TEST_DIR, 'locales', 'messages.pot'))).toBe(false);
-      expect(existsSync(join(TEST_DIR, 'locales', 'en', 'messages.po'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'messages.pot'))).toBe(false);
+      expect(existsSync(join(testDir, 'locales', 'en', 'messages.po'))).toBe(true);
     });
   });
 
   describe('Compile Command', () => {
     beforeEach(() => {
-      mkdirSync(join(TEST_DIR, 'locales', 'es'), { recursive: true });
-      mkdirSync(join(TEST_DIR, 'locales', 'fr'), { recursive: true });
+      mkdirSync(join(testDir, 'locales', 'es'), { recursive: true });
+      mkdirSync(join(testDir, 'locales', 'fr'), { recursive: true });
 
       // Create .po files to compile
       writeFileSync(
-        join(TEST_DIR, 'locales', 'es', 'messages.po'),
+        join(testDir, 'locales', 'es', 'messages.po'),
         `msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
@@ -230,7 +230,7 @@ msgstr[1] "{n} artículos"
       );
 
       writeFileSync(
-        join(TEST_DIR, 'locales', 'fr', 'messages.po'),
+        join(testDir, 'locales', 'fr', 'messages.po'),
         `msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
@@ -251,12 +251,12 @@ msgstr "Au revoir"
       expect(output).toContain('Compiled');
 
       // Check JSON files were created
-      expect(existsSync(join(TEST_DIR, 'locales', 'es', 'messages.json'))).toBe(true);
-      expect(existsSync(join(TEST_DIR, 'locales', 'fr', 'messages.json'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'es', 'messages.json'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'fr', 'messages.json'))).toBe(true);
 
       // Verify JSON content
       const esJson = JSON.parse(
-        readFileSync(join(TEST_DIR, 'locales', 'es', 'messages.json'), 'utf-8')
+        readFileSync(join(testDir, 'locales', 'es', 'messages.json'), 'utf-8')
       ) as { translations: Record<string, Record<string, { msgstr: string }>> };
 
       expect(esJson.translations['']).toBeDefined();
@@ -269,17 +269,17 @@ msgstr "Au revoir"
       expect(output).toContain('Compiled');
 
       // Check .mo files were created
-      expect(existsSync(join(TEST_DIR, 'locales', 'es', 'messages.mo'))).toBe(true);
-      expect(existsSync(join(TEST_DIR, 'locales', 'fr', 'messages.mo'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'es', 'messages.mo'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'fr', 'messages.mo'))).toBe(true);
 
       // Verify .mo files are binary (not empty)
-      const moContent = readFileSync(join(TEST_DIR, 'locales', 'es', 'messages.mo'));
+      const moContent = readFileSync(join(testDir, 'locales', 'es', 'messages.mo'));
       expect(moContent.length).toBeGreaterThan(0);
     });
 
     it('should handle compilation errors gracefully', () => {
       // Create invalid .po file
-      writeFileSync(join(TEST_DIR, 'locales', 'es', 'invalid.po'), 'INVALID CONTENT');
+      writeFileSync(join(testDir, 'locales', 'es', 'invalid.po'), 'INVALID CONTENT');
 
       // Should not throw but report error
       const output = runCLI(['compile', 'locales', '--format', 'json']);
@@ -290,13 +290,13 @@ msgstr "Au revoir"
 
   describe('Validate Command', () => {
     beforeEach(() => {
-      mkdirSync(join(TEST_DIR, 'locales', 'es'), { recursive: true });
-      mkdirSync(join(TEST_DIR, 'locales', 'fr'), { recursive: true });
+      mkdirSync(join(testDir, 'locales', 'es'), { recursive: true });
+      mkdirSync(join(testDir, 'locales', 'fr'), { recursive: true });
     });
 
     it('should validate correct .po files', () => {
       writeFileSync(
-        join(TEST_DIR, 'locales', 'es', 'messages.po'),
+        join(testDir, 'locales', 'es', 'messages.po'),
         `msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
@@ -320,7 +320,7 @@ msgstr "Adiós"
 
     it('should detect missing translations', () => {
       writeFileSync(
-        join(TEST_DIR, 'locales', 'es', 'messages.po'),
+        join(testDir, 'locales', 'es', 'messages.po'),
         `msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
@@ -345,7 +345,7 @@ msgstr ""
 
     it('should detect fuzzy translations', () => {
       writeFileSync(
-        join(TEST_DIR, 'locales', 'es', 'messages.po'),
+        join(testDir, 'locales', 'es', 'messages.po'),
         `msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
@@ -363,7 +363,7 @@ msgstr "Hola"
 
     it('should validate in strict mode', () => {
       writeFileSync(
-        join(TEST_DIR, 'locales', 'es', 'messages.po'),
+        join(testDir, 'locales', 'es', 'messages.po'),
         `msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
@@ -396,7 +396,7 @@ msgstr ""
     it('should handle extract -> compile -> validate workflow', () => {
       // Step 1: Create source files
       writeFileSync(
-        join(TEST_DIR, 'src', 'app.ts'),
+        join(testDir, 'src', 'app.ts'),
         `
 console.log(t('Hello'));
 console.log(t('Welcome'));
@@ -406,12 +406,12 @@ console.log(t('Goodbye'));
 
       // Step 2: Extract translations
       runCLI(['extract', 'src', '--output', 'locales/messages.pot', '--keep-template']);
-      expect(existsSync(join(TEST_DIR, 'locales', 'messages.pot'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'messages.pot'))).toBe(true);
 
       // Step 3: Create translated .po files (simulating manual translation)
-      mkdirSync(join(TEST_DIR, 'locales', 'es'), { recursive: true });
+      mkdirSync(join(testDir, 'locales', 'es'), { recursive: true });
       writeFileSync(
-        join(TEST_DIR, 'locales', 'es', 'messages.po'),
+        join(testDir, 'locales', 'es', 'messages.po'),
         `msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
@@ -434,11 +434,11 @@ msgstr "Adiós"
 
       // Step 5: Compile to JSON
       runCLI(['compile', 'locales', '--format', 'json']);
-      expect(existsSync(join(TEST_DIR, 'locales', 'es', 'messages.json'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'es', 'messages.json'))).toBe(true);
 
       // Verify compiled JSON is valid
       const jsonContent = JSON.parse(
-        readFileSync(join(TEST_DIR, 'locales', 'es', 'messages.json'), 'utf-8')
+        readFileSync(join(testDir, 'locales', 'es', 'messages.json'), 'utf-8')
       ) as { translations: Record<string, Record<string, { msgstr: string }>> };
       expect(jsonContent.translations['']).toBeDefined();
       expect(jsonContent.translations['']['Hello']?.msgstr).toBe('Hola');
@@ -447,7 +447,7 @@ msgstr "Adiós"
     it('should handle multiple locales in workflow', () => {
       // Create source with extractions
       writeFileSync(
-        join(TEST_DIR, 'src', 'app.ts'),
+        join(testDir, 'src', 'app.ts'),
         `
 console.log(t('User'));
 console.log(t('Settings'));
@@ -458,9 +458,9 @@ console.log(t('Settings'));
 
       // Create multiple locale translations
       for (const locale of ['es', 'fr', 'de']) {
-        mkdirSync(join(TEST_DIR, 'locales', locale), { recursive: true });
+        mkdirSync(join(testDir, 'locales', locale), { recursive: true });
         writeFileSync(
-          join(TEST_DIR, 'locales', locale, 'messages.po'),
+          join(testDir, 'locales', locale, 'messages.po'),
           `msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
@@ -482,22 +482,30 @@ msgstr "Configuración-${locale}"
       runCLI(['compile', 'locales', '--format', 'json']);
 
       // Verify all locales were compiled
-      expect(existsSync(join(TEST_DIR, 'locales', 'es', 'messages.json'))).toBe(true);
-      expect(existsSync(join(TEST_DIR, 'locales', 'fr', 'messages.json'))).toBe(true);
-      expect(existsSync(join(TEST_DIR, 'locales', 'de', 'messages.json'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'es', 'messages.json'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'fr', 'messages.json'))).toBe(true);
+      expect(existsSync(join(testDir, 'locales', 'de', 'messages.json'))).toBe(true);
     });
   });
 
   describe('Edge Cases', () => {
     it('should execute the CLI when the script path contains spaces', () => {
-      const cliDirWithSpaces = join(TEST_DIR, 'cli path with spaces');
-      const cliPathWithSpaces = join(cliDirWithSpaces, 'cli.js');
+      const cliDirWithSpaces = mkdtempSync(join(__dirname, 'cli path with spaces '));
+      const linkedDistPath = join(cliDirWithSpaces, 'dist');
+      const cliPathWithSpaces = join(linkedDistPath, 'cli.js');
 
-      mkdirSync(cliDirWithSpaces, { recursive: true });
-      copyFileSync(CLI_PATH, cliPathWithSpaces);
+      try {
+        symlinkSync(
+          join(__dirname, '..', '..', 'dist'),
+          linkedDistPath,
+          process.platform === 'win32' ? 'junction' : 'dir'
+        );
 
-      const output = runCLIAtPath(cliPathWithSpaces, ['--help']);
-      expect(output).toContain('Usage');
+        const output = runCLIAtPath(cliPathWithSpaces, ['--help']);
+        expect(output).toContain('Usage');
+      } finally {
+        rmSync(cliDirWithSpaces, { recursive: true, force: true });
+      }
     });
 
     it('should handle empty source directory', () => {
@@ -513,7 +521,7 @@ msgstr "Configuración-${locale}"
     });
 
     it('should handle missing locales directory', () => {
-      rmSync(join(TEST_DIR, 'locales'), { recursive: true, force: true });
+      rmSync(join(testDir, 'locales'), { recursive: true, force: true });
 
       try {
         runCLI(['validate', 'locales']);
@@ -525,7 +533,7 @@ msgstr "Configuración-${locale}"
 
     it('should handle special characters in translations', () => {
       writeFileSync(
-        join(TEST_DIR, 'src', 'app.ts'),
+        join(testDir, 'src', 'app.ts'),
         `
 console.log(t('Quote: "Hello"'));
 console.log(t("Apostrophe: It's working"));
@@ -542,7 +550,7 @@ console.log(t('Newline:\\nTest'));
       ]);
       expect(output).toBeDefined();
 
-      const potContent = readFileSync(join(TEST_DIR, 'locales', 'messages.pot'), 'utf-8');
+      const potContent = readFileSync(join(testDir, 'locales', 'messages.pot'), 'utf-8');
       expect(potContent).toContain('Quote');
       expect(potContent).toContain('Apostrophe');
     });
