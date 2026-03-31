@@ -1,8 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { rewritePolingoDependenciesForLocalSmoke } from '../../../scripts/examples-smoke.mjs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 interface PackageManifest {
   name?: string;
@@ -29,7 +28,22 @@ interface TsConfig {
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url));
 const templatesRoot = path.join(repoRoot, 'packages/create-polingo-app/templates');
 const examplesRoot = path.join(repoRoot, 'examples');
+const examplesSmokeScriptPath = path.join(repoRoot, 'scripts', 'examples-smoke.mjs');
 const mirroredExamples = ['express', 'react-vite'];
+
+async function loadExamplesSmokeModule(): Promise<{
+  rewritePolingoDependenciesForLocalSmoke: (
+    manifest: PackageManifest,
+    repoRoot: string
+  ) => PackageManifest;
+}> {
+  return import(pathToFileURL(examplesSmokeScriptPath).href) as Promise<{
+    rewritePolingoDependenciesForLocalSmoke: (
+      manifest: PackageManifest,
+      repoRoot: string
+    ) => PackageManifest;
+  }>;
+}
 
 function readJsonFile<T>(filePath: string): T {
   return JSON.parse(readFileSync(filePath, 'utf8')) as T;
@@ -265,7 +279,13 @@ describe('repo mechanics', () => {
     }
   });
 
-  it('stages mirrored examples against local workspace packages for smoke builds', () => {
+  it('stages mirrored examples against local workspace packages for smoke builds', async () => {
+    expect(
+      existsSync(examplesSmokeScriptPath),
+      `${path.relative(repoRoot, examplesSmokeScriptPath)} must exist so example smoke checks can stage local workspace packages.`
+    ).toBe(true);
+
+    const { rewritePolingoDependenciesForLocalSmoke } = await loadExamplesSmokeModule();
     const expressManifest = readJsonFile<PackageManifest>(
       path.join(examplesRoot, 'express', 'package.json')
     );
@@ -302,6 +322,17 @@ describe('repo mechanics', () => {
     expect(smokeScript).toContain('node ./scripts/examples-smoke.mjs');
     expect(smokeScript).not.toContain('pnpm --dir examples/express install');
     expect(smokeScript).not.toContain('pnpm --dir examples/react-vite install');
+  });
+
+  it('exports the local-package rewrite helper from the smoke runner', async () => {
+    expect(
+      existsSync(examplesSmokeScriptPath),
+      `${path.relative(repoRoot, examplesSmokeScriptPath)} must exist so repo smoke checks can run.`
+    ).toBe(true);
+
+    const smokeModule = await loadExamplesSmokeModule();
+
+    expect(smokeModule.rewritePolingoDependenciesForLocalSmoke).toBeTypeOf('function');
   });
 
   it('keeps the Express example on the public Translator locale API', () => {

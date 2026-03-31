@@ -223,4 +223,95 @@ msgstr "Blocked"
       /Unsupported characters|Invalid domain/
     );
   });
+
+  describe('path traversal hardening', () => {
+    it('should reject null bytes in locale', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('es\0', 'messages')).rejects.toThrow(/Unsupported characters/);
+    });
+
+    it('should reject null bytes in domain', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('es', 'messages\0.po')).rejects.toThrow(/Unsupported characters/);
+    });
+
+    it('should reject encoded path separators in locale', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('..%2Fes', 'messages')).rejects.toThrow(/Unsupported characters/);
+    });
+
+    it('should reject encoded path separators in domain', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('es', '..%2Fmessages')).rejects.toThrow(/Unsupported characters/);
+    });
+
+    it('should reject backslash path separators in locale', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('..\\es', 'messages')).rejects.toThrow(/Unsupported characters/);
+    });
+
+    it('should reject empty locale', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('', 'messages')).rejects.toThrow(/Invalid locale/);
+    });
+
+    it('should reject empty domain', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('es', '')).rejects.toThrow(/Invalid domain/);
+    });
+
+    it('should reject dot-dot in locale', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('..', 'messages')).rejects.toThrow(/Parent directory traversal/);
+    });
+
+    it('should reject dot-dot in domain', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('es', '..')).rejects.toThrow(/Parent directory traversal/);
+    });
+
+    it('should reject dot-dot embedded in locale', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('es..fr', 'messages')).rejects.toThrow(/Parent directory traversal/);
+    });
+
+    it('should reject whitespace-only locale', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('   ', 'messages')).rejects.toThrow(/Invalid locale/);
+    });
+
+    it('should reject locale with spaces', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('e s', 'messages')).rejects.toThrow(/Unsupported characters/);
+    });
+
+    it('should not follow symlinked translation files', async () => {
+      const secretDir = join(tmpdir(), 'polingo-test-secret-' + Date.now());
+      await mkdir(secretDir, { recursive: true });
+      await writeFile(
+        join(secretDir, 'secret.txt'),
+        `
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Language: es\\n"
+
+msgid "Hello"
+msgstr "Leaked secret"
+`
+      );
+
+      // Create a symlink from es/evil.po -> secret file outside base directory
+      await symlink(join(secretDir, 'secret.txt'), join(esDir, 'evil.po'));
+
+      const loader = new NodeLoader(testDir);
+      // evil.po is a symlink to a file outside the base directory — should not load
+      await expect(loader.load('es', 'evil')).rejects.toThrow(/Translation file not found/);
+    });
+
+    it('should reject locale containing only dots', async () => {
+      const loader = new NodeLoader(testDir);
+      await expect(loader.load('...', 'messages')).rejects.toThrow(/Parent directory traversal/);
+    });
+  });
 });

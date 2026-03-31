@@ -133,6 +133,10 @@ function sanitizePathSegment(value: string, segmentName: string): string {
   }
 
   const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    throw new Error(`Invalid ${segmentName} value.`);
+  }
+
   if (!/^[A-Za-z0-9._-]+$/.test(trimmed)) {
     throw new Error(
       `Unsupported characters in ${segmentName} "${value}". Only letters, numbers, ".", "_", and "-" are allowed.`

@@ -360,6 +360,7 @@ msgstr "Hola Actualizado"
     expect(fakeWatcher.close).toHaveBeenCalled();
 
     // Update file after stopping watcher
+    mkdirSync(join(TEST_DIR, 'es'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, 'es', 'messages.po'),
       `msgid ""
