@@ -167,7 +167,7 @@ async function readSafeFile(filePath: string, baseDir: string): Promise<Buffer |
     const canonicalPath = await realpath(resolvedPath);
     assertWithinDirectory(baseDir, canonicalPath);
 
-    return readFile(canonicalPath);
+    return await readFile(canonicalPath);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return null;
@@ -181,7 +181,11 @@ async function resolveSafeDirectory(targetPath: string, baseDir: string): Promis
 
   try {
     const stat = await lstat(resolvedPath);
-    if (stat.isSymbolicLink() || !stat.isDirectory()) {
+    if (stat.isSymbolicLink()) {
+      throw new Error('Resolved catalog path escapes the configured directory.');
+    }
+
+    if (!stat.isDirectory()) {
       return null;
     }
 
