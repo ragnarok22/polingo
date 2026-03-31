@@ -19,16 +19,41 @@ export function interpolate(text: string, vars?: Record<string, string | number>
     return text;
   }
 
-  // Replace every {key} with its corresponding value.
-  return text.replace(/\{([^}]+)\}/g, (_match, key: string) => {
-    const value = vars[key];
+  const firstOpeningBrace = text.indexOf('{');
+  if (firstOpeningBrace === -1) {
+    return text;
+  }
 
-    // Leave the placeholder untouched when the variable is missing.
-    if (value === undefined) {
-      return `{${key}}`;
+  let result = '';
+  let cursor = 0;
+
+  while (cursor < text.length) {
+    const openingBrace = text.indexOf('{', cursor);
+    if (openingBrace === -1) {
+      result += text.slice(cursor);
+      break;
     }
 
-    // Convert numbers to strings.
-    return String(value);
-  });
+    const closingBrace = text.indexOf('}', openingBrace + 1);
+    if (closingBrace === -1) {
+      result += text.slice(cursor);
+      break;
+    }
+
+    const key = text.slice(openingBrace + 1, closingBrace);
+
+    if (key.length === 0) {
+      result += text.slice(cursor, closingBrace + 1);
+      cursor = closingBrace + 1;
+      continue;
+    }
+
+    result += text.slice(cursor, openingBrace);
+
+    const value = vars[key];
+    result += value === undefined ? `{${key}}` : String(value);
+    cursor = closingBrace + 1;
+  }
+
+  return result;
 }
