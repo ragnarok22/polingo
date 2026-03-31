@@ -148,11 +148,15 @@ export function getPluralIndex(count: number, locale: string): number {
   // Extract base language code (e.g., 'es-MX' -> 'es')
   const lang = (locale.split('-')[0] ?? locale).toLowerCase();
 
-  // Find rule for the language
+  // Only use explicitly defined rules; ignore inherited prototype properties.
+  if (!Object.prototype.hasOwnProperty.call(pluralRules, lang)) {
+    return twoForms(count);
+  }
+
   const rule = pluralRules[lang];
 
-  // If no specific rule, use default rule (2 forms)
-  if (!rule) {
+  // Defensive guard in case the rules table is extended with non-functions later.
+  if (typeof rule !== 'function') {
     return twoForms(count);
   }
 
