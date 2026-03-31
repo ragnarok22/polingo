@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { mkdir, symlink, writeFile } from 'fs/promises';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { chmod, mkdir, symlink, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { NodeLoader } from '../src/loader';
@@ -12,6 +12,8 @@ describe('NodeLoader', () => {
   const frLCDir = join(frDir, 'LC_MESSAGES');
   const externalDir = join(tmpdir(), 'polingo-test-external-' + Date.now());
   const linkedDir = join(testDir, 'linked');
+  const inaccessibleExternalDir = join(tmpdir(), 'polingo-test-inaccessible-' + Date.now());
+  const inaccessibleLinkedDir = join(testDir, 'blocked-linked');
 
   beforeAll(async () => {
     // Create test directories
@@ -85,6 +87,35 @@ msgstr "Leaked"
 `
     );
     await symlink(externalDir, linkedDir, process.platform === 'win32' ? 'junction' : 'dir');
+
+    await mkdir(inaccessibleExternalDir, { recursive: true });
+    await writeFile(
+      join(inaccessibleExternalDir, 'messages.po'),
+      `
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Language: blocked\\n"
+
+msgid "Hello"
+msgstr "Blocked"
+`
+    );
+    await symlink(
+      inaccessibleExternalDir,
+      inaccessibleLinkedDir,
+      process.platform === 'win32' ? 'junction' : 'dir'
+    );
+
+    if (process.platform !== 'win32') {
+      await chmod(inaccessibleExternalDir, 0o000);
+    }
+  });
+
+  afterAll(async () => {
+    if (process.platform !== 'win32') {
+      await chmod(inaccessibleExternalDir, 0o755);
+    }
   });
 
   it('should load a .po file successfully', async () => {
@@ -163,5 +194,17 @@ msgstr "Leaked"
     const loader = new NodeLoader(testDir);
 
     await expect(loader.load('linked', 'messages')).rejects.toThrow();
+  });
+
+  it('should reject symlinked locale directories before probing inaccessible external targets', async () => {
+    if (process.platform === 'win32') {
+      return;
+    }
+
+    const loader = new NodeLoader(testDir);
+
+    await expect(loader.load('blocked-linked', 'messages')).rejects.toThrow(
+      'Resolved catalog path escapes the configured directory.'
+    );
   });
 });

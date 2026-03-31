@@ -32,11 +32,18 @@ export class NodeLoader implements TranslationLoader {
 
     const localeDirectory = resolve(baseDirectory, sanitizedLocale);
     assertWithinDirectory(baseDirectory, localeDirectory);
+    const hasSafeLocaleDirectory = await isSafeDirectory(localeDirectory, baseDirectory);
 
-    const candidateBasePaths = [
-      resolve(localeDirectory, sanitizedDomain),
-      resolve(localeDirectory, 'LC_MESSAGES', sanitizedDomain),
-    ];
+    if (!hasSafeLocaleDirectory) {
+      throw new Error(`Translation file not found for locale "${locale}" and domain "${domain}"`);
+    }
+
+    const candidateBasePaths = [resolve(localeDirectory, sanitizedDomain)];
+    const lcMessagesDirectory = resolve(localeDirectory, 'LC_MESSAGES');
+
+    if (await isSafeDirectory(lcMessagesDirectory, baseDirectory)) {
+      candidateBasePaths.push(resolve(lcMessagesDirectory, sanitizedDomain));
+    }
 
     for (const basePath of candidateBasePaths) {
       const poBuffer = await readSafeFile(`${basePath}.po`, baseDirectory);
@@ -155,14 +162,29 @@ async function readSafeFile(filePath: string, baseDir: string): Promise<Buffer |
     if (fileStat.isSymbolicLink() || !fileStat.isFile()) {
       return null;
     }
-
-    const canonicalPath = await realpath(resolvedPath);
-    assertWithinDirectory(baseDir, canonicalPath);
-
-    return readFile(canonicalPath);
+    return readFile(resolvedPath);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return null;
+    }
+    throw error;
+  }
+}
+
+async function isSafeDirectory(targetPath: string, baseDir: string): Promise<boolean> {
+  const resolvedPath = resolve(targetPath);
+  assertWithinDirectory(baseDir, resolvedPath);
+
+  try {
+    const stat = await lstat(resolvedPath);
+    if (stat.isSymbolicLink()) {
+      throw new Error('Resolved catalog path escapes the configured directory.');
+    }
+
+    return stat.isDirectory();
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return false;
     }
     throw error;
   }
